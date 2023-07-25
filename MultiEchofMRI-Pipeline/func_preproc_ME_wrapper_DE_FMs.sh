@@ -40,36 +40,38 @@ source ${EnvironmentScript}	# Set up pipeline environment variables and software
 echo -e "\nMulti-Echo Preprocessing & Denoising Pipeline"
 
 # ---------------------------------------------------------------------------------------
-echo -e "\nProcessing the Field Maps"
+# echo -e "\nProcessing the Field Maps"
 
 # process all field maps & create an average image 
 # for cases where scan-specific maps are unavailable;
-"$MEDIR"/func_preproc_fm_DE_FMs.sh "$MEDIR" "$Subject" \
-"$StudyFolder" "$NTHREADS"
+# "$MEDIR"/func_preproc_fm_DE_FMs.sh "$MEDIR" "$Subject" \
+# "$StudyFolder" "$NTHREADS"
 
-#echo -e "\n Post Processing the Field Maps"
 # leave commented out - this is redundant with last code block in func_preproc_fm.sh
+# echo -e "\n Post Processing the Field Maps"
+
 # "$MEDIR"/post_func_preproc_fm.sh "$MEDIR" "$Subject" \
 # "$StudyFolder" "$NTHREADS"
 
-echo -e "Coregistering SBrefs to the Anatomical Image"
+#echo -e "Coregistering SBrefs to the Anatomical Image"
 
 # create an avg. sbref image and co-register that 
-image & all individual SBrefs to the T1w image;
-"$MEDIR"/func_preproc_coreg_DE_FMs.sh "$MEDIR" "$Subject" "$StudyFolder" \
-"$AtlasTemplate" "$DOF" "$NTHREADS"
-
-echo -e "\nDone.\n"
+# image & all individual SBrefs to the T1w image;
+#"$MEDIR"/func_preproc_coreg_DE_FMs.sh "$MEDIR" "$Subject" "$StudyFolder" \
+#"$AtlasTemplate" "$DOF" "$NTHREADS"
 
 # ---------------------------------------------------------------------------------------
-#echo -e "Correcting for Slice Time Differences, Head Motion, & Spatial Distortion"
+
+echo -e "Correcting for Slice Time Differences, Head Motion, & Spatial Distortion"
 
 # correct func images for slice time differences and head motion;
-#"$MEDIR"/func_preproc_headmotion.sh "$MEDIR" "$Subject" "$StudyFolder" \
-#"$AtlasTemplate" "$DOF" "$NTHREADS" 
-#echo -e " Unobjective for Slice Time Differences, Head Motion, & Spatial Distortion"
+"$MEDIR"/func_preproc_headmotion.sh "$MEDIR" "$Subject" "$StudyFolder" \
+"$AtlasTemplate" "$DOF" "$NTHREADS" 
+echo -e "Unobjective for Slice Time Differences, Head Motion, & Spatial Distortion"
 
 
 # correct func images for slice time differences and head motion;
-#"$MEDIR"/unobjective.sh "$MEDIR" "$Subject" "$StudyFolder" \
-#"$AtlasTemplate" "$DOF" "$NTHREADS" 
+"$MEDIR"/unobjective.sh "$MEDIR" "$Subject" "$StudyFolder" \
+"$AtlasTemplate" "$DOF" "$NTHREADS"
+
+echo -e "\nDone.\n" 
