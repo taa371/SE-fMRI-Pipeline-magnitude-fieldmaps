@@ -1,6 +1,6 @@
 #!/bin/bash
 # CJL; (cjl2007@med.cornell.edu)
-# hob4003; (hob4003@med.cornell.edu)
+# HRB; (hob4003@med.cornell.edu)
 
 MEDIR=$1
 Subject=$2

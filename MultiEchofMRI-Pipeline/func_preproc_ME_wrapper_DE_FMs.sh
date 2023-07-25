@@ -1,5 +1,6 @@
 #!/bin/bash
 # CJL; (cjl2007@med.cornell.edu)
+# HRB; (hob4003@med.cornell.edu)
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
@@ -67,8 +68,8 @@ echo -e "Correcting for Slice Time Differences, Head Motion, & Spatial Distortio
 # correct func images for slice time differences and head motion;
 "$MEDIR"/func_preproc_headmotion.sh "$MEDIR" "$Subject" "$StudyFolder" \
 "$AtlasTemplate" "$DOF" "$NTHREADS" 
-echo -e "Unobjective for Slice Time Differences, Head Motion, & Spatial Distortion"
 
+echo -e "Unobjective for Slice Time Differences, Head Motion, & Spatial Distortion"
 
 # correct func images for slice time differences and head motion;
 "$MEDIR"/unobjective.sh "$MEDIR" "$Subject" "$StudyFolder" \
