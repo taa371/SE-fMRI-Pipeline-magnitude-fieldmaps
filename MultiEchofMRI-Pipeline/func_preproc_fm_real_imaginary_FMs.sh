@@ -9,7 +9,6 @@ Subdir="$StudyFolder"/"$Subject"
 SUBJECTS_DIR="$Subdir"/anat/T1w # note: this is used for "bbregister" calls;
 NTHREADS=$4
 StartSession=$5
-
 module load Connectome_Workbench/1.5.0/Connectome_Workbench
 module load freesurfer/6.0.0
 module load python-3.7.7-gcc-8.2.0-onbczx6
@@ -52,12 +51,10 @@ for s in $sessions ; do
 	for r in $runs ; do
 
 		# check to see if this file exists or not;
-		# if [ -f "$Subdir/func/unprocessed/field_maps/AP_S"$s"_R"$r".nii.gz" ]; then # CHANGED (2023-07-24)
-		if [ -f "$Subdir/func/unprocessed/field_maps/FM_rads_S"$s"_R"$r".nii.gz" ]; then
+		if [ -f "$Subdir/func/unprocessed/field_maps/FM_real_S"$s"_R"$r".nii.gz" ]; then
 
 			# the "AllFMs.txt" file contains 
 			# dir. paths to every pair of field maps;
-			# touch "$Subdir"/AllFMs.txt # TEST 
 			echo S"$s"_R"$r" >> "$Subdir"/AllFMs.txt  
 
 		fi
@@ -83,18 +80,37 @@ rm -rf "$Subdir"/func/field_maps/AllFMs > /dev/null 2>&1
 mkdir -p "$Subdir"/func/field_maps/AllFMs > /dev/null 2>&1 # 2023-07-24 WORKED!
 WDIR="$Subdir"/func/field_maps/AllFMs
 
+# ---------------------------------------------------------------------------------------
 for ThisFM in $AllFMs
 do
 
     echo $ThisFM
 
     # copy over field map pair to workspace 
-    cp -r "$Subdir"/func/unprocessed/field_maps/FM_rads_"$ThisFM".nii.gz "$WDIR"/FM_rads_"$ThisFM".nii.gz
-    cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_brain_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz
-    cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_"$ThisFM".nii.gz
+    cp -r "$Subdir"/func/unprocessed/field_maps/FM_real_"$ThisFM".nii.gz "$WDIR"/FM_real_"$ThisFM".nii.gz
+    cp -r "$Subdir"/func/unprocessed/field_maps/FM_imaginary_"$ThisFM".nii.gz "$WDIR"/FM_imaginary_"$ThisFM".nii.gz
 
-    # temporary bet image
-    # bet "$4"/FM_mag_"$5".nii.gz "$4"/FM_mag_brain_"$5".nii.gz -f 0.35 -R > /dev/null 2>&1 ]
+    # count the number of volumes;
+    RealnVols=`fslnvols "$4"/FM_real_"$5".nii.gz`
+    ImgnrynVols=`fslnvols "$4"/FM_imaginary_"$5".nii.gz`
+
+    # avg. the images, if needed
+    if [[ $RealnVols > 1 ]] ; then 
+    	mcflirt -in "$4"/AP_"$5".nii.gz -out "$4"/AP_"$5".nii.gz
+    	fslmaths "$4"/AP_"$5".nii.gz -Tmean "$4"/AP_"$5".nii.gz
+    	mcflirt -in "$4"/PA_"$5".nii.gz -out "$4"/PA_"$5".nii.gz
+    	fslmaths "$4"/PA_"$5".nii.gz -Tmean "$4"/PA_"$5".nii.gz
+    fi
+
+    # merge the field maps into a single 4D image;
+    # fslmerge -t "$4"/AP_PA_"$5".nii.gz "$4"/AP_"$5".nii.gz "$4"/PA_"$5".nii.gz > /dev/null 2>&1 
+
+    # prepare field map files using TOPUP; 
+    # topup --imain="$4"/AP_PA_"$5".nii.gz --datain="$2"/func/field_maps/acqparams.txt \ # DONE for NKI using fsl_prepare_fieldmap
+    # --iout="$4"/FM_mag_"$5".nii.gz --fout="$4"/FM_rads_"$5".nii.gz --config=b02b0.cnf > /dev/null 2>&1  
+    # fslmaths "$4"/FM_rads_"$5".nii.gz -mul 6.283 "$4"/FM_rads_"$5".nii.gz > /dev/null 2>&1 # convert to radians # DONE
+    # fslmaths "$4"/FM_mag_"$5".nii.gz -Tmean "$4"/FM_mag_"$5".nii.gz > /dev/null 2>&1 # magnitude image # DONE
+    # bet "$4"/FM_mag_"$5".nii.gz "$4"/FM_mag_brain_"$5".nii.gz -f 0.35 -R > /dev/null 2>&1 # temporary bet image # DONE
 
     # register reference volume to the T1-weighted anatomical image; use bbr cost function 
     "$MEDIR"/res0urces/epi_reg_dof --epi="$WDIR"/FM_mag_"$ThisFM".nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz \
@@ -117,6 +133,7 @@ do
     wb_command -volume-smoothing "$WDIR"/FM_rads_acpc_"$ThisFM".nii.gz 2 "$WDIR"/FM_rads_acpc_"$ThisFM".nii.gz -fix-zeros > /dev/null 2>&1 
 
 done
+
 
 # This section is repeated in post_func_preproc_fm.sh (only run once)
 # merge & average the co-registered field map images accross sessions;  
