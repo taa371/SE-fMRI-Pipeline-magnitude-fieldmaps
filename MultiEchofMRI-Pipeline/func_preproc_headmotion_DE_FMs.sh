@@ -191,7 +191,6 @@ done
 # remove some intermediate files;
 rm "$Subdir"/func/rest/"$AllScans"/Mean*.nii.gz
 
-
 # DOESN'T WORK - so I put the contents of the function in the main body and search-and-replaced the vbls...
 # export -f func # correct for head motion and warp to atlas space in single spline warp
 # parallel --jobs $NTHREADS func ::: $MEDIR ::: $AtlasTemplate ::: $Subdir ::: $DOF ::: $AllScans > /dev/null 2>&1  
