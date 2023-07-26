@@ -193,7 +193,7 @@ runs=$(seq 1 1 "${#runs[@]}")
 for r in $runs ; do
 
 	# check to see if this scan has a field map or not;
-	if [-f "$Subdir/func/field_maps/AllFMs/FM_rads_acpc_S"$Sessions"_R"$r".nii.gz"]; then
+	if [ -f "$Subdir/func/field_maps/AllFMs/FM_rads_acpc_S"$Sessions"_R"$r".nii.gz" ]; then # this needs to have spaces around brackets
 
 		# define the effective echo spacing;
 		EchoSpacing=$(cat "$Subdir"/func/rest/session_"$Sessions"/run_"$r"/EffectiveEchoSpacing.txt) 
