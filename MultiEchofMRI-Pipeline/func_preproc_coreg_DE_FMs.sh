@@ -186,50 +186,44 @@ mkdir -p "$Subdir"/func/qa/CoregQA > /dev/null 2>&1
 Sessions=("$Subdir"/func/rest/session_*)
 Sessions=$(seq $StartSession 1 "${#sessions[@]}")
 
-func () {
+# func ---------------------------------------------------------------
+# count number of runs for this session;
+runs=("$Subdir"/func/rest/session_"$Sessions"/run_*)
+runs=$(seq 1 1 "${#runs[@]}")
 
-	# count number of runs for this session;
-	runs=("$2"/func/rest/session_"$6"/run_*)
-	runs=$(seq 1 1 "${#runs[@]}")
+# sweep the runs;
+for r in $runs ; do
 
-	# sweep the runs;
-	for r in $runs ; do
+	# check to see if this scan has a field map or not;
+	if [ -f "$Subdir/func/field_maps/AllFMs/FM_rads_acpc_S"$Sessions"_R"$r".nii.gz" ]; then
 
-		# check to see if this scan has a field map or not;
-		if [ -f "$2/func/field_maps/AllFMs/FM_rads_acpc_S"$6"_R"$r".nii.gz" ]; then
+		# define the effective echo spacing;
+		EchoSpacing=$(cat "$Subdir"/func/rest/session_"$Sessions"/run_"$r"/EffectiveEchoSpacing.txt) 
+	
+		# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using scan-specific field map); 
+		"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$Sessions"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$Sessions"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$Sessions"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$Sessions"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y > /dev/null 2>&1 # note: need to manually set --pedir
+		applywarp --interp=spline --in="$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz --ref="5" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$Sessions"_R"$r".nii.gz --warp="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$Sessions"_R"$r"_warp.nii.gz
 
-			# define the effective echo spacing;
-			EchoSpacing=$(cat "$2"/func/rest/session_"$6"/run_"$r"/EffectiveEchoSpacing.txt) 
+		# use BBRegister (BBR) to fine-tune the existing co-registeration; output FSL style transformation matrix;
+		bbregister --s freesurfer --mov "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$Sessions"_R"$r".nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$Sessions"_R"$r".dat --6 --o "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$Sessions"_R"$r".nii.gz > /dev/null 2>&1 
+		tkregister2 --s freesurfer --noedit --reg "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$Sessions"_R"$r".dat --mov "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$Sessions"_R"$r".nii.gz --targ "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --fslregout "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$Sessions"_R"$r".mat > /dev/null 2>&1 
+
+		# add BBR step as post warp linear transformation & generate inverse warp;
+		convertwarp --warp1="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$Sessions"_R"$r"_warp.nii.gz --postmat="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$Sessions"_R"$r".mat --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$Sessions"_R"$r"_warp.nii.gz
+		applywarp --interp=spline --in="$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$Sessions"_R"$r".nii.gz --warp="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$Sessions"_R"$r"_warp.nii.gz
+		mv "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$Sessions"_R"$r".nii.gz "$Subdir"/func/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S"$Sessions"_R"$r".nii.gz
 		
-			# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using scan-specific field map); 
-			"$1"/res0urces/epi_reg_dof --dof="$4" --epi="$2"/func/rest/session_"$6"/run_"$r"/SBref.nii.gz --t1="$2"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$2"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$2"/func/xfms/rest/SBref2acpc_EpiReg_S"$6"_R"$r" --fmap="$2"/func/field_maps/AllFMs/FM_rads_acpc_S"$6"_R"$r".nii.gz --fmapmag="$2"/func/field_maps/AllFMs/FM_mag_acpc_S"$6"_R"$r".nii.gz --fmapmagbrain="$2"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$6"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$2"/anat/T1w/"$3"/mri/white.nii.gz --nofmapreg --pedir=-y > /dev/null 2>&1 # note: need to manually set --pedir
-			applywarp --interp=spline --in="$2"/func/rest/session_"$6"/run_"$r"/SBref.nii.gz --ref="5" --out="$2"/func/xfms/rest/SBref2acpc_EpiReg_S"$6"_R"$r".nii.gz --warp="$2"/func/xfms/rest/SBref2acpc_EpiReg_S"$6"_R"$r"_warp.nii.gz
+		# warp SBref image into MNI atlas volume space in a single spline warp; can be used for CoregQA
+		convertwarp --ref="$AtlasTemplate" --warp1="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$Sessions"_R"$r"_warp.nii.gz --warp2="$Subdir"/anat/MNINonLinear/xfms/acpc_dc2standard.nii.gz --out="$Subdir"/func/xfms/rest/SBref2nonlin_EpiReg+BBR_S"$Sessions"_R"$r"_warp.nii.gz
+		applywarp --interp=spline --in="$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/qa/CoregQA/SBref2nonlin_EpiReg+BBR_ScanSpecificFM_S"$Sessions"_R"$r".nii.gz --warp="$Subdir"/func/xfms/rest/SBref2nonlin_EpiReg+BBR_S"$Sessions"_R"$r"_warp.nii.gz
 
-			# use BBRegister (BBR) to fine-tune the existing co-registeration; output FSL style transformation matrix;
-			bbregister --s freesurfer --mov "$2"/func/xfms/rest/SBref2acpc_EpiReg_S"$6"_R"$r".nii.gz --init-reg "$1"/res0urces/eye.dat --surf white.deformed --bold --reg "$2"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$6"_R"$r".dat --6 --o "$2"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$6"_R"$r".nii.gz > /dev/null 2>&1 
-			tkregister2 --s freesurfer --noedit --reg "$2"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$6"_R"$r".dat --mov "$2"/func/xfms/rest/SBref2acpc_EpiReg_S"$6"_R"$r".nii.gz --targ "$2"/anat/T1w/T1w_acpc_dc_restore.nii.gz --fslregout "$2"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$6"_R"$r".mat > /dev/null 2>&1 
+	fi
 
-			# add BBR step as post warp linear transformation & generate inverse warp;
-			convertwarp --warp1="$2"/func/xfms/rest/SBref2acpc_EpiReg_S"$6"_R"$r"_warp.nii.gz --postmat="$2"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$6"_R"$r".mat --ref="$5" --out="$2"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$6"_R"$r"_warp.nii.gz
-			applywarp --interp=spline --in="$2"/func/rest/session_"$6"/run_"$r"/SBref.nii.gz --ref="$5" --out="$2"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$6"_R"$r".nii.gz --warp="$2"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$6"_R"$r"_warp.nii.gz
-			mv "$2"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$6"_R"$r".nii.gz "$2"/func/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S"$6"_R"$r".nii.gz
-			
-			# warp SBref image into MNI atlas volume space in a single spline warp; can be used for CoregQA
-			convertwarp --ref="$5" --warp1="$2"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$6"_R"$r"_warp.nii.gz --warp2="$2"/anat/MNINonLinear/xfms/acpc_dc2standard.nii.gz --out="$2"/func/xfms/rest/SBref2nonlin_EpiReg+BBR_S"$6"_R"$r"_warp.nii.gz
-			applywarp --interp=spline --in="$2"/func/rest/session_"$6"/run_"$r"/SBref.nii.gz --ref="$5" --out="$2"/func/qa/CoregQA/SBref2nonlin_EpiReg+BBR_ScanSpecificFM_S"$6"_R"$r".nii.gz --warp="$2"/func/xfms/rest/SBref2nonlin_EpiReg+BBR_S"$6"_R"$r"_warp.nii.gz
-
-		fi
-
-        # repeat warps (ACPC, MNI) but this time with the native --> acpc co-registration using an average field map;
-        flirt -dof "$4" -in "$2"/func/rest/session_"$6"/run_"$r"/SBref.nii.gz -ref "$2"/func/xfms/rest/AvgSBref.nii.gz -out "$2"/func/qa/CoregQA/SBref2AvgSBref_S"$6"_R"$r".nii.gz -omat "$2"/func/qa/CoregQA/SBref2AvgSBref_S"$6"_R"$r".mat
-        applywarp --interp=spline --in="$2"/func/rest/session_"$6"/run_"$r"/SBref.nii.gz --premat="$2"/func/qa/CoregQA/SBref2AvgSBref_S"$6"_R"$r".mat --warp="$2"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz --out="$2"/func/qa/CoregQA/SBref2acpc_EpiReg+BBR_AvgFM_S"$6"_R"$r".nii.gz --ref="$5"
-        applywarp --interp=spline --in="$2"/func/rest/session_"$6"/run_"$r"/SBref.nii.gz --premat="$2"/func/qa/CoregQA/SBref2AvgSBref_S"$6"_R"$r".mat --warp="$2"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz --out="$2"/func/qa/CoregQA/SBref2nonlin_EpiReg+BBR_AvgFM_S"$6"_R"$r".nii.gz --ref="$5"
-
-	done
-}
-
-export -f func # lets also co-register individual SBrefs to the target anatomical image;
-parallel --jobs $NTHREADS func ::: $MEDIR ::: $Subdir ::: $Subject ::: $DOF ::: $AtlasTemplate ::: $Sessions > /dev/null 2>&1  
+	# repeat warps (ACPC, MNI) but this time with the native --> acpc co-registration using an average field map;
+	flirt -dof "$DOF" -in "$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz -ref "$Subdir"/func/xfms/rest/AvgSBref.nii.gz -out "$Subdir"/func/qa/CoregQA/SBref2AvgSBref_S"$Sessions"_R"$r".nii.gz -omat "$Subdir"/func/qa/CoregQA/SBref2AvgSBref_S"$Sessions"_R"$r".mat
+	applywarp --interp=spline --in="$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz --premat="$Subdir"/func/qa/CoregQA/SBref2AvgSBref_S"$Sessions"_R"$r".mat --warp="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz --out="$Subdir"/func/qa/CoregQA/SBref2acpc_EpiReg+BBR_AvgFM_S"$Sessions"_R"$r".nii.gz --ref="$AtlasTemplate"
+	applywarp --interp=spline --in="$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz --premat="$Subdir"/func/qa/CoregQA/SBref2AvgSBref_S"$Sessions"_R"$r".mat --warp="$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz --out="$Subdir"/func/qa/CoregQA/SBref2nonlin_EpiReg+BBR_AvgFM_S"$Sessions"_R"$r".nii.gz --ref="$AtlasTemplate"
+# END FUNCTION ----------------------------------------------------------
 
 # finally, lets create files that will be needed later on 
 # (brain mask and subcortical mask in functional space)
