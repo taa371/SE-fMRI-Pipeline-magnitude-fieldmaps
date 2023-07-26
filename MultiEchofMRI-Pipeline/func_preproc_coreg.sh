@@ -193,7 +193,7 @@ func () {
 		
 			# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using scan-specific field map); 
 			"$1"/res0urces/epi_reg_dof --dof="$4" --epi="$2"/func/rest/session_"$6"/run_"$r"/SBref.nii.gz --t1="$2"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$2"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$2"/func/xfms/rest/SBref2acpc_EpiReg_S"$6"_R"$r" --fmap="$2"/func/field_maps/AllFMs/FM_rads_acpc_S"$6"_R"$r".nii.gz --fmapmag="$2"/func/field_maps/AllFMs/FM_mag_acpc_S"$6"_R"$r".nii.gz --fmapmagbrain="$2"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$6"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$2"/anat/T1w/"$3"/mri/white.nii.gz --nofmapreg --pedir=-y > /dev/null 2>&1 # note: need to manually set --pedir
-			applywarp --interp=spline --in="$2"/func/rest/session_"$6"/run_"$r"/SBref.nii.gz --ref="5" --out="$2"/func/xfms/rest/SBref2acpc_EpiReg_S"$6"_R"$r".nii.gz --warp="$2"/func/xfms/rest/SBref2acpc_EpiReg_S"$6"_R"$r"_warp.nii.gz
+			applywarp --interp=spline --in="$2"/func/rest/session_"$6"/run_"$r"/SBref.nii.gz --ref="$5" --out="$2"/func/xfms/rest/SBref2acpc_EpiReg_S"$6"_R"$r".nii.gz --warp="$2"/func/xfms/rest/SBref2acpc_EpiReg_S"$6"_R"$r"_warp.nii.gz
 
 			# use BBRegister (BBR) to fine-tune the existing co-registeration; output FSL style transformation matrix;
 			bbregister --s freesurfer --mov "$2"/func/xfms/rest/SBref2acpc_EpiReg_S"$6"_R"$r".nii.gz --init-reg "$1"/res0urces/eye.dat --surf white.deformed --bold --reg "$2"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$6"_R"$r".dat --6 --o "$2"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$6"_R"$r".nii.gz > /dev/null 2>&1 
