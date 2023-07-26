@@ -48,13 +48,14 @@ cd "$Subdir" # go back to subject dir.
 mkdir -p "$Subdir"/func/rest/AverageSBref
 WDIR="$Subdir"/func/rest/AverageSBref
 
-cp -r "$Subdir"/func/unprocessed/rest/session_1 "$Subdir"/func/rest # ADDED
-cp -r "$Subdir"/func/unprocessed/rest/session_2 "$Subdir"/func/rest # ADDED
-mkdir "$Subdir"/func/xfms # ADDED
-mkdir "$Subdir"/func/xfms/rest # ADDED
-echo ".000690" >> "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt # ADDED (EVO echo spacing/dwell time in secs)
-echo "2.46" >> "$Subdir"/func/rest/session_1/run_1/TE.txt # ADDED (EVO TE in ms)
-echo "2.46" >> "$Subdir"/func/rest/session_2/run_1/TE.txt # ADDED
+# HRB -> need this code block if you are using other field maps besides spin-echo
+cp -r "$Subdir"/func/unprocessed/rest/session_1 "$Subdir"/func/rest
+cp -r "$Subdir"/func/unprocessed/rest/session_2 "$Subdir"/func/rest
+mkdir "$Subdir"/func/xfms
+mkdir "$Subdir"/func/xfms/rest
+echo ".000690" >> "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt # (EVO echo spacing/dwell time in secs)
+echo "2.46" >> "$Subdir"/func/rest/session_1/run_1/TE.txt # (EVO TE in ms)
+echo "2.46" >> "$Subdir"/func/rest/session_2/run_1/TE.txt
 
 # count the number of sessions
 sessions=("$Subdir"/func/unprocessed/rest/session_*)
