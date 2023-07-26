@@ -25,10 +25,8 @@ for s in $sessions ; do
 	# sweep the runs;
 	for r in $runs ; do
 
-		# "AllScans.txt" contains 
-		# dir. paths to every scan. 
-		echo /session_"$s"/run_"$r" \
-		>> "$Subdir"/AllScans.txt  
+		# "AllScans.txt" contains dir. paths to every scan. 
+		echo /session_"$s"/run_"$r" >> "$Subdir"/AllScans.txt  
 
 	done
 
@@ -89,13 +87,10 @@ N4BiasFieldCorrection -d 3 -i "$Subdir"/func/rest/"$AllScans"/Mean.nii.gz -o ["$
 rm "$Subdir"/func/rest/"$AllScans"/Rest_E1.nii.gz # remove intermediate file;
 
 # resample bias field image (ANTs --> FSL orientation);
-flirt -in "$Subdir"/func/rest/"$AllScans"/Bias_field.nii.gz -ref "$Subdir"/func/rest/"$AllScans"/Mean.nii.gz -applyxfm \
--init "$MEDIR"/res0urces/ident.mat -out "$Subdir"/func/rest/"$AllScans"/Bias_field.nii.gz -interp spline
+flirt -in "$Subdir"/func/rest/"$AllScans"/Bias_field.nii.gz -ref "$Subdir"/func/rest/"$AllScans"/Mean.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat -out "$Subdir"/func/rest/"$AllScans"/Bias_field.nii.gz -interp spline
 
 # remove signal bias; 
-fslmaths "$Subdir"/func/rest/"$AllScans"/Rest_AVG.nii.gz \
--div "$Subdir"/func/rest/"$AllScans"/Bias_field.nii.gz \
-"$Subdir"/func/rest/"$AllScans"/Rest_AVG.nii.gz
+fslmaths "$Subdir"/func/rest/"$AllScans"/Rest_AVG.nii.gz -div "$Subdir"/func/rest/"$AllScans"/Bias_field.nii.gz "$Subdir"/func/rest/"$AllScans"/Rest_AVG.nii.gz
 
 # remove some intermediate files;
 rm "$Subdir"/func/rest/"$AllScans"/Mean*.nii.gz
@@ -113,9 +108,7 @@ mcflirt -dof "$DOF" -stages 3 -plots -in "$Subdir"/func/rest/"$AllScans"/Rest_AV
 rm "$Subdir"/func/rest/"$AllScans"/MCF.nii.gz # remove .nii output; not used moving forward 
 
 # perform slice time correction; using custom timing file;
-slicetimer -i "$Subdir"/func/rest/"$AllScans"/Rest_AVG.nii.gz \
--o "$Subdir"/func/rest/"$AllScans"/Rest_AVG.nii.gz -r $tr \
---tcustom="$Subdir"/func/rest/"$AllScans"/SliceTiming.txt 
+slicetimer -i "$Subdir"/func/rest/"$AllScans"/Rest_AVG.nii.gz -o "$Subdir"/func/rest/"$AllScans"/Rest_AVG.nii.gz -r $tr --tcustom="$Subdir"/func/rest/"$AllScans"/SliceTiming.txt 
 
 # now run another MCFLIRT; specify average sbref as ref. vol & output transformation matrices;
 mcflirt -dof "$DOF" -mats -stages 4 -in "$Subdir"/func/rest/"$AllScans"/Rest_AVG.nii.gz -r "$IntermediateCoregTarget" -out "$Subdir"/func/rest/"$AllScans"/Rest_AVG_mcf 
@@ -125,26 +118,20 @@ rm "$Subdir"/func/rest/"$AllScans"/Rest_AVG*.nii.gz # delete intermediate images
 for e in $(seq 1 1 "$n_te") ; do
 
 	# copy over echo "e"; 
-	cp "$Subdir"/func/unprocessed/rest/"$AllScans"/Rest*_E"$e".nii.gz \
-	"$Subdir"/func/rest/"$AllScans"/Rest_E"$e".nii.gz
+	cp "$Subdir"/func/unprocessed/rest/"$AllScans"/Rest*_E"$e".nii.gz "$Subdir"/func/rest/"$AllScans"/Rest_E"$e".nii.gz
 
 	# remove the first few volumes if needed;
 	if [[ -f "$Subdir"/func/rest/"$AllScans"/rmVols.txt ]]; then
-		fslroi "$Subdir"/func/rest/"$AllScans"/Rest_E"$e".nii.gz "$Subdir"/func/rest/"$AllScans"/Rest_E"$e".nii.gz \
-		"$rmVols" `expr $nVols - $rmVols`
+		fslroi "$Subdir"/func/rest/"$AllScans"/Rest_E"$e".nii.gz "$Subdir"/func/rest/"$AllScans"/Rest_E"$e".nii.gz "$rmVols" `expr $nVols - $rmVols`
 	fi
 
 	# perform slice time correction using custom timing file;
-	slicetimer -i "$Subdir"/func/rest/"$AllScans"/Rest_E"$e".nii.gz \
-	--tcustom="$Subdir"/func/rest/"$AllScans"/slice_times.txt \
-	-r $tr -o "$Subdir"/func/rest/"$AllScans"/Rest_E"$e".nii.gz
+	slicetimer -i "$Subdir"/func/rest/"$AllScans"/Rest_E"$e".nii.gz --tcustom="$Subdir"/func/rest/"$AllScans"/slice_times.txt -r $tr -o "$Subdir"/func/rest/"$AllScans"/Rest_E"$e".nii.gz
 
 	# split original data into individual volumes;
-	fslsplit "$Subdir"/func/rest/"$AllScans"/Rest_E"$e".nii.gz \
-	"$Subdir"/func/rest/"$AllScans"/Rest_AVG_mcf.mat/vol_ -t 
+	fslsplit "$Subdir"/func/rest/"$AllScans"/Rest_E"$e".nii.gz "$Subdir"/func/rest/"$AllScans"/Rest_AVG_mcf.mat/vol_ -t 
 
-	# define affine transformation 
-	# matrices and associated target images; 
+	# define affine transformation matrices and associated target images; 
 	mats=("$Subdir"/func/rest/"$AllScans"/Rest_AVG_mcf.mat/MAT_*)
 	images=("$Subdir"/func/rest/"$AllScans"/Rest_AVG_mcf.mat/vol_*.nii.gz)
 
@@ -152,15 +139,13 @@ for e in $(seq 1 1 "$n_te") ; do
 	for (( i=0; i<${#images[@]}; i++ )); do
 
 		# warp image into 2mm MNI atlas space using a single spline transformation; 
-		applywarp --interp=spline --in="${images["$i"]}" --premat="${mats["$i"]}" \
-		--warp="$Intermediate2ACPCWarp" --out="${images["$i"]}" --ref="$AtlasTemplate"
+		applywarp --interp=spline --in="${images["$i"]}" --premat="${mats["$i"]}" --warp="$Intermediate2ACPCWarp" --out="${images["$i"]}" --ref="$AtlasTemplate"
 
 	done
 
 	# merge corrected images into a single file & perform a brain extraction
 	fslmerge -t "$Subdir"/func/rest/"$AllScans"/Rest_E"$e"_acpc.nii.gz "$Subdir"/func/rest/"$AllScans"/Rest_AVG_mcf.mat/*.nii.gz
-	fslmaths "$Subdir"/func/rest/"$AllScans"/Rest_E"$e"_acpc.nii.gz -mas "$Subdir"/func/xfms/rest/T1w_acpc_brain_func_mask.nii.gz \
-	"$Subdir"/func/rest/"$AllScans"/Rest_E"$e"_acpc.nii.gz # note: this step reduces file size, which is generally desirable but not absolutely needed.
+	fslmaths "$Subdir"/func/rest/"$AllScans"/Rest_E"$e"_acpc.nii.gz -mas "$Subdir"/func/xfms/rest/T1w_acpc_brain_func_mask.nii.gz "$Subdir"/func/rest/"$AllScans"/Rest_E"$e"_acpc.nii.gz # note: this step reduces file size, which is generally desirable but not absolutely needed.
 
 	# remove some intermediate files;
 	rm "$Subdir"/func/rest/"$AllScans"/Rest_AVG_mcf.mat/*.nii.gz # split volumes
@@ -182,9 +167,7 @@ flirt -in "$Subdir"/func/rest/"$AllScans"/Bias_field.nii.gz -ref "$Subdir"/func/
 for e in $(seq 1 1 "$n_te") ; do
 
 	# correct for signal inhomog.;
-	fslmaths "$Subdir"/func/rest/"$AllScans"/Rest_E"$e"_acpc.nii.gz \
-	-div "$Subdir"/func/rest/"$AllScans"/Bias_field.nii.gz \
-	"$Subdir"/func/rest/"$AllScans"/Rest_E"$e"_acpc.nii.gz
+	fslmaths "$Subdir"/func/rest/"$AllScans"/Rest_E"$e"_acpc.nii.gz -div "$Subdir"/func/rest/"$AllScans"/Bias_field.nii.gz "$Subdir"/func/rest/"$AllScans"/Rest_E"$e"_acpc.nii.gz
 
 done
 
