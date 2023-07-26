@@ -6,7 +6,7 @@ MEDIR=$1
 Subject=$2
 StudyFolder=$3
 Subdir="$StudyFolder"/"$Subject"
-SUBJECTS_DIR="$Subdir"/anat/T1w/ # note: this is used for "bbregister" calls;
+SUBJECTS_DIR="$Subdir"/anat/T1w # note: this is used for "bbregister" calls;
 AtlasTemplate=$4
 DOF=$5
 NTHREADS=$6
@@ -24,12 +24,11 @@ module load matlab/R2021a
 # & write out some .txt files that will be used during preprocessing
 
 # fresh workspace dir.
-rm -rf "$Subdir"/workspace/ > /dev/null 2>&1
-mkdir "$Subdir"/workspace/ > /dev/null 2>&1
+rm -rf "$Subdir"/workspace > /dev/null 2>&1
+mkdir "$Subdir"/workspace > /dev/null 2>&1
 
 # create temp. find_epi_params.m 
-cp -rf "$MEDIR"/res0urces/find_epi_params.m \
-"$Subdir"/workspace/temp.m
+cp -rf "$MEDIR"/res0urces/find_epi_params.m "$Subdir"/workspace/temp.m
 
 # define some Matlab variables;
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m
@@ -40,7 +39,7 @@ cd "$Subdir"/workspace/ # run script via Matlab
 matlab -nodesktop -nosplash -r "temp; exit" > /dev/null 2>&1 
 
 # delete some files;
-rm -rf "$Subdir"/workspace/
+rm -rf "$Subdir"/workspace
 cd "$Subdir" # go back to subject dir. 
 
 # next, we loop through all scans and create SBrefs
@@ -97,8 +96,8 @@ for s in $sessions ; do
 		cp "$Subdir"/func/unprocessed/rest/session_"$s"/run_"$r"/SBref*_E1.nii.gz "$WDIR"/TMP_1.nii.gz
 		
 		# estimate field inhomog. & resample bias field image (ANTs --> FSL orientation);
-		N4BiasFieldCorrection -d 3 -i "$WDIR"/TMP_1.nii.gz -o ["$WDIR"/TMP_restored.nii.gz, "$WDIR"/Bias_field_"$s"_"$r".nii.gz]
-		flirt -in "$WDIR"/Bias_field_"$s"_"$r".nii.gz -ref "$WDIR"/TMP_1.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat -out "$WDIR"/Bias_field_"$s"_"$r".nii.gz -interp spline # 
+		N4BiasFieldCorrection -d 3 -i "$WDIR"/TMP_1.nii.gz -o ["$WDIR"/TMP_restored.nii.gz,"$WDIR"/Bias_field_"$s"_"$r".nii.gz] # CHANGED: spaces in brackets were causing a parsing error
+		flirt -in "$WDIR"/Bias_field_"$s"_"$r".nii.gz -ref "$WDIR"/TMP_1.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat -out "$WDIR"/Bias_field_"$s"_"$r".nii.gz -interp spline
 
 		# set back 
 		# to zero;
@@ -138,8 +137,7 @@ images=("$WDIR"/SBref_*.nii.gz)
 if [ "${#images[@]}" \> 1 ]; then
 
 	# align  and average the single-band reference (SBref) images;
-	"$MEDIR"/res0urces/FuncAverage -n -o "$Subdir"/func/xfms/rest/AvgSBref.nii.gz \
-	"$WDIR"/SBref_*.nii.gz > /dev/null 2>&1 
+	"$MEDIR"/res0urces/FuncAverage -n -o "$Subdir"/func/xfms/rest/AvgSBref.nii.gz "$WDIR"/SBref_*.nii.gz > /dev/null 2>&1 
 
 else
 
@@ -156,7 +154,7 @@ cp -rf "$Subdir"/anat/T1w/"$Subject" "$Subdir"/anat/T1w/freesurfer > /dev/null 2
 EchoSpacing=$(cat $Subdir/func/xfms/rest/EffectiveEchoSpacing.txt) 
 
 # register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using average field map); 
-"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y #> /dev/null 2>&1 # note: need to manually set --pedir
+"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y > /dev/null 2>&1 # note: need to manually set --pedir
 
 applywarp --interp=spline --in="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg.nii.gz --warp="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg_warp.nii.gz
 
@@ -195,7 +193,7 @@ runs=$(seq 1 1 "${#runs[@]}")
 for r in $runs ; do
 
 	# check to see if this scan has a field map or not;
-	if [ -f "$Subdir/func/field_maps/AllFMs/FM_rads_acpc_S"$Sessions"_R"$r".nii.gz" ]; then
+	if [-f "$Subdir/func/field_maps/AllFMs/FM_rads_acpc_S"$Sessions"_R"$r".nii.gz"]; then
 
 		# define the effective echo spacing;
 		EchoSpacing=$(cat "$Subdir"/func/rest/session_"$Sessions"/run_"$r"/EffectiveEchoSpacing.txt) 
@@ -223,6 +221,9 @@ for r in $runs ; do
 	flirt -dof "$DOF" -in "$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz -ref "$Subdir"/func/xfms/rest/AvgSBref.nii.gz -out "$Subdir"/func/qa/CoregQA/SBref2AvgSBref_S"$Sessions"_R"$r".nii.gz -omat "$Subdir"/func/qa/CoregQA/SBref2AvgSBref_S"$Sessions"_R"$r".mat
 	applywarp --interp=spline --in="$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz --premat="$Subdir"/func/qa/CoregQA/SBref2AvgSBref_S"$Sessions"_R"$r".mat --warp="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz --out="$Subdir"/func/qa/CoregQA/SBref2acpc_EpiReg+BBR_AvgFM_S"$Sessions"_R"$r".nii.gz --ref="$AtlasTemplate"
 	applywarp --interp=spline --in="$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz --premat="$Subdir"/func/qa/CoregQA/SBref2AvgSBref_S"$Sessions"_R"$r".mat --warp="$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz --out="$Subdir"/func/qa/CoregQA/SBref2nonlin_EpiReg+BBR_AvgFM_S"$Sessions"_R"$r".nii.gz --ref="$AtlasTemplate"
+
+done
+
 # END FUNCTION ----------------------------------------------------------
 
 # finally, lets create files that will be needed later on 
@@ -235,15 +236,14 @@ flirt -interp nearestneighbour -in "$Subdir"/anat/MNINonLinear/T1w_restore_brain
 fslmaths "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func.nii.gz -bin "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func_mask.nii.gz # this is a binarized version of the T1w_nonlin_brain.nii.gz image in 2mm atlas space; used for masking functional data
 
 # remove tmp. freesurfer folder;
-rm -rf "$Subdir"/anat/T1w/freesurfer/ 
+rm -rf "$Subdir"/anat/T1w/freesurfer 
 
 # fresh workspace dir.
-rm -rf "$Subdir"/workspace/ > /dev/null 2>&1
-mkdir "$Subdir"/workspace/ > /dev/null 2>&1
+rm -rf "$Subdir"/workspace > /dev/null 2>&1
+mkdir "$Subdir"/workspace > /dev/null 2>&1
 
 # create temp. make_precise_subcortical_labels.m 
-cp -rf "$MEDIR"/res0urces/make_precise_subcortical_labels.m \
-"$Subdir"/workspace/temp.m
+cp -rf "$MEDIR"/res0urces/make_precise_subcortical_labels.m "$Subdir"/workspace/temp.m
 
 # define some Matlab variables;
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m
@@ -254,7 +254,7 @@ cd "$Subdir"/workspace/ # run script via Matlab
 matlab -nodesktop -nosplash -r "temp; exit" > /dev/null 2>&1 
 
 # delete some files;
-rm -rf "$Subdir"/workspace/
+rm -rf "$Subdir"/workspace
 cd "$Subdir" # go back to subject dir. 
 
 # finally, evaluate whether scan-specific or average field maps 
@@ -262,16 +262,15 @@ cd "$Subdir" # go back to subject dir.
 # then generate a movie summarizing the results 
 
 # fresh workspace dir.
-rm -rf "$Subdir"/workspace/ > /dev/null 2>&1
-mkdir "$Subdir"/workspace/ > /dev/null 2>&1
+rm -rf "$Subdir"/workspace > /dev/null 2>&1
+mkdir "$Subdir"/workspace > /dev/null 2>&1
 
 # create temporary CoregQA.m 
-cp -rf "$MEDIR"/res0urces/coreg_qa.m \
-"$Subdir"/workspace/temp.m
+cp -rf "$MEDIR"/res0urces/coreg_qa.m "$Subdir"/workspace/temp.m
 
 # define some Matlab variables;
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m
 echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1 		
 cd "$Subdir"/workspace/ # run script via Matlab 
 matlab -nodesktop -nosplash -r "temp; exit" > /dev/null 2>&1
-rm -rf "$Subdir"/workspace/ > /dev/null 2>&1
+rm -rf "$Subdir"/workspace > /dev/null 2>&1
