@@ -20,14 +20,13 @@ module load afni/afni
 module load ants-2.4.0-gcc-8.2.0-ehibrhi
 module load matlab/R2021a
 
-# first, lets read in all the .json files associated with each scan 
-# & write out some .txt files that will be used during preprocessing
+# First, lets read in all the .json files associated with each scan & write out some .txt files that will be used during preprocessing
 
 # fresh workspace dir.
 rm -rf "$Subdir"/workspace > /dev/null 2>&1
 mkdir "$Subdir"/workspace > /dev/null 2>&1
 
-# create temp. find_epi_params.m 
+# create temporary find_epi_params.m 
 cp -rf "$MEDIR"/res0urces/find_epi_params.m "$Subdir"/workspace/temp.m
 
 # define some Matlab variables;
@@ -42,9 +41,8 @@ matlab -nodesktop -nosplash -r "temp; exit" > /dev/null 2>&1
 rm -rf "$Subdir"/workspace
 cd "$Subdir" # go back to subject dir. 
 
-# next, we loop through all scans and create SBrefs
-# (average of first few echoes) for each scan. This is used (when needed) 
-# as an intermediate target for co-registeration.
+# next, we loop through all scans and create SBrefs (average of first few echoes) for each scan
+# NOTE: this is used (when needed) as an intermediate target for co-registeration
 
 # define & create a temporary directory;
 mkdir -p "$Subdir"/func/rest/AverageSBref
@@ -127,8 +125,7 @@ for s in $sessions ; do
 
 done
 
-# co-register all SBrefs and create an 
-# average SBref for cross-scan allignment 
+# Co-register all SBrefs and create an average SBref for cross-scan allignment 
 
 # build a list of all SBrefs;
 images=("$WDIR"/SBref_*.nii.gz)
@@ -172,10 +169,8 @@ convertwarp --ref="$AtlasTemplate" --warp1="$Subdir"/func/xfms/rest/AvgSBref2acp
 applywarp --interp=spline --in="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR.nii.gz --warp="$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz
 invwarp -w "$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz -o "$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR_inv_warp.nii.gz --ref="$Subdir"/func/xfms/rest/AvgSBref.nii.gz # generate an inverse warp; atlas --> distorted SBref image 
 
-# now, lets also co-register individual 
-# SBrefs to the target anatomical image;
-# note: we will compare which is best 
-# (avg. field map vs. scan-specific) later on
+# now, lets also co-register individual SBrefs to the target anatomical image;
+# NOTE: we will compare which is best (avg. field map vs. scan-specific) later on
 
 # create & define the "CoregQA" folder;
 mkdir -p "$Subdir"/func/qa/CoregQA > /dev/null 2>&1
@@ -200,7 +195,7 @@ for r in $runs ; do
 	
 		# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using scan-specific field map); 
 		"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$Sessions"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$Sessions"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$Sessions"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$Sessions"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y > /dev/null 2>&1 # note: need to manually set --pedir
-		applywarp --interp=spline --in="$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz --ref="5" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$Sessions"_R"$r".nii.gz --warp="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$Sessions"_R"$r"_warp.nii.gz
+		applywarp --interp=spline --in="$Subdir"/func/rest/session_"$Sessions"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$Sessions"_R"$r".nii.gz --warp="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$Sessions"_R"$r"_warp.nii.gz
 
 		# use BBRegister (BBR) to fine-tune the existing co-registeration; output FSL style transformation matrix;
 		bbregister --s freesurfer --mov "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$Sessions"_R"$r".nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$Sessions"_R"$r".dat --6 --o "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$Sessions"_R"$r".nii.gz > /dev/null 2>&1 
@@ -226,8 +221,7 @@ done
 
 # END FUNCTION ----------------------------------------------------------
 
-# finally, lets create files that will be needed later on 
-# (brain mask and subcortical mask in functional space)
+# finally, lets create files that will be needed later on (brain mask and subcortical mask in functional space)
 
 # generate a set of functional brain mask (acpc + nonlin) in the atlas space; 
 flirt -interp nearestneighbour -in "$Subdir"/anat/T1w/T1w_acpc_dc_brain.nii.gz -ref "$AtlasTemplate" -out "$Subdir"/func/xfms/rest/T1w_acpc_brain_func.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat
