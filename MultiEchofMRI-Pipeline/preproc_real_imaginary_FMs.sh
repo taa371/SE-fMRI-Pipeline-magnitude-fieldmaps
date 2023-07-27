@@ -2,7 +2,7 @@
 # HRB; (hob4003@med.cornell.edu)
 
 StudyFolder=/Volumes/LACIE-SHARE/EVO_MEP_data/UW_MRI_data # location of Subject folder
-Subject=W389 # space delimited list of subject IDs (format like W001, W002, etc.)
+Subject=W182 # space delimited list of subject IDs (format like W001, W002, etc.)
 # NTHREADS=$3 # set number of threads
 Sessions=$(cat "$StudyFolder"/Sessions.txt)
 TE=2.46
@@ -17,6 +17,7 @@ for s in $Sessions; do
     cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_e2_imaginary.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
     cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_e1_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
     cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_e2_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
+    cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_imaginary_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
 done
 
 rm -r "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
@@ -27,6 +28,7 @@ for s in $Sessions; do
     mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_e2_imaginary.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
     mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_e1_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
     mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_e2_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
+    mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_imaginary_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
 done
 
 FieldMapFolder="$StudyFolder"/"$Subject"/func/unprocessed/field_maps
