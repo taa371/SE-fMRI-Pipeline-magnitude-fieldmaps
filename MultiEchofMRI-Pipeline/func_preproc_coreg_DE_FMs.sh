@@ -10,7 +10,7 @@ SUBJECTS_DIR="$Subdir"/anat/T1w # note: this is used for "bbregister" calls;
 AtlasTemplate=$4
 DOF=$5
 NTHREADS=$6
-StartSession=$7
+StartSession=1 # set manually here bc it wasn't being handed off to Matlab script
 
 module load Connectome_Workbench/1.5.0/Connectome_Workbench
 module load freesurfer/6.0.0
@@ -27,13 +27,14 @@ rm -rf "$Subdir"/workspace > /dev/null 2>&1
 mkdir "$Subdir"/workspace > /dev/null 2>&1
 
 # create temporary find_epi_params.m 
-cp -rf "$MEDIR"/res0urces/find_epi_params.m "$Subdir"/workspace/temp.m
+cp -rf "$MEDIR"/res0urces/find_epi_params2.m "$Subdir"/workspace
+mv "$Subdir"/workspace/find_epi_params2.m "$Subdir"/workspace/temp.m # rename in a separate line
 
 # define some Matlab variables;
-echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m
-echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1 		
-echo FuncName=["'rest'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1 		
-echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1  		
+echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m
+echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m #> /dev/null 2>&1 		
+echo FuncName=["'rest'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m #> /dev/null 2>&1 		
+echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m #> /dev/null 2>&1  		
 cd "$Subdir"/workspace/ # run script via Matlab 
 matlab -nodesktop -nosplash -r "temp; exit" #> /dev/null 2>&1 
 
@@ -49,21 +50,21 @@ mkdir -p "$Subdir"/func/rest/AverageSBref
 WDIR="$Subdir"/func/rest/AverageSBref
 
 # HRB -> need this code block if you are using other field maps besides spin-echo --------------------------------------
-cp -r "$Subdir"/func/unprocessed/rest/session_1 "$Subdir"/func/rest
-cp -r "$Subdir"/func/unprocessed/rest/session_2 "$Subdir"/func/rest
-mkdir "$Subdir"/func/xfms
-mkdir "$Subdir"/func/xfms/rest
-echo ".000690" >> "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt # (EVO echo spacing/dwell time in secs)
-echo "2.46" >> "$Subdir"/func/rest/session_1/run_1/TE.txt # (EVO TE in ms)
-echo "2.46" >> "$Subdir"/func/rest/session_2/run_1/TE.txt
+# cp -r "$Subdir"/func/unprocessed/rest/session_1 "$Subdir"/func/rest
+# cp -r "$Subdir"/func/unprocessed/rest/session_2 "$Subdir"/func/rest
+# mkdir "$Subdir"/func/xfms
+# mkdir "$Subdir"/func/xfms/rest
+# echo ".000690" >> "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt # (EVO echo spacing/dwell time in secs)
+# echo "2.46" >> "$Subdir"/func/rest/session_1/run_1/TE.txt # (EVO TE in ms)
+# echo "2.46" >> "$Subdir"/func/rest/session_2/run_1/TE.txt
 
 # This is not totally necessary, but it helps with troubleshooting to have copies in one place
-cp "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt "$Subdir"/func/xfms/rest # put a copy in rest dir (used later)
-cp "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt "$Subdir" # also put a copy in subdir for troubleshooting purposes
-cp "$Subdir"/func/rest/session_1/run_1/TE.txt "$Subdir" # put a copy in subdir for troubleshooting purposes
-mv "$Subdir"/TE.txt "$Subdir"/TE_S1.txt # rename
-cp "$Subdir"/func/rest/session_2/run_1/TE.txt "$Subdir" # put a copy in subdir for troubleshooting purposes
-mv "$Subdir"/TE.txt "$Subdir"/TE_S2.txt # rename
+# cp "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt "$Subdir"/func/xfms/rest # put a copy in rest dir (used later)
+# cp "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt "$Subdir" # also put a copy in subdir for troubleshooting purposes
+# cp "$Subdir"/func/rest/session_1/run_1/TE.txt "$Subdir" # put a copy in subdir for troubleshooting purposes
+# mv "$Subdir"/TE.txt "$Subdir"/TE_S1.txt # rename
+# cp "$Subdir"/func/rest/session_2/run_1/TE.txt "$Subdir" # put a copy in subdir for troubleshooting purposes
+# mv "$Subdir"/TE.txt "$Subdir"/TE_S2.txt # rename
 # ----------------------------------------------------------------------------------------------------------------------
 
 # count the number of sessions
