@@ -1,6 +1,6 @@
 #!/bin/bash
 # CJL; (cjl2007@med.cornell.edu)
-# HRB; (hob4003@med.cornell.edu)
+# hob4003; (hob4003@med.cornell.edu)
 
 MEDIR=$1
 Subject=$2
@@ -8,7 +8,7 @@ StudyFolder=$3
 Subdir="$StudyFolder"/"$Subject"
 SUBJECTS_DIR="$Subdir"/anat/T1w # note: this is used for "bbregister" calls;
 NTHREADS=$4
-StartSession=$5
+StartSession=1
 
 module load Connectome_Workbench/1.5.0/Connectome_Workbench
 module load freesurfer/6.0.0
@@ -23,11 +23,10 @@ rm -rf "$Subdir"/workspace/ > /dev/null 2>&1
 mkdir "$Subdir"/workspace/ > /dev/null 2>&1 
 
 # create a temp "find_fm_params.m"
-cp -rf "$MEDIR"/res0urces/find_fm_params.m \
-"$Subdir"/workspace/temp.m
+cp -rf "$MEDIR"/res0urces/find_fm_params.m "$Subdir"/workspace/temp.m # TEST
 
 # define some Matlab variables
-echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1  
+echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1  
 echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1
 echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1  		
 cd "$Subdir"/workspace/ # run script via Matlab 
@@ -52,12 +51,11 @@ for s in $sessions ; do
 	for r in $runs ; do
 
 		# check to see if this file exists or not;
-		# if [ -f "$Subdir/func/unprocessed/field_maps/AP_S"$s"_R"$r".nii.gz" ]; then # CHANGED (2023-07-24)
 		if [ -f "$Subdir/func/unprocessed/field_maps/FM_rads_S"$s"_R"$r".nii.gz" ]; then
 
 			# the "AllFMs.txt" file contains 
 			# dir. paths to every pair of field maps;
-			# touch "$Subdir"/AllFMs.txt # TEST 
+			touch "$Subdir"/AllFMs.txt
 			echo S"$s"_R"$r" >> "$Subdir"/AllFMs.txt  
 
 		fi
@@ -71,16 +69,16 @@ AllFMs=$(cat "$Subdir"/AllFMs.txt)
 rm "$Subdir"/AllFMs.txt # remove intermediate file;
 
 # create a white matter segmentation (.mgz --> .nii.gz);
-mri_binarize --i "$Subdir"/anat/T1w/"$Subject"/mri/aparc+aseg.mgz --wm --o "$Subdir"/anat/T1w/"$Subject"/mri/white.mgz > /dev/null 2>&1  # 2023-07-24 WORKED!
-mri_convert -i "$Subdir"/anat/T1w/"$Subject"/mri/white.mgz -o "$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --like "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz > /dev/null 2>&1   # create a white matter segmentation (.mgz --> .nii.gz); # 2023-07-24 WORKED!
+mri_binarize --i "$Subdir"/anat/T1w/"$Subject"/mri/aparc+aseg.mgz --wm --o "$Subdir"/anat/T1w/"$Subject"/mri/white.mgz > /dev/null 2>&1
+mri_convert -i "$Subdir"/anat/T1w/"$Subject"/mri/white.mgz -o "$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --like "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz > /dev/null 2>&1   # create a white matter segmentation (.mgz --> .nii.gz);
 
 # create clean tmp. copy of freesurfer folder;
 rm -rf "$Subdir"/anat/T1w/freesurfer > /dev/null 2>&1 
-cp -rf "$Subdir"/anat/T1w/"$Subject" "$Subdir"/anat/T1w/freesurfer > /dev/null 2>&1 # 2023-07-24 WORKED!
+cp -rf "$Subdir"/anat/T1w/"$Subject" "$Subdir"/anat/T1w/freesurfer > /dev/null 2>&1
 
 # create & define the FM "library";
 rm -rf "$Subdir"/func/field_maps/AllFMs > /dev/null 2>&1
-mkdir -p "$Subdir"/func/field_maps/AllFMs > /dev/null 2>&1 # 2023-07-24 WORKED!
+mkdir -p "$Subdir"/func/field_maps/AllFMs > /dev/null 2>&1
 WDIR="$Subdir"/func/field_maps/AllFMs
 
 for ThisFM in $AllFMs
@@ -90,12 +88,13 @@ do
 
     # copy over field map pair to workspace 
     cp -r "$Subdir"/func/unprocessed/field_maps/FM_rads_"$ThisFM".nii.gz "$WDIR"/FM_rads_"$ThisFM".nii.gz
-    # cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_brain_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz
+    cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_brain_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz # added for EVO data (already ran bet)
     cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_"$ThisFM".nii.gz
 
-    # temporary bet image
-    # NOTE: fid best bet params for UW ppts
-    bet "$WDIR"/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz -f 6 -N > /dev/null 2>&1
+    # temporary bet image (changed settings to what works for EVO data)
+    # bet "$WDIR"/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz -f 0.6 -N > /dev/null 2>&1
+
+    # for future use, add fsl_prepare_fieldmap() cmds here (did this part outside of pipeline for EVO)
 
     # register reference volume to the T1-weighted anatomical image; use bbr cost function 
     "$MEDIR"/res0urces/epi_reg_dof --epi="$WDIR"/FM_mag_"$ThisFM".nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz \

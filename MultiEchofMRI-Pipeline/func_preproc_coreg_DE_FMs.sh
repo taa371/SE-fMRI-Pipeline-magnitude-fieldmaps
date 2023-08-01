@@ -49,7 +49,8 @@ cd "$Subdir" # go back to subject dir.
 mkdir -p "$Subdir"/func/rest/AverageSBref
 WDIR="$Subdir"/func/rest/AverageSBref
 
-# HRB -> need this code block if you are using other field maps besides spin-echo --------------------------------------
+# HRB -> need this code block if there is no JSON file --------------------------------------
+# Create necessary files (if no ppts have JSON files)
 # cp -r "$Subdir"/func/unprocessed/rest/session_1 "$Subdir"/func/rest
 # cp -r "$Subdir"/func/unprocessed/rest/session_2 "$Subdir"/func/rest
 # mkdir "$Subdir"/func/xfms
@@ -59,12 +60,11 @@ WDIR="$Subdir"/func/rest/AverageSBref
 # echo "2.46" >> "$Subdir"/func/rest/session_2/run_1/TE.txt
 
 # This is not totally necessary, but it helps with troubleshooting to have copies in one place
-# cp "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt "$Subdir"/func/xfms/rest # put a copy in rest dir (used later)
-# cp "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt "$Subdir" # also put a copy in subdir for troubleshooting purposes
-# cp "$Subdir"/func/rest/session_1/run_1/TE.txt "$Subdir" # put a copy in subdir for troubleshooting purposes
-# mv "$Subdir"/TE.txt "$Subdir"/TE_S1.txt # rename
-# cp "$Subdir"/func/rest/session_2/run_1/TE.txt "$Subdir" # put a copy in subdir for troubleshooting purposes
-# mv "$Subdir"/TE.txt "$Subdir"/TE_S2.txt # rename
+#cp "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt "$Subdir" # also put a copy in subdir for troubleshooting purposes
+#cp "$Subdir"/func/rest/session_1/run_1/TE.txt "$Subdir" # put a copy in subdir for troubleshooting purposes
+#mv "$Subdir"/TE.txt "$Subdir"/TE_S1.txt # rename
+#cp "$Subdir"/func/rest/session_2/run_1/TE.txt "$Subdir" # put a copy in subdir for troubleshooting purposes
+#mv "$Subdir"/TE.txt "$Subdir"/TE_S2.txt # rename
 # ----------------------------------------------------------------------------------------------------------------------
 
 # count the number of sessions

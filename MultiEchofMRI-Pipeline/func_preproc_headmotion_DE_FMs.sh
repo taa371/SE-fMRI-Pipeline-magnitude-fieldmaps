@@ -9,7 +9,7 @@ Subdir="$StudyFolder"/"$Subject"
 AtlasTemplate=$4
 DOF=$5
 NTHREADS=$6
-StartSession=$7
+StartSession=1
 
 # count the number of sessions
 sessions=("$Subdir"/func/rest/session_*)
@@ -211,3 +211,5 @@ done
 
 # # delete temp. workspace;
 # rm -rf "$Subdir"/workspace
+
+
