@@ -25,10 +25,8 @@ for s in $sessions ; do
 	# sweep the runs;
 	for r in $runs ; do
 
-		# "AllScans.txt" contains 
-		# dir. paths to every scan. 
-		echo /session_"$s"/run_"$r" \
-		>> "$Subdir"/AllScans.txt  
+		# "AllScans.txt" contains dir. paths to every scan. 
+		echo /session_"$s"/run_"$r" >> "$Subdir"/AllScans.txt  
 
 	done
 
