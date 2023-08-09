@@ -12,65 +12,63 @@ TE=2.46
 # module load fsl/6.0.4
 
 # Fresh destination dir
-for s in $Sessions; do
-    cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_e1_imaginary.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
-    cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_e2_imaginary.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
-    cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_e1_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
-    cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_e2_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
-    cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_imaginary_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
-done
+# for s in $Sessions; do
+#     cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_e1_imaginary.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
+#     cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_e2_imaginary.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
+#     cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_e1_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
+#     cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_e2_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
+#     cp "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/S"$s"_AxialField_Mapping_imaginary_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed
+# done
 
-rm -r "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
-mkdir "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
+# rm -r "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
+# mkdir "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
 
-for s in $Sessions; do
-    mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_e1_imaginary.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
-    mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_e2_imaginary.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
-    mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_e1_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
-    mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_e2_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
-    mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_imaginary_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
-done
+# for s in $Sessions; do
+#     mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_e1_imaginary.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
+#     mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_e2_imaginary.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
+#     mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_e1_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
+#     mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_e2_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
+#     mv "$StudyFolder"/"$Subject"/func/unprocessed/S"$s"_AxialField_Mapping_imaginary_real.nii.gz "$StudyFolder"/"$Subject"/func/unprocessed/field_maps
+# done
+
+mkdir "$StudyFolder"/"$Subject"/func/unprocessed/field_maps/intermediate"
 
 FieldMapFolder="$StudyFolder"/"$Subject"/func/unprocessed/field_maps
 
 for s in $Sessions; do
 
     # Step 1: merge the real field maps from the different echoes
-    fslmerge -t "$FieldMapFolder"/S"$s"_real_merge "$FieldMapFolder"/S"$s"_AxialField_Mapping_e1_real.nii.gz "$FieldMapFolder"/S"$s"_AxialField_Mapping_e2_real.nii.gz
+    fslmerge -t "$FieldMapFolder"/intermediate/S"$s"_real_merge "$FieldMapFolder"/S"$s"_AxialField_Mapping_e1_real.nii.gz "$FieldMapFolder"/S"$s"_AxialField_Mapping_e2_real.nii.gz
 
     # Step 2: merge the imaginary field maps from the different echoes
-    fslmerge -t "$FieldMapFolder"/S"$s"_imag_merge "$FieldMapFolder"/S"$s"_AxialField_Mapping_e1_imaginary.nii.gz "$FieldMapFolder"/S"$s"_AxialField_Mapping_e2_imaginary.nii.gz
+    fslmerge -t "$FieldMapFolder"/intermediate/S"$s"_imag_merge "$FieldMapFolder"/S"$s"_AxialField_Mapping_e1_imaginary.nii.gz "$FieldMapFolder"/S"$s"_AxialField_Mapping_e2_imaginary.nii.gz
 
     # Step 3: Combine real and imaginary merged images into a complex image
-    fslcomplex -complex "$FieldMapFolder"/S"$s"_real_merge "$FieldMapFolder"/S"$s"_imag_merge "$FieldMapFolder"/S"$s"_complex
+    fslcomplex -complex "$FieldMapFolder"/intermediate/S"$s"_real_merge "$FieldMapFolder"/intermediate/S"$s"_imag_merge "$FieldMapFolder"/intermediate/S"$s"_complex
 
     # Step 4: Extract magnitude image from the complex image
-    fslcomplex -realabs "$FieldMapFolder"/S"$s"_complex "$FieldMapFolder"/FM_mag_S"$s"_R1.nii.gz 0 1 # final output magnitude image
+    fslcomplex -realabs "$FieldMapFolder"/intermediate/S"$s"_complex "$FieldMapFolder"/FM_mag_S"$s"_R1.nii.gz 0 1 # final output magnitude image
 
     # Step 5: Extract two phase images from the complex image
-    fslcomplex -realphase "$FieldMapFolder"/S"$s"_complex "$FieldMapFolder"/S"$s"_phase0_rad 0 1
-    fslcomplex -realphase "$FieldMapFolder"/S"$s"_complex "$FieldMapFolder"/S"$s"_phase1_rad 1 1
+    fslcomplex -realphase "$FieldMapFolder"/intermediate/S"$s"_complex "$FieldMapFolder"/intermediate/S"$s"_phase0_rad 0 1
+    fslcomplex -realphase "$FieldMapFolder"/intermediate/S"$s"_complex "$FieldMapFolder"/intermediate/S"$s"_phase1_rad 1 1
 
     # Step 6: Unwrap the phase images
-    prelude -a "$FieldMapFolder"/FM_mag_S"$s"_R1.nii.gz -p "$FieldMapFolder"/S"$s"_phase0_rad -o "$FieldMapFolder"/S"$s"_phase0_unwrapped_rad
-    prelude -a "$FieldMapFolder"/FM_mag_S"$s"_R1.nii.gz -p "$FieldMapFolder"/S"$s"_phase1_rad -o "$FieldMapFolder"/S"$s"_phase1_unwrapped_rad
+    prelude -a "$FieldMapFolder"/FM_mag_S"$s"_R1.nii.gz -p "$FieldMapFolder"/intermediate/S"$s"_phase0_rad -o "$FieldMapFolder"/intermediate/S"$s"_phase0_unwrapped_rad
+    prelude -a "$FieldMapFolder"/FM_mag_S"$s"_R1.nii.gz -p "$FieldMapFolder"/intermediate/S"$s"_phase1_rad -o "$FieldMapFolder"/intermediate/S"$s"_phase1_unwrapped_rad
 
     # Step 7: Subtract phase images, multiply by 1000 and divide by the TE to get a combined phase image
-    fslmaths "$FieldMapFolder"/S"$s"_phase0_unwrapped_rad -sub "$FieldMapFolder"/S"$s"_phase1_unwrapped_rad -mul 1000 -div $TE "$FieldMapFolder"/S"$s"_fieldmap_rad -odt float
+    fslmaths "$FieldMapFolder"/intermediate/S"$s"_phase0_unwrapped_rad -sub "$FieldMapFolder"/intermediate/S"$s"_phase1_unwrapped_rad -mul 1000 -div $TE "$FieldMapFolder"/intermediate/S"$s"_fieldmap_rad -odt float
 
     # Step 8: Use FSL Fugue to smooth the phase images
-    fugue --loadfmap="$FieldMapFolder"/S"$s"_fieldmap_rad -s 1 --savefmap="$FieldMapFolder"/S"$s"_fieldmap_rad
-    fugue --loadfmap="$FieldMapFolder"/S"$s"_fieldmap_rad --despike --savefmap="$FieldMapFolder"/S"$s"_fieldmap_rad
-    fugue --loadfmap="$FieldMapFolder"/S"$s"_fieldmap_rad -m --savefmap="$FieldMapFolder"/FM_rads_S"$s"_R1.nii.gz # final output phase image
+    fugue --loadfmap="$FieldMapFolder"/intermediate/S"$s"_fieldmap_rad -s 1 --savefmap="$FieldMapFolder"/intermediate/S"$s"_fieldmap_rad
+    fugue --loadfmap="$FieldMapFolder"/intermediate/S"$s"_fieldmap_rad --despike --savefmap="$FieldMapFolder"/intermediate/S"$s"_fieldmap_rad
+    fugue --loadfmap="$FieldMapFolder"/intermediate/S"$s"_fieldmap_rad -m --savefmap="$FieldMapFolder"/FM_rads_S"$s"_R1.nii.gz # final output phase image
+
+    # move raw files into intermediate folder
+    mv "$FieldMapFolder"/S"$s"_AxialField_Mapping_e1_real.nii.gz "$FieldMapFolder"/intermediate
+    mv "$FieldMapFolder"/S"$s"_AxialField_Mapping_e2_real.nii.gz "$FieldMapFolder"/intermediate
+    mv "$FieldMapFolder"/S"$s"_AxialField_Mapping_e1_imaginary.nii.gz "$FieldMapFolder"/intermediate
+    mv "$FieldMapFolder"/S"$s"_AxialField_Mapping_e2_imaginary.nii.gz "$FieldMapFolder"/intermediate
 
 done
-
-# Copy preprocessed field maps to dirs on the cluster and rename
-# for s in $Sessions; do
-#     cp "$FieldMapFolder"/S"$s"_fieldmap_rad_smooth.nii.gz "$ClusterDir"/"$Subject"/func/unprocessed/field_maps
-#     mv "$ClusterDir"/"$Subject"/func/unprocessed/field_maps/S"$s"_fieldmap_rad_smooth.nii.gz "$ClusterDir"/"$Subject"/func/unprocessed/field_maps/FM_rads_S"$s"_R1.nii.gz
-
-#     cp "$FieldMapFolder"/S"$s"_mag "$ClusterDir"/"$Subject"/func/unprocessed/field_maps
-#     mv "$ClusterDir"/"$Subject"/func/unprocessed/field_maps/S"$s"_mag.nii.gz "$ClusterDir"/"$Subject"/func/unprocessed/field_maps/FM_mag_S"$s"_R1.nii.gz
-
-# done
