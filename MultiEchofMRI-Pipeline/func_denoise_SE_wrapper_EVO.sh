@@ -35,9 +35,10 @@ Subdir="$StudyFolder"/"$Subject"
 # define some directories containing 
 # custom matlab scripts and various atlas files;
 MEDIR="/athena/victorialab/scratch/hob4003/ME_Pipeline/MEF-P-HB/MultiEchofMRI-Pipeline"
-CiftiList="$MEDIR"/config/SE_CiftiList.txt # .txt file containing list of files to be mapped to surface. user can specify OCME, OCME+MEICA, OCME+MEICA+MGTR, and/or OCME+MEICA+MGTR_Betas
-CiftiListma="$MEDIR"/config/SE_CiftiList2.txt # .txt file containing list of files to be mapped to surface. user can specify OCME, OCME+MEICA, OCME+MEICA+MGTR, and/or OCME+MEICA+MGTR_Betas
-CiftiListmg="$MEDIR"/config/SE_CiftiList3.txt
+CiftiList1="$MEDIR"/config/EVO_CiftiList_MGTR.txt # .txt file containing list of files on which to perform MGTR before ICA-AROMA (use if you intend to skip ICA-AROMA entirely)
+CiftiList2="$MEDIR"/config/EVO_CiftiList_ICAAROMA.txt # .txt file containing list of files on which to perform MGTR after ICA-AROMA
+CiftiList3="$MEDIR"/config/EVO_CiftiList_ICAAROMA+MGTR.txt # .txt file containing list of files to be mapped to surface. user can specify OCME, OCME+MEICA, OCME+MEICA+MGTR, and/or OCME+MEICA+MGTR_Betas
+
 # these variables should not be changed unless you have a very good reason
 DOF=6 # this is the degrees of freedom (DOF) used for SBref --> T1w and EPI --> SBref coregistrations;
 AtlasTemplate="$MEDIR/res0urces/FSL/MNI152_T1_2mm_brain.nii.gz" # define a lowres MNI template; 
@@ -49,27 +50,28 @@ PATH=$PATH:/usr/lib/python2.7/site-packages # added this to find python 2.7 pack
 
 # Testing ------------------------------------------------------------------------------
 
-#echo -e "AROMA + smooth + vol2surf"
+echo -e "Denoising Pipeline: AROMA + MGTR + smooth + vol2surf"
 
-# ICA AROMA signal denoising for Single-Echo data;
+# OPTION 1: perform signal-decay denoising on pre-ICAAROMA files (do this to skip AROMA altogether)
+# echo -e "MGTR without ICA-AROMA for subject {$2}..."
+#"$MEDIR"/func_denoise_mgtr_SE.sh "$Subject" "$StudyFolder" \
+#"$MEDIR" "$CiftiList1" # pre-AROMA Ciftilist
+
+# OPTION 2, step 1: ICA AROMA signal denoising for Single-Echo data
+# echo -e "ICA-AROMA for subject {$2}..."
 #"$MEDIR"/ICAAROMA_SE_denoise_DE_FMs.sh "$MEDIR" "$Subject" "$StudyFolder" \
 #"$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
 
-echo -e "mgtr TIME FOR {$2}"
-
-# perform signal-decay denoising without ICA-AROMA; 
-#"$MEDIR"/func_denoise_mgtr_SE.sh "$Subject" "$StudyFolder" \
-#"$MEDIR" "$CiftiList" # pre-AROMA Ciftilist
-
-# perform signal-decay denoising after ICA-AROMA; 
+# OPTION 2, step 2: perform signal-decay denoising on post-ICAAROMA files
+echo -e "Post-AROMA MGTR for subject {$2}..."
 "$MEDIR"/func_denoise_mgtr_SE.sh "$Subject" "$StudyFolder" \
-"$MEDIR" "$CiftiListma" # post-AROMA
+"$MEDIR" "$CiftiList2" # post-AROMA CiftiList
 
-
-# perform signal-decay denoising; 
+# project AROMA output volumes onto a surface
+#echo -e "Project volumes to surface for subject {$2}..."
 #"$MEDIR"/func_vol2surf.sh "$Subject" "$StudyFolder" \
-#"$MEDIR" "$CiftiListmg" "1" # project AROMA output onto surface
+#"$MEDIR" "$CiftiList3" "1"
 
-# perform signal-decay denoising; 
-#"$MEDIR"/func_smooth.sh "$Subject" "$StudyFolder" \
-#"1.75" "$CiftiListmg" # 1.75 mm smoothing before projecting onto a surface
+# 1.75 mm smoothing before projecting onto a surface
+#echo -e "Smooth and project to surface for subject {$2}..."
+#"$MEDIR"/func_smooth.sh "$Subject" "$StudyFolder" "1.75" "$CiftiList3"
