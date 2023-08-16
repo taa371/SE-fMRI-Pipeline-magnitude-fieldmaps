@@ -64,7 +64,7 @@ echo -e "Denoising Pipeline: AROMA + MGTR + smooth + vol2surf"
 
 # OPTION 2, step 2: perform signal-decay denoising on post-ICAAROMA files
 echo -e "Post-AROMA MGTR for subject {$2}..."
-"$MEDIR"/func_denoise_mgtr_SE.sh "$Subject" "$StudyFolder" \
+"$MEDIR"/func_denoise_mgtr_SE_EVO.sh "$Subject" "$StudyFolder" \
 "$MEDIR" "$CiftiList2" # post-AROMA CiftiList
 
 # project AROMA output volumes onto a surface
