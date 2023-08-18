@@ -5,7 +5,7 @@
 StudyFolder=/Volumes/LACIE-SHARE/EVO_MEP_data/UW_MRI_data # location of Subject folder
 Subject=W235 # space delimited list of subject IDs (format like W001, W002, etc.)
 Sessions=$(cat "$StudyFolder"/Sessions.txt)
-TE=2.46
+TE=4.901 # in EVO study, UW TE = 4.901; NKI TE = 2.46 
 
 # module load python-3.7.7-gcc-8.2.0-onbczx6
 # module load fsl/6.0.4
@@ -46,15 +46,28 @@ done
 
 # Move intermediate and raw FMs into new folder, "intermediate"
 for s in $Sessions; do
+
     # create /intermediate subdir if it does not exist
     if [ ! -d "$FieldMapFolder"/intermediate/ ]; then
         mkdir "$FieldMapFolder"/intermediate/
     fi
 
-    # if /intermediate subdir exists, move all files except final output files into /intermediate subdir
+    # check one more time that /intermediate subdir exists; break loop if it doesn't
     if [ ! -d "$FieldMapFolder"/intermediate/ ]; then
-        echo -e "Failed to create subdirectory.\nBreaking loop without moving files."
+        echo -e "ERROR: Failed to create subdirectory.\nBreaking loop without moving files."
         break
     fi
-    for f in "$FieldMapFolder"/; do
-        if [[ "$f" != "" ]]; then
+
+    for f in "$FieldMapFolder"/; do # iterate through NIFTI files in FM dir
+
+        FinalPhase="$FieldMapFolder"/FM_rads_S"$s"_R1.nii.gz # final phase image fn
+        FinalMag="$FieldMapFolder"/FM_mag_S"$s"_R1.nii.gz # final magnitude image fn
+
+        # if file is not one of the final output FMs, move it to /intermediate subdir
+        if [[ "$f" != "$FinalPhase" ]] && [[ "$f" != "$FinalMag" ]]; then
+            mv "$f" "$FieldMapFolder"/intermediate/
+        fi
+
+    done
+
+done
