@@ -2,6 +2,7 @@
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
 # This script is a wrapper for the HCP's anatomical preprocessing pipeline
+# Updated 2023-08-18
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
@@ -136,7 +137,7 @@ fi
  --processing-mode="$ProcessingMode" \
  --printcom=$PRINTCOM > ${StudyFolder}/${Subject}/qa/PreFreeSurfer.txt
 
-# define some input variables for FreeSurfer;
+# define some input variables for FreeSurfer
 SubjectID="$Subject" #FreeSurfer Subject ID Name
 SubjectDIR="${StudyFolder}/${Subject}/T1w" #Location to Put FreeSurfer Subject's Folder
 T1wImage="${StudyFolder}/${Subject}/T1w/T1w_acpc_dc_restore.nii.gz" #T1w FreeSurfer Input (Full Resolution)
@@ -152,7 +153,7 @@ fi
 
 echo -e "Running FreeSurferPipeline" 
 
-# run the FreeSurfer pipeline;
+# run the FreeSurfer pipeline
  ${HCPPIPEDIR}/FreeSurfer/FreeSurferPipeline.sh \
  --subject="$Subject" \
  --subjectDIR="$SubjectDIR" \
@@ -161,7 +162,7 @@ echo -e "Running FreeSurferPipeline"
  --t2="$T2wImage" \
  --processing-mode="$ProcessingMode" > ${StudyFolder}/${Subject}/qa/FreeSurfer.txt
 
-# define some input variables for "Post" FreeSurfer;
+# define some input variables for "Post" FreeSurfer
 SurfaceAtlasDIR="${HCPPIPEDIR_Templates}/standard_mesh_atlases"
 GrayordinatesSpaceDIR="${HCPPIPEDIR_Templates}/91282_Greyordinates"
 GrayordinatesResolutions="2" #Usually 2mm, if multiple delimit with @, must already exist in templates dir
@@ -174,7 +175,7 @@ RegName="MSMSulc" #MSMSulc is recommended, if binary is not available use FS (Fr
 
 echo -e "Running PostFreeSurferPipeline" 
 
-# run the Post FreeSurfer pipeline;
+# run the Post FreeSurfer pipeline
 ${HCPPIPEDIR}/PostFreeSurfer/PostFreeSurferPipeline.sh \
 --path="$StudyFolder" \
 --subject="$Subject" \
@@ -189,7 +190,7 @@ ${HCPPIPEDIR}/PostFreeSurfer/PostFreeSurferPipeline.sh \
 --regname="$RegName" \
 --processing-mode="$ProcessingMode" > ${StudyFolder}/${Subject}/qa/PostFreeSurfer.txt
 
-# move output folders into "anat";
+# move output folders into "anat"
 mv ${StudyFolder}/${Subject}/T*w ${StudyFolder}/${Subject}/anat # T1w & T2w folders
 mv ${StudyFolder}/${Subject}/MNINonLinear ${StudyFolder}/${Subject}/anat # MNINonLinear folder
 mv ${StudyFolder}/${Subject}/qa ${StudyFolder}/${Subject}/anat # QA folder

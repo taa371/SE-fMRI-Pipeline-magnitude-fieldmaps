@@ -1,6 +1,8 @@
 #!/bin/bash
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
+# Remove signal bias, slice-time correction
+# Updated 2023-08-18
 
 MEDIR=$1
 Subject=$2
@@ -9,7 +11,7 @@ Subdir="$StudyFolder"/"$Subject"
 AtlasTemplate=$4
 DOF=$5
 NTHREADS=$6
-StartSession=1
+StartSession=1 # may not need to be hard-coded anymore; check call in wrapper
 
 # count the number of sessions
 sessions=("$Subdir"/func/rest/session_*)
@@ -211,5 +213,8 @@ done
 
 # # delete temp. workspace;
 # rm -rf "$Subdir"/workspace
+
+
+
 
 

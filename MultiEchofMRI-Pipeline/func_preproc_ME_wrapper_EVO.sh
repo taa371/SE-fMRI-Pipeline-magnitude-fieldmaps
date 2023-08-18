@@ -1,6 +1,8 @@
 #!/bin/bash
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
+# 2nd of 3 wrappers (HCP structural, func preproc, func denoising)
+# Updated 2023-08-18
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
@@ -40,10 +42,9 @@ source ${EnvironmentScript}	# Set up pipeline environment variables and software
 
 echo -e "\nMulti-Echo Preprocessing & Denoising Pipeline"
 
-echo -e "\nProcessing the Field Maps"
-
 # process all field maps & create an average image for cases where scan-specific maps are unavailable
-"$MEDIR"/func_preproc_fm_EVO_NKI.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" # skips BET for magnitude FMs (already done for NKI FMs)
+#echo -e "\nProcessing the Field Maps"
+#"$MEDIR"/func_preproc_fm_EVO_NKI.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" # skips BET for magnitude FMs (already done for NKI FMs)
 # "$MEDIR"/func_preproc_fm_EVO_UW.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" # includes BET for magnitude FMs (not already done for UW FMs)
 
 # ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
@@ -55,10 +56,10 @@ echo -e "\nProcessing the Field Maps"
 
 # create an avg. sbref image and co-register that image & all individual SBrefs to the T1w image
 echo -e "Coregistering SBrefs to the Anatomical Image"
-"$MEDIR"/func_preproc_coreg_DE_FMs.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+"$MEDIR"/func_preproc_coreg_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
 
 # correct func images for slice time differences and head motion
 echo -e "Correcting for Slice Time Differences, Head Motion, & Spatial Distortion"
-"$MEDIR"/func_preproc_headmotion_DE_FMs.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+"$MEDIR"/func_preproc_headmotion_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
 
 echo -e "\nFunctional pre-processing for subject $Subject done.\n" 

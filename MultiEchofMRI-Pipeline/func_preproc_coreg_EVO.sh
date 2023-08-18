@@ -1,16 +1,18 @@
 #!/bin/bash
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
+# Create SBrefs (if necessary) and coregister to anatomicals
+# Updated 2023-08-18
 
 MEDIR=$1
 Subject=$2
 StudyFolder=$3
 Subdir="$StudyFolder"/"$Subject"
-SUBJECTS_DIR="$Subdir"/anat/T1w # note: this is used for "bbregister" calls;
+SUBJECTS_DIR="$Subdir"/anat/T1w # note: this is used for "bbregister" calls
 AtlasTemplate=$4
 DOF=$5
 NTHREADS=$6
-StartSession=1 # set manually here bc it wasn't being handed off to Matlab script
+StartSession=1 # adjust call to script in wrapper
 
 module load Connectome_Workbench/1.5.0/Connectome_Workbench
 module load freesurfer/6.0.0
@@ -38,7 +40,7 @@ echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> temp && 
 cd "$Subdir"/workspace/ # run script via Matlab 
 matlab -nodesktop -nosplash -r "temp; exit" #> /dev/null 2>&1 
 
-# delete some files;
+# delete some files
 rm -rf "$Subdir"/workspace
 cd "$Subdir" # go back to subject dir. 
 
@@ -49,22 +51,58 @@ cd "$Subdir" # go back to subject dir.
 mkdir -p "$Subdir"/func/rest/AverageSBref
 WDIR="$Subdir"/func/rest/AverageSBref
 
-# HRB -> need this code block if there is no JSON file --------------------------------------
-# Create necessary files (if no ppts have JSON files)
-# cp -r "$Subdir"/func/unprocessed/rest/session_1 "$Subdir"/func/rest
-# cp -r "$Subdir"/func/unprocessed/rest/session_2 "$Subdir"/func/rest
-# mkdir "$Subdir"/func/xfms
-# mkdir "$Subdir"/func/xfms/rest
-# echo ".000690" >> "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt # (EVO echo spacing/dwell time in secs)
-# echo "2.46" >> "$Subdir"/func/rest/session_1/run_1/TE.txt # (EVO TE in ms)
-# echo "2.46" >> "$Subdir"/func/rest/session_2/run_1/TE.txt
+# HRB -> need this code block if there is no JSON file ----------------------------------------------------------------
+# Create necessary files (if ppts don't have JSON files)
+if [ ! -d  "$Subdir"/func/rest/session_1 ]; then
+	cp -r "$Subdir"/func/unprocessed/rest/session_1 "$Subdir"/func/rest/
+	echo -e "Copying unprocessed S1 resting-state files to "$Subdir"/func/rest/ ..."
+fi
+if [ ! -d  "$Subdir"/func/rest/session_2 ] && [ -d "$Subdir"/func/unprocessed/rest/session_2 ]; then
+	cp -r "$Subdir"/func/unprocessed/rest/session_2 "$Subdir"/func/rest/
+	echo -e "Copying unprocessed S2 resting-state files to "$Subdir"/func/rest/ ..."
+fi
+if [ ! -d "$Subdir"/func/xfms ]; then
+	mkdir "$Subdir"/func/xfms
+	mkdir "$Subdir"/func/xfms/rest
+	echo -e "Creating "$Subdir"/func/xfms directory..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_1/run_1/SliceTiming.txt ]; then
+	cp $StudyFolder/SliceTiming.txt "$Subdir"/func/rest/session_1/run_1
+	echo -e "Copying SliceTiming.txt from study dir to /rest/session_1/..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_1/run_1/EffectiveEchoSpacing.txt ]; then
+	cp $StudyFolder/EffectiveEchoSpacing.txt "$Subdir"/func/rest/session_1/run_1
+	echo -e "Copying EffectiveEchoSpacing.txt from study dir to /rest/session_1/..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_1/run_1/TE.txt ]; then
+	cp $StudyFolder/TE.txt "$Subdir"/func/rest/session_1/run_1
+	echo -e "Copying TE.txt from study dir to /rest/session_1/..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_1/run_1/TR.txt ]; then
+	cp $StudyFolder/TR.txt "$Subdir"/func/rest/session_1/run_1
+	echo -e "Copying TR.txt from study dir to /rest/session_1/..."
+fi
 
-# This is not totally necessary, but it helps with troubleshooting to have copies in one place
-#cp "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt "$Subdir" # also put a copy in subdir for troubleshooting purposes
-#cp "$Subdir"/func/rest/session_1/run_1/TE.txt "$Subdir" # put a copy in subdir for troubleshooting purposes
-#mv "$Subdir"/TE.txt "$Subdir"/TE_S1.txt # rename
-#cp "$Subdir"/func/rest/session_2/run_1/TE.txt "$Subdir" # put a copy in subdir for troubleshooting purposes
-#mv "$Subdir"/TE.txt "$Subdir"/TE_S2.txt # rename
+if [ ! -f "$Subdir"/func/rest/session_2/run_1/SliceTiming.txt ]; then
+	cp $StudyFolder/SliceTiming.txt "$Subdir"/func/rest/session_2/run_1
+	echo -e "Copying SliceTiming.txt from study dir to /rest/session_2/..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_2/run_1/EffectiveEchoSpacing.txt ]; then
+	cp $StudyFolder/EffectiveEchoSpacing.txt "$Subdir"/func/rest/session_2/run_1
+	echo -e "Copying EffectiveEchoSpacing.txt from study dir to /rest/session_2/..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_2/run_1/TE.txt ]; then
+	cp $StudyFolder/TE.txt "$Subdir"/func/rest/session_2/run_1
+	echo -e "Copying TE.txt from study dir to /rest/session_2/..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_2/run_1/TR.txt ]; then
+	cp $StudyFolder/TR.txt "$Subdir"/func/rest/session_2/run_1
+	echo -e "Copying TR.txt from study dir to /rest/session_2/..."
+fi
+if [ ! -f "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt ]; then
+	cp "$Subdir"/func/rest/session_1/run_1/EffectiveEchoSpacing.txt "$Subdir"/func/xfms/rest
+	echo -e "Copying EffectiveEchoSpacing.txt to /xfms/ from "$Subdir"/func/rest/ ..."
+fi
 # ----------------------------------------------------------------------------------------------------------------------
 
 # count the number of sessions
@@ -198,13 +236,13 @@ for s in $Sessions ; do
 	runs=("$Subdir"/func/rest/session_"$s"/run_*)
 	runs=$(seq 1 1 "${#runs[@]}")
 
-	# sweep the runs;
+	# sweep the runs
 	for r in $runs ; do
 
-		# check to see if this scan has a field map or not;
+		# check to see if this scan has a field map or not
 		if [[ -f "$Subdir/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz" ]]; then # this needs to have spaces around brackets
 
-			# define the effective echo spacing;
+			# define the effective echo spacing
 			EchoSpacing=$(cat "$Subdir"/func/rest/session_"$s"/run_"$r"/EffectiveEchoSpacing.txt) 
 		
 			# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using scan-specific field map);
@@ -212,11 +250,11 @@ for s in $Sessions ; do
 			"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y > /dev/null 2>&1
 			applywarp --interp=spline --in="$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r"_warp.nii.gz
 
-			# use BBRegister (BBR) to fine-tune the existing co-registeration; output FSL style transformation matrix;
+			# use BBRegister (BBR) to fine-tune the existing co-registeration; output FSL style transformation matrix
 			bbregister --s freesurfer --mov "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".dat --6 --o "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz > /dev/null 2>&1 
 			tkregister2 --s freesurfer --noedit --reg "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".dat --mov "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --targ "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --fslregout "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".mat > /dev/null 2>&1 
 
-			# add BBR step as post warp linear transformation & generate inverse warp;
+			# add BBR step as post warp linear transformation & generate inverse warp
 			convertwarp --warp1="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r"_warp.nii.gz --postmat="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".mat --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
 			applywarp --interp=spline --in="$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
 			mv "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz "$Subdir"/func/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S"$s"_R"$r".nii.gz
@@ -246,7 +284,7 @@ flirt -interp nearestneighbour -in "$Subdir"/anat/T1w/T1w_acpc_brain_mask.nii.gz
 flirt -interp nearestneighbour -in "$Subdir"/anat/MNINonLinear/T1w_restore_brain.nii.gz -ref "$AtlasTemplate" -out "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat # this is the T1w_restore_brain.nii.gz image in functional atlas space;
 fslmaths "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func.nii.gz -bin "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func_mask.nii.gz # this is a binarized version of the T1w_nonlin_brain.nii.gz image in 2mm atlas space; used for masking functional data
 
-# remove tmp. freesurfer folder;
+# remove tmp. freesurfer folder
 rm -rf "$Subdir"/anat/T1w/freesurfer 
 
 # fresh workspace dir.
@@ -256,7 +294,7 @@ mkdir "$Subdir"/workspace > /dev/null 2>&1
 # create temp. make_precise_subcortical_labels.m 
 cp -rf "$MEDIR"/res0urces/make_precise_subcortical_labels.m "$Subdir"/workspace/temp.m
 
-# define some Matlab variables;
+# define some Matlab variables
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m
 echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1 		
 echo AtlasTemplate=["'$AtlasTemplate'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1 		
@@ -264,7 +302,7 @@ echo SubcorticalLabels=["'$MEDIR/res0urces/FS/SubcorticalLabels.txt'"] | cat - "
 cd "$Subdir"/workspace/ # run script via Matlab 
 matlab -nodesktop -nosplash -r "temp; exit" > /dev/null 2>&1 
 
-# delete some files;
+# delete some files
 rm -rf "$Subdir"/workspace
 cd "$Subdir" # go back to subject dir. 
 
@@ -279,7 +317,7 @@ mkdir "$Subdir"/workspace > /dev/null 2>&1
 # create temporary CoregQA.m 
 cp -rf "$MEDIR"/res0urces/coreg_qa.m "$Subdir"/workspace/temp.m
 
-# define some Matlab variables;
+# define some Matlab variables
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m
 echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1 		
 cd "$Subdir"/workspace/ # run script via Matlab 

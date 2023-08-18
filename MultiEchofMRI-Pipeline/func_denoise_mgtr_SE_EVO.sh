@@ -2,6 +2,8 @@
 # CJL; (cjl2007@med.cornell.edu)
 # HB; (syb4001@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
+# Grayordinate smoothing and denoising
+# Updated 2023-08-18
 
 Subject=$1
 StudyFolder=$2
@@ -29,14 +31,14 @@ mkdir "$Subdir"/workspace/ > /dev/null 2>&1
 sessions=("$Subdir"/func/rest/session_*)
 sessions=$(seq 1 1 "${#sessions[@]}")
 
-# sweep the sessions;
+# sweep the sessions
 for s in $sessions ; do
 
-	# count number of runs for this session;
+	# count number of runs for this session
 	runs=("$Subdir"/func/rest/session_"$s"/run_*)
 	runs=$(seq 1 1 "${#runs[@]}" )
 
-	# sweep the runs;
+	# sweep the runs
 	for r in $runs ; do
         for c in $CiftiList ; do
         echo -e " this is sub $1 session $s run $r cifti $c"
@@ -45,14 +47,14 @@ for s in $sessions ; do
 		"$Subdir"/workspace/temp.m
 
 		# define some Matlab variables
-		echo Input=["'$Subdir/func/rest/session_$s/run_$r/Rest_"$c".nii.gz'"] | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m
+		echo Input=["'$Subdir/func/rest/session_$s/run_$r/"$c".nii.gz'"] | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m
 		echo Subdir=["'$Subdir'"]  | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m
-		echo Output_MGTR=["'$Subdir/func/rest/session_$s/run_$r/Rest_"$c"+MGTR'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m
-		echo Output_Betas=["'$Subdir/func/rest/session_$s/run_$r/Rest_"$c"+MGTR_Betas'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m
+		echo Output_MGTR=["'$Subdir/func/rest/session_$s/run_$r/"$c"+MGTR'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m
+		echo Output_Betas=["'$Subdir/func/rest/session_$s/run_$r/"$c"+MGTR_Betas'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m
 		echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m
 
 		matlab -nodesktop -nosplash -r "temp; exit" #> /dev/null 2>&1	 
-		#rm "$Subdir"/workspace/temp.m # 
+		#rm "$Subdir"/workspace/temp.m
         done
 	done
 	
