@@ -1,6 +1,7 @@
 #!/bin/bash
 # CJL; (cjl2007@med.cornell.edu)
-# note: this script is a wrapper for the HCP's anatomical preprocessing pipeline; 
+# HRB; (hob4003@med.cornell.edu)
+# This script is a wrapper for the HCP's anatomical preprocessing pipeline
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
@@ -26,9 +27,9 @@ source ${EnvironmentScript}	# Set up pipeline environment variables and software
 PRINTCOM="" # If PRINTCOM is not a null or empty string variable, then this script and other scripts that it calls will simply print out the primary commands it otherwise would run. This printing will be done using the command specified in the PRINTCOM variable
 
 AvgrdcSTRING=$4 # Readout Distortion Correction;
-MagnitudeInputName="NONE" # The MagnitudeInputName variable should be set to a 4D magnitude volume with two 3D timepoints or "NONE" if not used
-PhaseInputName="NONE" # The PhaseInputName variable should be set to a 3D phase difference volume or "NONE" if not used
-TE="4.901" # For EVO study: UW TE is 4.901 ms, NKI TE is 2.46 ms
+MagnitudeInputName="FM_mag_S1_R1.nii.gz" # The MagnitudeInputName variable should be set to a 4D magnitude volume with two 3D timepoints or "NONE" if not used
+PhaseInputName="FM_rads_S1_R1.nii.gz" # The PhaseInputName variable should be set to a 3D phase difference volume or "NONE" if not used
+TE="2.46" # For EVO study: UW TE is 4.901 ms, NKI TE is 2.46 ms
 
 # I added this for posterity...
 echo -e "\nSubject: $Subject" # so subject number is recorded in slurm out file for QC purposes
@@ -36,7 +37,7 @@ echo -e "TE: $TE" # make sure the TE is right for UW vs. NKI ppts
 echo -e "Magnitude Image: $MagnitudeInputName" # so I can tell if I included fieldmaps or left them as "NONE" for this run
 echo -e "Phase Image: $PhaseInputName\n"
 
-# Variables related to using Spin Echo Field Maps
+# Variables related to using Spin Echo Field Maps -> no spin-echo FMs for EVO study
 SpinEchoPhaseEncodeNegative=$5
 SpinEchoPhaseEncodePositive=$6
 SEEchoSpacing=$7
@@ -63,9 +64,9 @@ BrainSize="170" # BrainSize in mm, 150-170 for humans
 FNIRTConfig="${HCPPIPEDIR_Config}/T1_2_MNI152_2mm.cnf" # FNIRT 2mm T1w Config
 GradientDistortionCoeffs="NONE" # Set to NONE to skip gradient distortion correction
 
-# echo -e "\nAnatomical Preprocessing and Surface Registration Pipeline" 
+echo -e "\nAnatomical Preprocessing and Surface Registration Pipeline: with NKI Field Maps" 
 
-# # clean slate;
+# clean slate;
  rm -rf ${StudyFolder}/${Subject}/T*w > /dev/null 2>&1 
  rm -rf ${StudyFolder}/${Subject}/MNINonLinear > /dev/null 2>&1 
 
@@ -74,8 +75,7 @@ T1ws=`ls ${StudyFolder}/${Subject}/anat/unprocessed/T1w/T1w*.nii.gz`
 
 T1wInputImages="" # preallocate 
 
-# find all 
-# T1w images;
+# find all T1w images
 for i in $T1ws ; do
 	T1wInputImages=`echo "${T1wInputImages}$i@"`
 done
@@ -90,8 +90,7 @@ for i in $T2ws ; do
 	T2wInputImages=`echo "${T2wInputImages}$i@"`
 done
 
-# determine if T2w images exist & 
-# adjust "processing mode" accordingly
+# determine if T2w images exist & adjust "processing mode" accordingly
 if [ "$T2wInputImages" = "" ]; then
 	T2wInputImages="NONE" # script will proceed in "legacy" mode
 	ProcessingMode="LegacyStyleData"
@@ -99,12 +98,12 @@ else
 	ProcessingMode="HCPStyleData"
 fi
 
-# make "QA" folder;
+# make "QA" folder
  mkdir ${StudyFolder}/${Subject}/qa/ > /dev/null 2>&1 
 
  echo -e "\nRunning PreFreeSurferPipeline" 
 
-# # run the Pre FreeSurfer pipeline;
+# run the Pre FreeSurfer pipeline
  ${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh \
  --path="$StudyFolder" \
  --subject="$Subject" \
