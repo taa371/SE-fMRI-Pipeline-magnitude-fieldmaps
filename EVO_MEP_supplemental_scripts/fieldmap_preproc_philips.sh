@@ -1,5 +1,6 @@
 #!/bin/bash
 # HRB; (hob4003@med.cornell.edu)
+# Updated 2023-08-18
 
 StudyFolder=/Volumes/LACIE-SHARE/EVO_MEP_data/UW_MRI_data # location of Subject folder
 Subject=W235 # space delimited list of subject IDs (format like W001, W002, etc.)
