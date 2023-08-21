@@ -1,6 +1,8 @@
 #!/bin/bash
 # CJL; (cjl2007@med.cornell.edu)
 # hob4003; (hob4003@med.cornell.edu)
+# Pre-process field maps for EVO data from NKI collection site
+# Updated 2023-08-21
 
 MEDIR=$1
 Subject=$2

@@ -1,6 +1,8 @@
 #!/bin/bash
 # CJL; (cjl2007@med.cornell.edu)
 # hob4003; (hob4003@med.cornell.edu)
+# Pre-process field maps for EVO data from UW collection site
+# Updated 2023-08-21
 
 MEDIR=$1
 Subject=$2
@@ -88,13 +90,13 @@ do
 
     # copy over field map pair to workspace 
     cp -r "$Subdir"/func/unprocessed/field_maps/FM_rads_"$ThisFM".nii.gz "$WDIR"/FM_rads_"$ThisFM".nii.gz
-    cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_brain_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz # added for EVO data (already ran bet)
     cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_"$ThisFM".nii.gz
 
-    # temporary bet image (changed settings to what works for EVO data)
-    bet "$WDIR"/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz -f 0.6 -N > /dev/null 2>&1
+    # temporary bet image (for EVO, this only needs to be run for UW participants)
+    #cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_brain_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz # added for EVO NKI data (already ran bet)
+    bet "$WDIR"/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz -f 0.6 -B > /dev/null 2>&1
 
-    # for future use, add fsl_prepare_fieldmap() cmds here (did this part outside of pipeline for EVO)
+    # **ADD HERE LATER: for future use, add call to my preproc_fieldmaps script here (ran it outside of pipeline for EVO)**
 
     # register reference volume to the T1-weighted anatomical image; use bbr cost function 
     "$MEDIR"/res0urces/epi_reg_dof --epi="$WDIR"/FM_mag_"$ThisFM".nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz \
