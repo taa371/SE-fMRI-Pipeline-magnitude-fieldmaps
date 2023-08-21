@@ -1,12 +1,13 @@
 #!/bin/bash
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
-# This script is a wrapper for the HCP's anatomical preprocessing pipeline
-# Updated 2023-08-18
+# Wrapper for the HCP's anatomical preprocessing pipeline (1st wrapper of 3)
+# Updated 2023-08-21
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
-export NSLOTS=$3 # set number of cores for FreeSurfer
+TE=$3 # HRB: added this bc TE differs between 2 collection sites for EVO study (For EVO study, UW TE is 4.901 ms, NKI TE is 2.46 ms)
+export NSLOTS=$4 # set number of cores for FreeSurfer
 export PATH='/athena/victorialab/scratch/hob4003/ME_Pipeline/Hb_HCP_master/FreeSurfer/custom:/software/spack/bin:/athena/scu/scratch/shared/bin:/usr/condabin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/ibutils/bin:/home/hob4003/.local/bin:/home/hob4003/bin:/home/software/apps/freesurfer6/6.0/freesurfer/mni/bin:/home/software/spack/opt/spack/linux-centos7-x86_64/gcc-8.2.0/ants-2.4.0-ehibrhis7to7ojl5v4ctspcdwljeyf7l/bin:$PATH'
 echo $PATH %IE
 
@@ -30,7 +31,7 @@ PRINTCOM="" # If PRINTCOM is not a null or empty string variable, then this scri
 AvgrdcSTRING=$4 # Readout Distortion Correction;
 MagnitudeInputName="FM_mag_S1_R1.nii.gz" # The MagnitudeInputName variable should be set to a 4D magnitude volume with two 3D timepoints or "NONE" if not used
 PhaseInputName="FM_rads_S1_R1.nii.gz" # The PhaseInputName variable should be set to a 3D phase difference volume or "NONE" if not used
-TE="2.46" # For EVO study: UW TE is 4.901 ms, NKI TE is 2.46 ms
+# TE="2.46" # For EVO study: UW TE is 4.901 ms, NKI TE is 2.46 ms
 
 # I added this for posterity...
 echo -e "\nSubject: $Subject" # so subject number is recorded in slurm out file for QC purposes
