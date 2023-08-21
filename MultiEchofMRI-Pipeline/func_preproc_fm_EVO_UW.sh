@@ -1,16 +1,18 @@
 #!/bin/bash
 # CJL; (cjl2007@med.cornell.edu)
-# hob4003; (hob4003@med.cornell.edu)
-# Pre-process field maps for EVO data from UW collection site
+# HRB; (hob4003@med.cornell.edu)
+# Create SBrefs (if necessary) and coregister to anatomicals
 # Updated 2023-08-21
 
 MEDIR=$1
 Subject=$2
 StudyFolder=$3
 Subdir="$StudyFolder"/"$Subject"
-SUBJECTS_DIR="$Subdir"/anat/T1w # note: this is used for "bbregister" calls;
-NTHREADS=$4
-StartSession=1
+SUBJECTS_DIR="$Subdir"/anat/T1w # note: this is used for "bbregister" calls
+AtlasTemplate=$4
+DOF=$5
+NTHREADS=$6
+StartSession=$7 # adjust call to script in wrapper
 
 module load Connectome_Workbench/1.5.0/Connectome_Workbench
 module load freesurfer/6.0.0
@@ -20,29 +22,94 @@ module load afni/afni
 module load ants-2.4.0-gcc-8.2.0-ehibrhi
 module load matlab/R2021a
 
+# First, lets read in all the .json files associated with each scan & write out some .txt files that will be used during preprocessing
+
 # fresh workspace dir.
-rm -rf "$Subdir"/workspace/ > /dev/null 2>&1 
-mkdir "$Subdir"/workspace/ > /dev/null 2>&1 
+rm -rf "$Subdir"/workspace > /dev/null 2>&1
+mkdir "$Subdir"/workspace > /dev/null 2>&1
 
-# create a temp "find_fm_params.m"
-cp -rf "$MEDIR"/res0urces/find_fm_params.m "$Subdir"/workspace/temp.m # TEST
+# create temporary find_epi_params.m 
+cp -rf "$MEDIR"/res0urces/find_epi_params2.m "$Subdir"/workspace
+mv "$Subdir"/workspace/find_epi_params2.m "$Subdir"/workspace/temp.m # rename in a separate line
 
-# define some Matlab variables
-echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1  
-echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1
-echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1  		
+# define some Matlab variables;
+echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m
+echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m #> /dev/null 2>&1 		
+echo FuncName=["'rest'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m #> /dev/null 2>&1 		
+echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m #> /dev/null 2>&1  		
 cd "$Subdir"/workspace/ # run script via Matlab 
-matlab -nodesktop -nosplash -r "temp; exit" > /dev/null 2>&1  
+matlab -nodesktop -nosplash -r "temp; exit" #> /dev/null 2>&1 
 
-# delete some files;
-rm "$Subdir"/workspace/temp.m
-cd "$Subdir" 
+# delete some files
+rm -rf "$Subdir"/workspace
+cd "$Subdir" # go back to subject dir. 
+
+# next, we loop through all scans and create SBrefs (average of first few echoes) for each scan
+# NOTE: this is used (when needed) as an intermediate target for co-registeration
+
+# define & create a temporary directory;
+mkdir -p "$Subdir"/func/rest/AverageSBref
+WDIR="$Subdir"/func/rest/AverageSBref
+
+# HRB -> need this code block if there is no JSON file ----------------------------------------------------------------
+# Create necessary files (if ppts don't have JSON files)
+if [ ! -d  "$Subdir"/func/rest/session_1 ]; then
+	cp -r "$Subdir"/func/unprocessed/rest/session_1 "$Subdir"/func/rest/
+	echo -e "Copying unprocessed S1 resting-state files to "$Subdir"/func/rest/ ..."
+fi
+if [ ! -d  "$Subdir"/func/rest/session_2 ] && [ -d "$Subdir"/func/unprocessed/rest/session_2 ]; then
+	cp -r "$Subdir"/func/unprocessed/rest/session_2 "$Subdir"/func/rest/
+	echo -e "Copying unprocessed S2 resting-state files to "$Subdir"/func/rest/ ..."
+fi
+if [ ! -d "$Subdir"/func/xfms ]; then
+	mkdir "$Subdir"/func/xfms
+	mkdir "$Subdir"/func/xfms/rest
+	echo -e "Creating "$Subdir"/func/xfms directory..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_1/run_1/SliceTiming.txt ]; then
+	cp $StudyFolder/SliceTiming.txt "$Subdir"/func/rest/session_1/run_1
+	echo -e "Copying SliceTiming.txt from study dir to /rest/session_1/..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_1/run_1/EffectiveEchoSpacing.txt ]; then
+	cp $StudyFolder/EffectiveEchoSpacing.txt "$Subdir"/func/rest/session_1/run_1
+	echo -e "Copying EffectiveEchoSpacing.txt from study dir to /rest/session_1/..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_1/run_1/TE.txt ]; then
+	cp $StudyFolder/TE.txt "$Subdir"/func/rest/session_1/run_1
+	echo -e "Copying TE.txt from study dir to /rest/session_1/..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_1/run_1/TR.txt ]; then
+	cp $StudyFolder/TR.txt "$Subdir"/func/rest/session_1/run_1
+	echo -e "Copying TR.txt from study dir to /rest/session_1/..."
+fi
+
+if [ ! -f "$Subdir"/func/rest/session_2/run_1/SliceTiming.txt ]; then
+	cp $StudyFolder/SliceTiming.txt "$Subdir"/func/rest/session_2/run_1
+	echo -e "Copying SliceTiming.txt from study dir to /rest/session_2/..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_2/run_1/EffectiveEchoSpacing.txt ]; then
+	cp $StudyFolder/EffectiveEchoSpacing.txt "$Subdir"/func/rest/session_2/run_1
+	echo -e "Copying EffectiveEchoSpacing.txt from study dir to /rest/session_2/..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_2/run_1/TE.txt ]; then
+	cp $StudyFolder/TE.txt "$Subdir"/func/rest/session_2/run_1
+	echo -e "Copying TE.txt from study dir to /rest/session_2/..."
+fi
+if [ ! -f "$Subdir"/func/rest/session_2/run_1/TR.txt ]; then
+	cp $StudyFolder/TR.txt "$Subdir"/func/rest/session_2/run_1
+	echo -e "Copying TR.txt from study dir to /rest/session_2/..."
+fi
+if [ ! -f "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt ]; then
+	cp "$Subdir"/func/rest/session_1/run_1/EffectiveEchoSpacing.txt "$Subdir"/func/xfms/rest
+	echo -e "Copying EffectiveEchoSpacing.txt to /xfms/ from "$Subdir"/func/rest/ ..."
+fi
+# ----------------------------------------------------------------------------------------------------------------------
 
 # count the number of sessions
 sessions=("$Subdir"/func/unprocessed/rest/session_*)
 sessions=$(seq 1 1 "${#sessions[@]}")
 
-# sweep the sessions;
+# sweep through sessions 
 for s in $sessions ; do
 
 	# count number of runs for this session;
@@ -50,80 +117,209 @@ for s in $sessions ; do
 	runs=$(seq 1 1 "${#runs[@]}")
 
 	# sweep the runs;
-	for r in $runs ; do
+	for r in $runs ; do 
 
-		# check to see if this file exists or not;
-		if [ -f "$Subdir/func/unprocessed/field_maps/FM_rads_S"$s"_R"$r".nii.gz" ]; then
+		# define the echo times;
+		te=$(cat "$Subdir"/func/rest/session_"$s"/run_"$r"/TE.txt)
+		n_te=0 # set to zero;
 
-			# the "AllFMs.txt" file contains 
-			# dir. paths to every pair of field maps;
-			touch "$Subdir"/AllFMs.txt
-			echo S"$s"_R"$r" >> "$Subdir"/AllFMs.txt  
+		# sweep the te;
+		for i in $te ; do
 
-		fi
+			# keep track of 
+			# which te we are on;
+			n_te=`expr $n_te + 1` 
+
+			# if there is no single-band reference image, we can assume that there 
+			# are also a bunch of non-steady state images we need to dump from the start of the time-series...
+			if [[ ! -f "$Subdir"/func/unprocessed/rest/session_"$s"/run_"$r"/SBref_S"$s"_R"$r"_E"$n_te".nii.gz ]]; then
+				fslroi "$Subdir"/func/unprocessed/rest/session_"$s"/run_"$r"/Rest_S"$s"_R"$r"_E"$n_te".nii.gz "$Subdir"/func/unprocessed/rest/session_"$s"/run_"$r"/SBref_S"$s"_R"$r"_E"$n_te".nii.gz 10 1 
+				echo 10 > "$Subdir"/func/rest/session_"$s"/run_"$r"/rmVols.txt
+			fi
+
+		done
+
+		# use the first echo (w/ least amount of signal dropout) to estimate bias field;
+		cp "$Subdir"/func/unprocessed/rest/session_"$s"/run_"$r"/SBref*_E1.nii.gz "$WDIR"/TMP_1.nii.gz
+		
+		# estimate field inhomog. & resample bias field image (ANTs --> FSL orientation);
+		N4BiasFieldCorrection -d 3 -i "$WDIR"/TMP_1.nii.gz -o ["$WDIR"/TMP_restored.nii.gz,"$WDIR"/Bias_field_"$s"_"$r".nii.gz] # CHANGED: spaces in brackets were causing a parsing error
+		flirt -in "$WDIR"/Bias_field_"$s"_"$r".nii.gz -ref "$WDIR"/TMP_1.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat -out "$WDIR"/Bias_field_"$s"_"$r".nii.gz -interp spline
+
+		# set back 
+		# to zero;
+		n_te=0 
+
+		# sweep the te;
+		for i in $te ; do
+
+			# skip the "long" te;
+			if [[ $i < 60 ]] ; then 
+
+				n_te=`expr $n_te + 1` # keep track which te we are on;
+				cp "$Subdir"/func/unprocessed/rest/session_"$s"/run_"$r"/SBref*_E"$n_te.nii".gz "$WDIR"/TMP_"$n_te".nii.gz
+				fslmaths "$WDIR"/TMP_"$n_te".nii.gz -div "$WDIR"/Bias_field_"$s"_"$r".nii.gz "$WDIR"/TMP_"$n_te".nii.gz # apply correction;
+
+			fi
+
+		done
+
+		# combine & average the te; 
+		fslmerge -t "$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz "$WDIR"/TMP_*.nii.gz > /dev/null 2>&1 
+		fslmaths "$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz -Tmean "$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz
+		cp "$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz "$WDIR"/SBref_"$s"_"$r".nii.gz
+		rm "$WDIR"/TMP* # remove intermediate files;
 
 	done
 
 done
 
-# define a list of directories;
-AllFMs=$(cat "$Subdir"/AllFMs.txt)
-rm "$Subdir"/AllFMs.txt # remove intermediate file;
+# Co-register all SBrefs and create an average SBref for cross-scan allignment 
 
-# create a white matter segmentation (.mgz --> .nii.gz);
-mri_binarize --i "$Subdir"/anat/T1w/"$Subject"/mri/aparc+aseg.mgz --wm --o "$Subdir"/anat/T1w/"$Subject"/mri/white.mgz > /dev/null 2>&1
-mri_convert -i "$Subdir"/anat/T1w/"$Subject"/mri/white.mgz -o "$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --like "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz > /dev/null 2>&1   # create a white matter segmentation (.mgz --> .nii.gz);
+# build a list of all SBrefs;
+images=("$WDIR"/SBref_*.nii.gz)
+
+# count images; average if needed  
+if [ "${#images[@]}" \> 1 ]; then
+
+	# align  and average the single-band reference (SBref) images;
+	"$MEDIR"/res0urces/FuncAverage -n -o "$Subdir"/func/xfms/rest/AvgSBref.nii.gz "$WDIR"/SBref_*.nii.gz > /dev/null 2>&1 
+
+else
+
+	# copy over the lone single-band reference (SBref) image;
+	cp "${images[0]}" "$Subdir"/func/xfms/rest/AvgSBref.nii.gz > /dev/null 2>&1
+
+fi
 
 # create clean tmp. copy of freesurfer folder;
-rm -rf "$Subdir"/anat/T1w/freesurfer > /dev/null 2>&1 
+rm -rf "$Subdir"/anat/T1w/freesurfer > /dev/null 2>&1
 cp -rf "$Subdir"/anat/T1w/"$Subject" "$Subdir"/anat/T1w/freesurfer > /dev/null 2>&1
 
-# create & define the FM "library";
-rm -rf "$Subdir"/func/field_maps/AllFMs > /dev/null 2>&1
-mkdir -p "$Subdir"/func/field_maps/AllFMs > /dev/null 2>&1
-WDIR="$Subdir"/func/field_maps/AllFMs
+# define the effective echo spacing;
+EchoSpacing=$(cat $Subdir/func/xfms/rest/EffectiveEchoSpacing.txt) 
 
-for ThisFM in $AllFMs
-do
+# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using average field map); 
+"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y > /dev/null 2>&1 # note: need to manually set --pedir
 
-    echo $ThisFM
+applywarp --interp=spline --in="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg.nii.gz --warp="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg_warp.nii.gz
 
-    # copy over field map pair to workspace 
-    cp -r "$Subdir"/func/unprocessed/field_maps/FM_rads_"$ThisFM".nii.gz "$WDIR"/FM_rads_"$ThisFM".nii.gz
-    cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_"$ThisFM".nii.gz
+# use BBRegister (BBR) to fine-tune the existing co-registration & output FSL style transformation matrix;
+bbregister --s freesurfer --mov "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg.nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.dat --6 --o "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.nii.gz > /dev/null 2>&1 
+tkregister2 --s freesurfer --noedit --reg "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.dat --mov "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg.nii.gz --targ "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --fslregout "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.mat > /dev/null 2>&1 
 
-    # temporary bet image (for EVO, this only needs to be run for UW participants)
-    #cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_brain_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz # added for EVO NKI data (already ran bet)
-    bet "$WDIR"/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz -f 0.6 -B > /dev/null 2>&1
+# add BBR step as post warp linear transformation & generate inverse warp;
+convertwarp --warp1="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg_warp.nii.gz --postmat="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.mat --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz
+applywarp --interp=spline --in="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.nii.gz --warp="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz
+invwarp --ref="$Subdir"/func/xfms/rest/AvgSBref.nii.gz -w "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz -o "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR_inv_warp.nii.gz # invert func --> T1w anatomical warp; includ. dc.;
 
-    # **ADD HERE LATER: for future use, add call to my preproc_fieldmaps script here (ran it outside of pipeline for EVO)**
+# combine warps (distorted SBref image --> T1w_acpc & anatomical image in acpc --> MNI atlas)
+convertwarp --ref="$AtlasTemplate" --warp1="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz --warp2="$Subdir"/anat/MNINonLinear/xfms/acpc_dc2standard.nii.gz --out="$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz
+applywarp --interp=spline --in="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR.nii.gz --warp="$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz
+invwarp -w "$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz -o "$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR_inv_warp.nii.gz --ref="$Subdir"/func/xfms/rest/AvgSBref.nii.gz # generate an inverse warp; atlas --> distorted SBref image 
 
-    # register reference volume to the T1-weighted anatomical image; use bbr cost function 
-    "$MEDIR"/res0urces/epi_reg_dof --epi="$WDIR"/FM_mag_"$ThisFM".nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz \
-    --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$WDIR"/fm2acpc_"$ThisFM" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --dof=6 > /dev/null 2>&1 
+# now, lets also co-register individual SBrefs to the target anatomical image;
+# NOTE: we will compare which is best (avg. field map vs. scan-specific) later on
 
-    # use BBRegister to fine-tune the existing co-registration; output FSL style transformation matrix; (not sure why --s isnt working, renaming dir. to "freesurfer" as an ugly workaround)
-    bbregister --s freesurfer --mov "$WDIR"/fm2acpc_"$ThisFM".nii.gz --init-reg "$MEDIR"/res0urces/FSL/eye.dat --surf white.deformed --bold --reg "$WDIR"/fm2acpc_bbr_"$ThisFM".dat --6 --o "$WDIR"/fm2acpc_bbr_"$ThisFM".nii.gz > /dev/null 2>&1  
-    tkregister2 --s freesurfer --noedit --reg "$WDIR"/fm2acpc_bbr_"$ThisFM".dat --mov "$WDIR"/fm2acpc_"$ThisFM".nii.gz --targ "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --fslregout "$WDIR"/fm2acpc_bbr_"$ThisFM".mat > /dev/null 2>&1  
+# create & define the "CoregQA" folder;
+mkdir -p "$Subdir"/func/qa/CoregQA > /dev/null 2>&1
 
-    # combine the original and fine tuned affine matrix;
-    convert_xfm -omat "$WDIR"/fm2acpc_"$ThisFM".mat -concat "$WDIR"/fm2acpc_bbr_"$ThisFM".mat "$WDIR"/fm2acpc_"$ThisFM".mat > /dev/null 2>&1
+# count the number of sessions
+Sessions=("$Subdir"/func/rest/session_*)
+Sessions=$(seq $StartSession 1 "${#sessions[@]}")
 
-    # apply transformation to the relevant files;
-    flirt -dof 6 -interp spline -in "$WDIR"/FM_mag_"$ThisFM".nii.gz -ref "$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz -out "$WDIR"/FM_mag_acpc_"$ThisFM".nii.gz -applyxfm -init "$WDIR"/fm2acpc_"$ThisFM".mat > /dev/null 2>&1  
-    fslmaths "$WDIR"/FM_mag_acpc_"$ThisFM".nii.gz -mas "$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz "$WDIR"/FM_mag_acpc_brain_"$ThisFM".nii.gz  > /dev/null 2>&1  
-    flirt -dof 6 -interp spline -in "$WDIR"/FM_rads_"$ThisFM".nii.gz -ref "$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz -out "$WDIR"/FM_rads_acpc_"$ThisFM".nii.gz -applyxfm -init "$WDIR"/fm2acpc_"$ThisFM".mat > /dev/null 2>&1  
-    wb_command -volume-smoothing "$WDIR"/FM_rads_acpc_"$ThisFM".nii.gz 2 "$WDIR"/FM_rads_acpc_"$ThisFM".nii.gz -fix-zeros > /dev/null 2>&1 
+# func ---------------------------------------------------------------
+# sweep through sessions 
+for s in $Sessions ; do
+
+	# count number of runs for this session;
+	runs=("$Subdir"/func/rest/session_"$s"/run_*)
+	runs=$(seq 1 1 "${#runs[@]}")
+
+	# sweep the runs
+	for r in $runs ; do
+
+		# check to see if this scan has a field map or not
+		if [[ -f "$Subdir/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz" ]]; then # this needs to have spaces around brackets
+
+			# define the effective echo spacing
+			EchoSpacing=$(cat "$Subdir"/func/rest/session_"$s"/run_"$r"/EffectiveEchoSpacing.txt) 
+		
+			# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using scan-specific field map);
+			# NOTE: need to manually set --pedir (phase encoding direction)
+			"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y > /dev/null 2>&1
+			applywarp --interp=spline --in="$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r"_warp.nii.gz
+
+			# use BBRegister (BBR) to fine-tune the existing co-registeration; output FSL style transformation matrix
+			bbregister --s freesurfer --mov "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".dat --6 --o "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz > /dev/null 2>&1 
+			tkregister2 --s freesurfer --noedit --reg "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".dat --mov "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --targ "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --fslregout "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".mat > /dev/null 2>&1 
+
+			# add BBR step as post warp linear transformation & generate inverse warp
+			convertwarp --warp1="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r"_warp.nii.gz --postmat="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".mat --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
+			applywarp --interp=spline --in="$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
+			mv "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz "$Subdir"/func/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S"$s"_R"$r".nii.gz
+			
+			# warp SBref image into MNI atlas volume space in a single spline warp; can be used for CoregQA
+			convertwarp --ref="$AtlasTemplate" --warp1="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz --warp2="$Subdir"/anat/MNINonLinear/xfms/acpc_dc2standard.nii.gz --out="$Subdir"/func/xfms/rest/SBref2nonlin_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
+			applywarp --interp=spline --in="$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/qa/CoregQA/SBref2nonlin_EpiReg+BBR_ScanSpecificFM_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/rest/SBref2nonlin_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
+
+		fi
+
+		# repeat warps (ACPC, MNI) but this time with the native --> acpc co-registration using an average field map;
+		flirt -dof "$DOF" -in "$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz -ref "$Subdir"/func/xfms/rest/AvgSBref.nii.gz -out "$Subdir"/func/qa/CoregQA/SBref2AvgSBref_S"$s"_R"$r".nii.gz -omat "$Subdir"/func/qa/CoregQA/SBref2AvgSBref_S"$s"_R"$r".mat
+		applywarp --interp=spline --in="$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz --premat="$Subdir"/func/qa/CoregQA/SBref2AvgSBref_S"$s"_R"$r".mat --warp="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz --out="$Subdir"/func/qa/CoregQA/SBref2acpc_EpiReg+BBR_AvgFM_S"$s"_R"$r".nii.gz --ref="$AtlasTemplate"
+		applywarp --interp=spline --in="$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz --premat="$Subdir"/func/qa/CoregQA/SBref2AvgSBref_S"$s"_R"$r".mat --warp="$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz --out="$Subdir"/func/qa/CoregQA/SBref2nonlin_EpiReg+BBR_AvgFM_S"$s"_R"$r".nii.gz --ref="$AtlasTemplate"
+
+	done
 
 done
 
-# This section is repeated in post_func_preproc_fm.sh (only run once)
-# merge & average the co-registered field map images accross sessions 
-fslmerge -t "$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz "$WDIR"/FM_rads_acpc_S*.nii.gz > /dev/null 2>&1  
-fslmaths "$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz -Tmean "$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz > /dev/null 2>&1  
-fslmerge -t "$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz "$WDIR"/FM_mag_acpc_S*.nii.gz > /dev/null 2>&1  
-fslmaths "$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz -Tmean "$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz > /dev/null 2>&1  
+# END FUNCTION ----------------------------------------------------------
 
-# perform a final brain extraction
-fslmaths "$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz -mas "$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz "$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz > /dev/null 2>&1  
-rm -rf "$Subdir"/anat/T1w/freesurfer/ # remove softlink
+# finally, lets create files that will be needed later on (brain mask and subcortical mask in functional space)
+
+# generate a set of functional brain mask (acpc + nonlin) in the atlas space; 
+flirt -interp nearestneighbour -in "$Subdir"/anat/T1w/T1w_acpc_dc_brain.nii.gz -ref "$AtlasTemplate" -out "$Subdir"/func/xfms/rest/T1w_acpc_brain_func.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat
+flirt -interp nearestneighbour -in "$Subdir"/anat/T1w/T1w_acpc_brain_mask.nii.gz -ref "$AtlasTemplate" -out "$Subdir"/func/xfms/rest/T1w_acpc_brain_func_mask.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat
+flirt -interp nearestneighbour -in "$Subdir"/anat/MNINonLinear/T1w_restore_brain.nii.gz -ref "$AtlasTemplate" -out "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat # this is the T1w_restore_brain.nii.gz image in functional atlas space;
+fslmaths "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func.nii.gz -bin "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func_mask.nii.gz # this is a binarized version of the T1w_nonlin_brain.nii.gz image in 2mm atlas space; used for masking functional data
+
+# remove tmp. freesurfer folder
+rm -rf "$Subdir"/anat/T1w/freesurfer 
+
+# fresh workspace dir.
+rm -rf "$Subdir"/workspace > /dev/null 2>&1
+mkdir "$Subdir"/workspace > /dev/null 2>&1
+
+# create temp. make_precise_subcortical_labels.m 
+cp -rf "$MEDIR"/res0urces/make_precise_subcortical_labels.m "$Subdir"/workspace/temp.m
+
+# define some Matlab variables
+echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m
+echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1 		
+echo AtlasTemplate=["'$AtlasTemplate'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1 		
+echo SubcorticalLabels=["'$MEDIR/res0urces/FS/SubcorticalLabels.txt'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1 		
+cd "$Subdir"/workspace/ # run script via Matlab 
+matlab -nodesktop -nosplash -r "temp; exit" > /dev/null 2>&1 
+
+# delete some files
+rm -rf "$Subdir"/workspace
+cd "$Subdir" # go back to subject dir. 
+
+# finally, evaluate whether scan-specific or average field maps 
+# produce the best co-registeration / cross-scan allignment & 
+# then generate a movie summarizing the results 
+
+# fresh workspace dir.
+rm -rf "$Subdir"/workspace > /dev/null 2>&1
+mkdir "$Subdir"/workspace > /dev/null 2>&1
+
+# create temporary CoregQA.m 
+cp -rf "$MEDIR"/res0urces/coreg_qa.m "$Subdir"/workspace/temp.m
+
+# define some Matlab variables
+echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m
+echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1 		
+cd "$Subdir"/workspace/ # run script via Matlab 
+matlab -nodesktop -nosplash -r "temp; exit" > /dev/null 2>&1
+rm -rf "$Subdir"/workspace > /dev/null 2>&1
