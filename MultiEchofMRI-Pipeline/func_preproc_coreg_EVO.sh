@@ -2,7 +2,7 @@
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
 # Create SBrefs (if necessary) and coregister to anatomicals
-# Updated 2023-08-18
+# Updated 2023-08-21
 
 MEDIR=$1
 Subject=$2
@@ -12,7 +12,7 @@ SUBJECTS_DIR="$Subdir"/anat/T1w # note: this is used for "bbregister" calls
 AtlasTemplate=$4
 DOF=$5
 NTHREADS=$6
-StartSession=1 # adjust call to script in wrapper
+StartSession=$7 # adjust call to script in wrapper
 
 module load Connectome_Workbench/1.5.0/Connectome_Workbench
 module load freesurfer/6.0.0
@@ -287,7 +287,7 @@ fslmaths "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func.nii.gz -bin "$Subdir"/fu
 # remove tmp. freesurfer folder
 rm -rf "$Subdir"/anat/T1w/freesurfer 
 
-# fresh workspace dir.
+# fresh workspace dir
 rm -rf "$Subdir"/workspace > /dev/null 2>&1
 mkdir "$Subdir"/workspace > /dev/null 2>&1
 
@@ -304,7 +304,7 @@ matlab -nodesktop -nosplash -r "temp; exit" > /dev/null 2>&1
 
 # delete some files
 rm -rf "$Subdir"/workspace
-cd "$Subdir" # go back to subject dir. 
+cd "$Subdir" # go back to subject dir
 
 # finally, evaluate whether scan-specific or average field maps 
 # produce the best co-registeration / cross-scan allignment & 

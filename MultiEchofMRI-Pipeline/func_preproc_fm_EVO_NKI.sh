@@ -10,7 +10,7 @@ StudyFolder=$3
 Subdir="$StudyFolder"/"$Subject"
 SUBJECTS_DIR="$Subdir"/anat/T1w # note: this is used for "bbregister" calls;
 NTHREADS=$4
-StartSession=1
+StartSession=$5
 
 module load Connectome_Workbench/1.5.0/Connectome_Workbench
 module load freesurfer/6.0.0
@@ -34,87 +34,33 @@ echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> temp && 
 cd "$Subdir"/workspace/ # run script via Matlab 
 matlab -nodesktop -nosplash -r "temp; exit" > /dev/null 2>&1  
 
-# delete some files;
+# delete some files
 rm "$Subdir"/workspace/temp.m
 cd "$Subdir"
 
-# define & create a temporary directory;
+# define & create a temporary directory
 mkdir -p "$Subdir"/func/rest/AverageSBref
 WDIR="$Subdir"/func/rest/AverageSBref
-
-# HRB -> need this code block if there is no JSON file ----------------------------------------------------------------
-# Create necessary files (if ppts don't have JSON files)
-if [ ! -d  "$Subdir"/func/rest/session_1 ]; then
-	cp -r "$Subdir"/func/unprocessed/rest/session_1 "$Subdir"/func/rest/
-	echo -e "Copying unprocessed S1 resting-state files to "$Subdir"/func/rest/ ..."
-fi
-if [ ! -d  "$Subdir"/func/rest/session_2 ] && [ -d "$Subdir"/func/unprocessed/rest/session_2 ]; then
-	cp -r "$Subdir"/func/unprocessed/rest/session_2 "$Subdir"/func/rest/
-	echo -e "Copying unprocessed S2 resting-state files to "$Subdir"/func/rest/ ..."
-fi
-if [ ! -d "$Subdir"/func/xfms ]; then
-	mkdir "$Subdir"/func/xfms
-	mkdir "$Subdir"/func/xfms/rest
-	echo -e "Creating "$Subdir"/func/xfms directory..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_1/run_1/SliceTiming.txt ]; then
-	cp $StudyFolder/SliceTiming.txt "$Subdir"/func/rest/session_1/run_1
-	echo -e "Copying SliceTiming.txt from study dir to /rest/session_1/..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_1/run_1/EffectiveEchoSpacing.txt ]; then
-	cp $StudyFolder/EffectiveEchoSpacing.txt "$Subdir"/func/rest/session_1/run_1
-	echo -e "Copying EffectiveEchoSpacing.txt from study dir to /rest/session_1/..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_1/run_1/TE.txt ]; then
-	cp $StudyFolder/TE.txt "$Subdir"/func/rest/session_1/run_1
-	echo -e "Copying TE.txt from study dir to /rest/session_1/..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_1/run_1/TR.txt ]; then
-	cp $StudyFolder/TR.txt "$Subdir"/func/rest/session_1/run_1
-	echo -e "Copying TR.txt from study dir to /rest/session_1/..."
-fi
-
-if [ ! -f "$Subdir"/func/rest/session_2/run_1/SliceTiming.txt ]; then
-	cp $StudyFolder/SliceTiming.txt "$Subdir"/func/rest/session_2/run_1
-	echo -e "Copying SliceTiming.txt from study dir to /rest/session_2/..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_2/run_1/EffectiveEchoSpacing.txt ]; then
-	cp $StudyFolder/EffectiveEchoSpacing.txt "$Subdir"/func/rest/session_2/run_1
-	echo -e "Copying EffectiveEchoSpacing.txt from study dir to /rest/session_2/..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_2/run_1/TE.txt ]; then
-	cp $StudyFolder/TE.txt "$Subdir"/func/rest/session_2/run_1
-	echo -e "Copying TE.txt from study dir to /rest/session_2/..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_2/run_1/TR.txt ]; then
-	cp $StudyFolder/TR.txt "$Subdir"/func/rest/session_2/run_1
-	echo -e "Copying TR.txt from study dir to /rest/session_2/..."
-fi
-if [ ! -f "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt ]; then
-	cp "$Subdir"/func/rest/session_1/run_1/EffectiveEchoSpacing.txt "$Subdir"/func/xfms/rest
-	echo -e "Copying EffectiveEchoSpacing.txt to /xfms/ from "$Subdir"/func/rest/ ..."
-fi
-# ----------------------------------------------------------------------------------------------------------------------
 
 # count the number of sessions
 sessions=("$Subdir"/func/unprocessed/rest/session_*)
 sessions=$(seq 1 1 "${#sessions[@]}")
 
-# sweep the sessions;
+# sweep the sessions
 for s in $sessions ; do
 
-	# count number of runs for this session;
+	# count number of runs for this session
 	runs=("$Subdir"/func/unprocessed/rest/session_"$s"/run_*)
 	runs=$(seq 1 1 "${#runs[@]}")
 
-	# sweep the runs;
+	# sweep the runs
 	for r in $runs ; do
 
-		# check to see if this file exists or not;
+		# check to see if this file exists or not
 		if [ -f "$Subdir/func/unprocessed/field_maps/FM_rads_S"$s"_R"$r".nii.gz" ]; then
 
 			# the "AllFMs.txt" file contains 
-			# dir. paths to every pair of field maps;
+			# dir. paths to every pair of field maps
 			touch "$Subdir"/AllFMs.txt
 			echo S"$s"_R"$r" >> "$Subdir"/AllFMs.txt  
 
@@ -124,19 +70,19 @@ for s in $sessions ; do
 
 done
 
-# define a list of directories;
+# define a list of directories
 AllFMs=$(cat "$Subdir"/AllFMs.txt)
-rm "$Subdir"/AllFMs.txt # remove intermediate file;
+rm "$Subdir"/AllFMs.txt # remove intermediate file
 
-# create a white matter segmentation (.mgz --> .nii.gz);
+# create a white matter segmentation (.mgz --> .nii.gz)
 mri_binarize --i "$Subdir"/anat/T1w/"$Subject"/mri/aparc+aseg.mgz --wm --o "$Subdir"/anat/T1w/"$Subject"/mri/white.mgz > /dev/null 2>&1
 mri_convert -i "$Subdir"/anat/T1w/"$Subject"/mri/white.mgz -o "$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --like "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz > /dev/null 2>&1   # create a white matter segmentation (.mgz --> .nii.gz);
 
-# create clean tmp. copy of freesurfer folder;
+# create clean tmp. copy of freesurfer folder
 rm -rf "$Subdir"/anat/T1w/freesurfer > /dev/null 2>&1 
 cp -rf "$Subdir"/anat/T1w/"$Subject" "$Subdir"/anat/T1w/freesurfer > /dev/null 2>&1
 
-# create & define the FM "library";
+# create & define the FM "library"
 rm -rf "$Subdir"/func/field_maps/AllFMs > /dev/null 2>&1
 mkdir -p "$Subdir"/func/field_maps/AllFMs > /dev/null 2>&1
 WDIR="$Subdir"/func/field_maps/AllFMs
@@ -148,13 +94,14 @@ do
 
     # copy over field map pair to workspace 
     cp -r "$Subdir"/func/unprocessed/field_maps/FM_rads_"$ThisFM".nii.gz "$WDIR"/FM_rads_"$ThisFM".nii.gz
-    cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_brain_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz # added for EVO data (already ran bet)
     cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_"$ThisFM".nii.gz
 
-    # temporary bet image (changed settings to what works for EVO data)
-    # bet "$WDIR"/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz -f 0.6 -N > /dev/null 2>&1
+    # temporary bet image (for EVO, this only needs to be run for UW participants)
+    cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_brain_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz # added for EVO NKI data (already ran bet)
+    # bet "$WDIR"/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz -f 0.6 -B > /dev/null 2>&1
+    # cp -r "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz "$Subdir"/func/unprocessed/field_maps # save a copy in unproc dir
 
-    # for future use, add fsl_prepare_fieldmap() cmds here (did this part outside of pipeline for EVO)
+    # **ADD HERE LATER: for future use, add call to my preproc_fieldmaps script here (ran it outside of pipeline for EVO)**
 
     # register reference volume to the T1-weighted anatomical image; use bbr cost function 
     "$MEDIR"/res0urces/epi_reg_dof --epi="$WDIR"/FM_mag_"$ThisFM".nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz \
@@ -164,13 +111,12 @@ do
     bbregister --s freesurfer --mov "$WDIR"/fm2acpc_"$ThisFM".nii.gz --init-reg "$MEDIR"/res0urces/FSL/eye.dat --surf white.deformed --bold --reg "$WDIR"/fm2acpc_bbr_"$ThisFM".dat --6 --o "$WDIR"/fm2acpc_bbr_"$ThisFM".nii.gz > /dev/null 2>&1  
     tkregister2 --s freesurfer --noedit --reg "$WDIR"/fm2acpc_bbr_"$ThisFM".dat --mov "$WDIR"/fm2acpc_"$ThisFM".nii.gz --targ "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --fslregout "$WDIR"/fm2acpc_bbr_"$ThisFM".mat > /dev/null 2>&1  
 
-    # combine the original and 
-    # fine tuned affine matrix;
+    # combine the original and fine tuned affine matrix
     convert_xfm -omat "$WDIR"/fm2acpc_"$ThisFM".mat \
     -concat "$WDIR"/fm2acpc_bbr_"$ThisFM".mat \
     "$WDIR"/fm2acpc_"$ThisFM".mat > /dev/null 2>&1
 
-    # apply transformation to the relevant files;
+    # apply transformation to the relevant files
     flirt -dof 6 -interp spline -in "$WDIR"/FM_mag_"$ThisFM".nii.gz -ref "$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz -out "$WDIR"/FM_mag_acpc_"$ThisFM".nii.gz -applyxfm -init "$WDIR"/fm2acpc_"$ThisFM".mat > /dev/null 2>&1  
     fslmaths "$WDIR"/FM_mag_acpc_"$ThisFM".nii.gz -mas "$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz "$WDIR"/FM_mag_acpc_brain_"$ThisFM".nii.gz  > /dev/null 2>&1  
     flirt -dof 6 -interp spline -in "$WDIR"/FM_rads_"$ThisFM".nii.gz -ref "$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz -out "$WDIR"/FM_rads_acpc_"$ThisFM".nii.gz -applyxfm -init "$WDIR"/fm2acpc_"$ThisFM".mat > /dev/null 2>&1  
@@ -179,13 +125,13 @@ do
 done
 
 # This section is repeated in post_func_preproc_fm.sh (only run once)
-# merge & average the co-registered field map images accross sessions;  
+# merge & average the co-registered field map images accross sessions
 fslmerge -t "$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz "$WDIR"/FM_rads_acpc_S*.nii.gz > /dev/null 2>&1  
 fslmaths "$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz -Tmean "$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz > /dev/null 2>&1  
 fslmerge -t "$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz "$WDIR"/FM_mag_acpc_S*.nii.gz > /dev/null 2>&1  
 fslmaths "$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz -Tmean "$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz > /dev/null 2>&1  
 
-# perform a final brain extraction;
+# perform a final brain extraction
 fslmaths "$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz -mas "$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz \
 "$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz > /dev/null 2>&1  
-rm -rf "$Subdir"/anat/T1w/freesurfer/ # remove softlink;
+rm -rf "$Subdir"/anat/T1w/freesurfer/ # remove softlink
