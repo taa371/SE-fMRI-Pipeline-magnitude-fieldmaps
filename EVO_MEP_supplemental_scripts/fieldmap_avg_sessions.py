@@ -1,7 +1,7 @@
 # Average Field Maps Across Sessions to Create HCP Anatomical Pipeline Input Field Map
 # Holland Brown
 
-# Updated 2023-08-23
+# Updated 2023-08-24
 # Created 2023-08-23
 
 # %%
@@ -14,8 +14,9 @@ datadir = '/Volumes/LACIE-SHARE/EVO_MEP_data/WCM_MRI_data'
 
 p = fmri_tools(datadir) # use p.subs to run all subjects in data dir
 
-subs = ['97025'] # use subs to run one or a few subjects at a time
-# subs = p.subs
+subs = ['97018','97028','97030','97035'] # use subs to run one or a few subjects at a time
+# subs = p.subs # use p.subs to run all subs in data dir
+
 
 # define file names (without extensions)
 phase_in_fn1='FM_rads_S1_R1'
