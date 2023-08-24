@@ -2,7 +2,7 @@
 # Project Post-ICAAROMA Volumetric Functional Data onto a 3D Surface
 # Chuck Lynch; (cjl2007@med.cornell.edu)
 # Holland Brown; (hob4003@med.cornell.edu)
-# Updated 2023-08-21
+# Updated 2023-08-24
 
 Subject=$1
 StudyFolder=$2
