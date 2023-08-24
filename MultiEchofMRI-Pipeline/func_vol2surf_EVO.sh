@@ -1,7 +1,7 @@
 #!/bin/bash
+# CJL; (cjl2007@med.cornell.edu)
+# HRB; (hob4003@med.cornell.edu)
 # Project Post-ICAAROMA Volumetric Functional Data onto a 3D Surface
-# Chuck Lynch; (cjl2007@med.cornell.edu)
-# Holland Brown; (hob4003@med.cornell.edu)
 # Updated 2023-08-21
 
 Subject=$1
@@ -67,7 +67,7 @@ for s in $sessions ; do
 				REG_MSMSulc_FSLR32k="$Subdir"/anat/MNINonLinear/fsaverage_LR32k/$Subject.$Hemisphere.sphere.32k_fs_LR.surf.gii
 
 				# map functional data from volume to surface;
-				wb_command -volume-to-surface-mapping "$OUT_DIR"/Rest_"$c".nii.gz "$MIDTHICK" \
+				wb_command -volume-to-surface-mapping "$OUT_DIR"/"$c".nii.gz "$MIDTHICK" \
 				"$OUT_DIR"/"$hemisphere".native.shape.gii -ribbon-constrained "$WHITE" "$PIAL" 
 			
 				# dilate metric file 10mm in geodesic space;
@@ -91,7 +91,7 @@ for s in $sessions ; do
 
 			# combine hemispheres and subcortical structures into a single CIFTI file;
 			tr=$(cat "$Subdir"/func/rest/session_"$s"/run_"$r"/TR.txt) # define the repitition time;
-			wb_command -cifti-create-dense-timeseries "$OUT_DIR"/Rest_"$c".dtseries.nii -volume "$Subdir"/func/rest/session_"$s"/run_"$r"/Rest_"$c".nii.gz "$Subdir"/func/rois/Subcortical_ROIs_acpc.nii.gz \
+			wb_command -cifti-create-dense-timeseries "$OUT_DIR"/"$c".dtseries.nii -volume "$Subdir"/func/rest/session_"$s"/run_"$r"/"$c".nii.gz "$Subdir"/func/rois/Subcortical_ROIs_acpc.nii.gz \
 			-left-metric "$OUT_DIR"/lh.32k_fs_LR.shape.gii -roi-left "$Subdir"/anat/MNINonLinear/fsaverage_LR32k/"$Subject".L.atlasroi.32k_fs_LR.shape.gii \
 			-right-metric "$OUT_DIR"/rh.32k_fs_LR.shape.gii -roi-right "$Subdir"/anat/MNINonLinear/fsaverage_LR32k/"$Subject".R.atlasroi.32k_fs_LR.shape.gii -timestep "$tr"
 			rm "$OUT_DIR"/*shape* # remove left over files 
