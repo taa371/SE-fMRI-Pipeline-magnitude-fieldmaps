@@ -1,8 +1,8 @@
 # Average Field Maps Across Sessions to Create HCP Anatomical Pipeline Input Field Map
 # Holland Brown
 
-# Updated 2023-08-22
-# Created 2023-08-22
+# Updated 2023-08-23
+# Created 2023-08-23
 
 # %%
 import tqdm
@@ -16,6 +16,8 @@ p = fmri_tools(datadir) # use p.subs to run all subjects in data dir
 
 subs = ['97025'] # use subs to run one or a few subjects at a time
 # subs = p.subs
+
+# define file names (without extensions)
 phase_in_fn1='FM_rads_S1_R1'
 phase_in_fn2='FM_rads_S2_R1'
 
@@ -29,18 +31,10 @@ mag_out_fn='FM_mag_avg'
 cmd = [None] * 2
 for sub in tqdm(subs):
 
-    # define subject paths
-    phase_input1 = f'{datadir}/{sub}/field_maps/{phase_in_fn1}'
-    phase_input2 = f'{datadir}/{sub}/field_maps/{phase_in_fn2}'
-
-    mag_input1 = f'{datadir}/{sub}/field_maps/{mag_in_fn1}'
-    mag_input2 = f'{datadir}/{sub}/field_maps/{mag_in_fn2}'
-
-    phase_out = f'{datadir}/{sub}/field_maps/{phase_out_fn}'
-    mag_out = f'{datadir}/{sub}/field_maps/{mag_out_fn}'
+    fm_dir = f'{datadir}/{sub}/field_maps' # define subject field map path
 
     # avg magnitude and phase imgs
-    cmd[0] = f'fslmaths {phase_in_fn1} -add {phase_in_fn2} -div N {phase_out}'
-    cmd[1] = f'fslmaths {mag_in_fn1} -add {mag_in_fn2} -div N {mag_out}'
+    cmd[0] = f'fslmaths {fm_dir}/{phase_in_fn1} -add {fm_dir}/{phase_in_fn2} -div N {fm_dir}/{phase_out_fn}'
+    cmd[1] = f'fslmaths {fm_dir}/{mag_in_fn1} -add {fm_dir}/{mag_in_fn2} -div N {fm_dir}/{mag_out_fn}'
 
     p.exec_cmds(cmd)
