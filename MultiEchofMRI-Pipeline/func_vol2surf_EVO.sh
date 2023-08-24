@@ -67,7 +67,7 @@ for s in $sessions ; do
 				REG_MSMSulc_FSLR32k="$Subdir"/anat/MNINonLinear/fsaverage_LR32k/$Subject.$Hemisphere.sphere.32k_fs_LR.surf.gii
 
 				# map functional data from volume to surface;
-				wb_command -volume-to-surface-mapping "$OUT_DIR"/Rest_"$c".nii.gz "$MIDTHICK" \
+				wb_command -volume-to-surface-mapping "$OUT_DIR"/"$c".nii.gz "$MIDTHICK" \
 				"$OUT_DIR"/"$hemisphere".native.shape.gii -ribbon-constrained "$WHITE" "$PIAL" 
 			
 				# dilate metric file 10mm in geodesic space;
@@ -91,7 +91,7 @@ for s in $sessions ; do
 
 			# combine hemispheres and subcortical structures into a single CIFTI file;
 			tr=$(cat "$Subdir"/func/rest/session_"$s"/run_"$r"/TR.txt) # define the repitition time;
-			wb_command -cifti-create-dense-timeseries "$OUT_DIR"/Rest_"$c".dtseries.nii -volume "$Subdir"/func/rest/session_"$s"/run_"$r"/Rest_"$c".nii.gz "$Subdir"/func/rois/Subcortical_ROIs_acpc.nii.gz \
+			wb_command -cifti-create-dense-timeseries "$OUT_DIR"/"$c".dtseries.nii -volume "$Subdir"/func/rest/session_"$s"/run_"$r"/"$c".nii.gz "$Subdir"/func/rois/Subcortical_ROIs_acpc.nii.gz \
 			-left-metric "$OUT_DIR"/lh.32k_fs_LR.shape.gii -roi-left "$Subdir"/anat/MNINonLinear/fsaverage_LR32k/"$Subject".L.atlasroi.32k_fs_LR.shape.gii \
 			-right-metric "$OUT_DIR"/rh.32k_fs_LR.shape.gii -roi-right "$Subdir"/anat/MNINonLinear/fsaverage_LR32k/"$Subject".R.atlasroi.32k_fs_LR.shape.gii -timestep "$tr"
 			rm "$OUT_DIR"/*shape* # remove left over files 
@@ -142,8 +142,8 @@ done
 
 # 		# sweep the hemispheres;
 # 		for Hemisphere in L R ; do  
-# 			  wb_command -create-signed-distance-volume "$AtlasSpaceNativeFolder"/"$Subject"."$Hemisphere".white.native.surf.gii "$Subdir"/func/rest/session_"$s"/run_"$r"/Rest_OCME.nii.gz "$WDIR"/"$Subject"."$Hemisphere".white.native.nii.gz
-# 			  wb_command -create-signed-distance-volume "$AtlasSpaceNativeFolder"/"$Subject"."$Hemisphere".pial.native.surf.gii "$Subdir"/func/rest/session_"$s"/run_"$r"/Rest_OCME.nii.gz "$WDIR"/"$Subject"."$Hemisphere".pial.native.nii.gz
+# 			  wb_command -create-signed-distance-volume "$AtlasSpaceNativeFolder"/"$Subject"."$Hemisphere".white.native.surf.gii "$Subdir"/func/rest/session_"$s"/run_"$r"/OCME.nii.gz "$WDIR"/"$Subject"."$Hemisphere".white.native.nii.gz
+# 			  wb_command -create-signed-distance-volume "$AtlasSpaceNativeFolder"/"$Subject"."$Hemisphere".pial.native.surf.gii "$Subdir"/func/rest/session_"$s"/run_"$r"/OCME.nii.gz "$WDIR"/"$Subject"."$Hemisphere".pial.native.nii.gz
 # 			  fslmaths "$WDIR"/"$Subject"."$Hemisphere".white.native.nii.gz -thr 0 -bin -mul 255 "$WDIR"/"$Subject"."$Hemisphere".white_thr0.native.nii.gz
 # 			  fslmaths "$WDIR"/"$Subject"."$Hemisphere".white_thr0.native.nii.gz -bin "$WDIR"/"$Subject"."$Hemisphere".white_thr0.native.nii.gz
 # 			  fslmaths "$WDIR"/"$Subject"."$Hemisphere".pial.native.nii.gz -uthr 0 -abs -bin -mul 255 "$WDIR"/"$Subject"."$Hemisphere".pial_uthr0.native.nii.gz
@@ -159,8 +159,8 @@ done
 # 		rm "$WDIR"/"$Subject".L.ribbon.nii.gz "$WDIR"/"$Subject".R.ribbon.nii.gz
 
 # 		# calc. temporal mean, standard deviation, & covariance
-# 		fslmaths "$Subdir"/func/rest/session_"$s"/run_"$r"/Rest_OCME.nii.gz -Tmean "$WDIR"/mean -odt float
-# 		fslmaths "$Subdir"/func/rest/session_"$s"/run_"$r"/Rest_OCME.nii.gz -Tstd "$WDIR"/std -odt float
+# 		fslmaths "$Subdir"/func/rest/session_"$s"/run_"$r"/OCME.nii.gz -Tmean "$WDIR"/mean -odt float
+# 		fslmaths "$Subdir"/func/rest/session_"$s"/run_"$r"/OCME.nii.gz -Tstd "$WDIR"/std -odt float
 # 		fslmaths "$WDIR"/std -div "$WDIR"/mean "$WDIR"/cov
 # 		fslmaths "$WDIR"/cov -mas "$WDIR"/ribbon_only.nii.gz "$WDIR"/cov_ribbon # constrained to ribbon
 # 		fslmaths "$WDIR"/cov_ribbon -div `fslstats "$WDIR"/cov_ribbon -M` "$WDIR"/cov_ribbon_norm
