@@ -5,7 +5,7 @@
 StudyFolder=/Volumes/LACIE-SHARE/EVO_MEP_data/UW_MRI_data # location of Subject folder
 Subject=W235 # space delimited list of subject IDs (format like W001, W002, etc.)
 Sessions=$(cat "$StudyFolder"/Sessions.txt)
-TE=4.901 # in EVO study, UW TE = 4.901; NKI TE = 2.46 
+TE=2.399 # Difference in echo times; in EVO study, UW TE = 2.399, NKI TE = 2.46 
 
 # module load python-3.7.7-gcc-8.2.0-onbczx6
 # module load fsl/6.0.4
