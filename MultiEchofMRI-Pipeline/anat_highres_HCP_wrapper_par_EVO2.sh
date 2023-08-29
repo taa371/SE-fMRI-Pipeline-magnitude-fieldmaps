@@ -61,7 +61,7 @@ Template2mmMask="${HCPPIPEDIR_Templates}/MNI152_T1_2mm_brain_mask_dil.nii.gz" # 
 # The values set below are for the HCP-YA Protocol using the Siemens Connectom Scanner
 T1wSampleSpacing="NONE" # DICOM field (0019,1018) in s or "NONE" if not used
 T2wSampleSpacing="NONE" # DICOM field (0019,1018) in s or "NONE" if not used
-UnwarpDir="i" # z appears to be the appropriate polarity for the 3D structurals collected on Siemens scanners
+UnwarpDir="z" # z appears to be the appropriate polarity for the 3D structurals collected on Siemens scanners
 BrainSize="170" # BrainSize in mm, 150-170 for humans
 FNIRTConfig="${HCPPIPEDIR_Config}/T1_2_MNI152_2mm.cnf" # FNIRT 2mm T1w Config
 GradientDistortionCoeffs="NONE" # Set to NONE to skip gradient distortion correction
