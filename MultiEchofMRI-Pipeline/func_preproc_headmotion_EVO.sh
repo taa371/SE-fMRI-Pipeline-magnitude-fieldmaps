@@ -11,7 +11,7 @@ Subdir="$StudyFolder"/"$Subject"
 AtlasTemplate=$4
 DOF=$5
 NTHREADS=$6
-StartSession=1 # may not need to be hard-coded anymore; check call in wrapper
+StartSession=$7 # may not need to be hard-coded anymore; check call in wrapper
 
 # count the number of sessions
 sessions=("$Subdir"/func/rest/session_*)
@@ -133,8 +133,12 @@ for s in $AllScans ; do
 		fi
 
 		# perform slice time correction using custom timing file;
-		slicetimer -i "$Subdir"/func/rest/"$s"/Rest_E"$e".nii.gz --tcustom="$Subdir"/func/rest/"$s"/SliceTiming.txt -r $tr -o "$Subdir"/func/rest/"$s"/Rest_E"$e".nii.gz
-
+		if [[ -f "$Subdir"/func/rest/"$s"/SliceTiming.txt ]]; then
+			slicetimer -i "$Subdir"/func/rest/"$s"/Rest_E"$e".nii.gz --tcustom="$Subdir"/func/rest/"$s"/SliceTiming.txt -r $tr -o "$Subdir"/func/rest/"$s"/Rest_E"$e".nii.gz
+		else
+			echo -e "$Subdir/func/rest/$s/SliceTiming.txt does not exist. Skipping slice-timing correction."
+		fi
+		
 		# split original data into individual volumes;
 		fslsplit "$Subdir"/func/rest/"$s"/Rest_E"$e".nii.gz "$Subdir"/func/rest/"$s"/Rest_AVG_mcf.mat/vol_ -t 
 
@@ -214,5 +218,3 @@ done
 
 # # delete temp. workspace;
 # rm -rf "$Subdir"/workspace
-
-
