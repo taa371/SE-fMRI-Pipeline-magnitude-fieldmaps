@@ -2,7 +2,7 @@
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
 # Remove signal bias, slice-time correction
-# Updated 2023-08-18
+# Updated 2023-08-31
 
 MEDIR=$1
 Subject=$2
@@ -28,7 +28,7 @@ for s in $sessions ; do
 	for r in $runs ; do
 
 		# "AllScans.txt" contains dir. paths to every scan
-		echo /session_"$s"/run_"$r" >> "$Subdir"/AllScans.txt  
+		echo session_"$s"/run_"$r" >> "$Subdir"/AllScans.txt  
 
 	done
 
@@ -54,9 +54,7 @@ for s in $AllScans ; do
 	IntermediateCoregTarget=$(cat "$Subdir"/func/rest/"$s"/IntermediateCoregTarget.txt)
 	Intermediate2ACPCWarp=$(cat "$Subdir"/func/rest/"$s"/Intermediate2ACPCWarp.txt)
 
-
-
-# sweep the te;
+	# sweep the te;
 	for i in $te ; do
 
 		# track which te we are on
@@ -66,8 +64,7 @@ for s in $AllScans ; do
 		if [[ $i < 60 ]] ; then 
 
 			# split original 4D resting-state file into single 3D vols.;
-			fslsplit "$Subdir"/func/unprocessed/rest/"$s"/Rest*_E"$n_te".nii.gz \
-			"$Subdir"/func/rest/"$s"/vols/E"$n_te"_
+			fslsplit "$Subdir"/func/unprocessed/rest/"$s"/Rest*_E"$n_te".nii.gz "$Subdir"/func/rest/"$s"/vols/E"$n_te"_
 
 		fi
 
@@ -114,7 +111,11 @@ for s in $AllScans ; do
 	rm "$Subdir"/func/rest/"$s"/MCF.nii.gz # remove .nii output; not used moving forward 
 
 	# perform slice time correction; using custom timing file;
-	slicetimer -i "$Subdir"/func/rest/"$s"/Rest_AVG.nii.gz -o "$Subdir"/func/rest/"$s"/Rest_AVG.nii.gz -r $tr --tcustom="$Subdir"/func/rest/"$s"/SliceTiming.txt 
+	if [[ -f "$Subdir"/func/rest/"$s"/SliceTiming.txt ]]; then
+		slicetimer -i "$Subdir"/func/rest/"$s"/Rest_AVG.nii.gz -o "$Subdir"/func/rest/"$s"/Rest_AVG.nii.gz -r $tr --tcustom="$Subdir"/func/rest/"$s"/SliceTiming.txt
+	else
+		echo -e "$Subdir/func/rest/$s/SliceTiming.txt does not exist. Skipping slice-timing correction."
+	fi
 
 	# now run another MCFLIRT; specify average sbref as ref. vol & output transformation matrices;
 	mcflirt -dof "$DOF" -mats -stages 4 -in "$Subdir"/func/rest/"$s"/Rest_AVG.nii.gz -r "$IntermediateCoregTarget" -out "$Subdir"/func/rest/"$s"/Rest_AVG_mcf 
@@ -213,8 +214,5 @@ done
 
 # # delete temp. workspace;
 # rm -rf "$Subdir"/workspace
-
-
-
 
 
