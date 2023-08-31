@@ -2,7 +2,7 @@
 # Chuck Lynch; (cjl2007@med.cornell.edu)
 # Holland Brown; (hob4003@med.cornell.edu)
 # Pre-process field maps for EVO data from NKI collection site
-# Updated 2023-08-21
+# Updated 2023-08-31
 
 MEDIR=$1
 Subject=$2
@@ -25,17 +25,18 @@ rm -rf "$Subdir"/workspace/ > /dev/null 2>&1
 mkdir "$Subdir"/workspace/ > /dev/null 2>&1 
 
 # create a temp "find_fm_params.m"
-cp -rf "$MEDIR"/res0urces/find_fm_params.m "$Subdir"/workspace/temp.m # TEST
+cp -rf "$MEDIR"/res0urces/find_fm_params_EVO.m "$Subdir"/workspace/temp.m # TEST
 
 # define some Matlab variables
-echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1  
-echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1
-echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1  		
+echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m > /dev/null 2>&1  
+echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m > /dev/null 2>&1
+echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m > /dev/null 2>&1  		
 cd "$Subdir"/workspace/ # run script via Matlab 
 matlab -nodesktop -nosplash -r "temp; exit" > /dev/null 2>&1  
 
 # delete some files
-rm "$Subdir"/workspace/temp.m
+rm -r "$Subdir"/workspace/
+mkdir "$Subdir"/workspace/
 cd "$Subdir"
 
 # define & create a temporary directory
