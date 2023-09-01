@@ -1,7 +1,7 @@
 
 Labels = [8 47 26 58 18 54 11 50 17 53 13 52 12 51 10 49 16 28 60]; % these are the default subcortical labels
 tmp_dir = [Subdir '/func/rois/tmp']; % define the roi directory
-system(['mkdir -p ' tmp_dir]); % make the temporary dir. 
+system(['mkdir ' tmp_dir]); % make the temporary dir. 
 cd(tmp_dir); % change dir. 
 
 % sweep through the labels
@@ -23,7 +23,7 @@ system(['rm -rf ' tmp_dir]);
 
 % MNInonlinear
 tmp_dir = [Subdir '/func/rois/tmp']; % define the roi directory
-system(['mkdir -p ' tmp_dir]); % make the temporary dir. 
+system(['mkdir ' tmp_dir]); % make the temporary dir. 
 cd(tmp_dir); % change dir. 
 
 % sweep through the labels
