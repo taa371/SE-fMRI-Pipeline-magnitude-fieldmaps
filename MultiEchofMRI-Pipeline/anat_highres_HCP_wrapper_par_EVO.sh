@@ -62,7 +62,7 @@ Template2mmMask="${HCPPIPEDIR_Templates}/MNI152_T1_2mm_brain_mask_dil.nii.gz" # 
 # The values set below are for the HCP-YA Protocol using the Siemens Connectom Scanner
 T1wSampleSpacing="NONE" # DICOM field (0019,1018) in s or "NONE" if not used
 T2wSampleSpacing="NONE" # DICOM field (0019,1018) in s or "NONE" if not used
-UnwarpDir="j-" # see fslhd info for phase encoding dir; NOTE: for EVO, both NKI and UW scanners have dir 'j-'
+UnwarpDir="j" # {x,y,z,x-,y-,z-} OR {i,j,k,i-,j-,k-}' "Readout direction of the T1w and T2w images (according to the *voxel axes); NOTE: for EVO, both NKI and UW scanners have dir 'j'
 BrainSize="170" # BrainSize in mm, 150-170 for humans
 FNIRTConfig="${HCPPIPEDIR_Config}/T1_2_MNI152_2mm.cnf" # FNIRT 2mm T1w Config
 GradientDistortionCoeffs="NONE" # Set to NONE to skip gradient distortion correction
