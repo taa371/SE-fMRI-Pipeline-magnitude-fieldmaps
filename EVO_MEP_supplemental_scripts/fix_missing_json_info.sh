@@ -1,10 +1,25 @@
 #!bin/bash
 # Holland Brown
-# Updated: 2023-09-01
-# Source: https://neurostars.org/t/deriving-slice-timing-order-from-philips-par-rec-and-console-information/17688
+# Updated: 2023-09-05
+# NOTE: need jq installed (not installed on cluster)
+# NOTE: can get slice timing by running rorden_get_slice_times.m
+# Sources:
+    # https://stackoverflow.com/questions/24942875/change-json-file-by-bash-script
+    # https://jqlang.github.io/jq/manual/
 
-trStr="1.3999"
-phaseencodingdirStr="j-"
+Subject="" # subject ID
+Session="1" # session number
+#UnprocFuncDir=/athena/victorialab/scratch/hob4003/UW_MRI_data/"$Subject"/func/unprocessed/rest/session_"$Session"/run_1 # destination for new JSON files
+#jsonFn=Rest_S"$Session"_R1_E1.json
+UnprocFuncDir=/Users/holland_brown_ra/Desktop
+jsonFn=test.json
+
+# parameters you want to change in JSON file
+trStr="1.3999" # for UW, TR is 1.399999; for NKI, TR is 1.4
+phaseencodingdirStr="j-" # '-j' for both NKI and UW
+teStr="25" # for UW, TE is 25; for NKI, TE is 30
+
+# get UW slice timing using Rorden's Matlab script; NKI slice timing already in JSONs
 slicetimingStr="[
 0,
 0.699999,
@@ -151,7 +166,12 @@ slicetimingStr="[
 0.690277,
 1.39028 ],"
 
-jq '. + { "RepetitionTime": "" }' <<<"$jsonStr"
+# store parameters you want to change in JSON variable
+jsonStr='{ "RepetitionTime": "$trStr", "PhaseEncodingDirection": "$phaseencodingdirStr", "SliceTiming": "$slicetimingStr" }'
+
+jq '. + { "RepetitionTime": "trStr" }' <<<"$jsonStr"
 jq '. + { "PhaseEncodingDirection": "$phaseencodingdirStr" }' <<<"$phaseencodingdirStr"
 jq '. + {"SliceTiming": slicetimingStr}'
 
+# create new JSON file
+echo -e "$jsonStr" >> "$UnprocFuncDir"/"$jsonFn"
