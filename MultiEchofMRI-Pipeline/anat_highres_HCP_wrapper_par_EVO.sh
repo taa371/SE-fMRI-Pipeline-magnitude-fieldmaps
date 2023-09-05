@@ -1,15 +1,18 @@
 #!/bin/bash
-# CJL; (cjl2007@med.cornell.edu)
-# HRB; (hob4003@med.cornell.edu)
+# CJL; (cjl2007)
+# HRB; (hob4003)
 # Wrapper for the HCP's anatomical preprocessing pipeline (1st wrapper of 3)
-# Updated 2023-08-21
+# Resources: https://github.com/Washington-University/HCPpipelines/blob/master/PreFreeSurfer/PreFreeSurferPipeline.sh
+# Updated 2023-09-05
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
-TE=$3 # HRB: added this bc TE differs between 2 collection sites for EVO study (For EVO study, UW TE is 4.901 ms, NKI TE is 2.46 ms)
+TE=$3 # TE differs between 2 collection sites for EVO study (For EVO study, UW TE is 2.399 ms, NKI TE is 2.46 ms)
 MagnitudeInputName=$4 # The MagnitudeInputName variable should be set to a 4D magnitude volume with two 3D timepoints or "NONE" if not used
 PhaseInputName=$5 # The PhaseInputName variable should be set to a 3D phase difference volume or "NONE" if not used
 export NSLOTS=$6 # set number of cores for FreeSurfer
+AvgrdcSTRING=$7 # Readout Distortion Correction; for EVO, should be "SiemensFieldMap" or "PhilipsFieldMap"
+
 export PATH='/athena/victorialab/scratch/hob4003/ME_Pipeline/Hb_HCP_master/FreeSurfer/custom:/software/spack/bin:/athena/scu/scratch/shared/bin:/usr/condabin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin:/opt/ibutils/bin:/home/hob4003/.local/bin:/home/hob4003/bin:/home/software/apps/freesurfer6/6.0/freesurfer/mni/bin:/home/software/spack/opt/spack/linux-centos7-x86_64/gcc-8.2.0/ants-2.4.0-ehibrhis7to7ojl5v4ctspcdwljeyf7l/bin:$PATH'
 echo $PATH %IE
 
@@ -28,26 +31,22 @@ fi
 # Set variable value that sets up environment
 EnvironmentScript="/athena/victorialab/scratch/hob4003/ME_Pipeline/Hb_HCP_master/Examples/Scripts/SetUpHCPPipeline.sh" # Pipeline environment script; users need to set this 
 source ${EnvironmentScript}	# Set up pipeline environment variables and software
-PRINTCOM="" # If PRINTCOM is not a null or empty string variable, then this script and other scripts that it calls will simply print out the primary commands it otherwise would run. This printing will be done using the command specified in the PRINTCOM variable
-
-AvgrdcSTRING=$7 # Readout Distortion Correction;
-#MagnitudeInputName="FM_mag_S1_R1.nii.gz" # The MagnitudeInputName variable should be set to a 4D magnitude volume with two 3D timepoints or "NONE" if not used
-#PhaseInputName="FM_rads_S1_R1.nii.gz" # The PhaseInputName variable should be set to a 3D phase difference volume or "NONE" if not used
-# TE="2.46" # For EVO study: UW TE is 4.901 ms, NKI TE is 2.46 ms
+PRINTCOM="" # leave empty to run everything; set to "echo" to print everything without actually running any commands, for testing purposes
 
 # I added this for posterity...
 echo -e "\nSubject: $Subject" # so subject number is recorded in slurm out file for QC purposes
 echo -e "TE: $TE" # make sure the TE is right for UW vs. NKI ppts
 echo -e "Magnitude Image: $MagnitudeInputName" # so I can tell if I included fieldmaps or left them as "NONE" for this run
 echo -e "Phase Image: $PhaseInputName\n"
+echo -e "Averaging and Readout Distortion Correction Method: $AvgrdcSTRING\n"
 
 # Variables related to using Spin Echo Field Maps -> no spin-echo FMs for EVO study
-SpinEchoPhaseEncodeNegative=$5
-SpinEchoPhaseEncodePositive=$6
-SEEchoSpacing=$7
+SpinEchoPhaseEncodeNegative="NONE"
+SpinEchoPhaseEncodePositive="NONE"
+SEEchoSpacing="NONE"
 SEUnwarpDir="NONE"
-TopupConfig=$8
-GEB0InputName="NONE"
+TopupConfig="NONE"
+GEB0InputName="NONE" # General Electric field map name (don't use a GE scanner in EVO study)
 
 # define some templates;
 T1wTemplate="${HCPPIPEDIR_Templates}/MNI152_T1_0.8mm.nii.gz" # Hires T1w MNI template
@@ -63,12 +62,12 @@ Template2mmMask="${HCPPIPEDIR_Templates}/MNI152_T1_2mm_brain_mask_dil.nii.gz" # 
 # The values set below are for the HCP-YA Protocol using the Siemens Connectom Scanner
 T1wSampleSpacing="NONE" # DICOM field (0019,1018) in s or "NONE" if not used
 T2wSampleSpacing="NONE" # DICOM field (0019,1018) in s or "NONE" if not used
-UnwarpDir="z" # z appears to be the appropriate polarity for the 3D structurals collected on Siemens scanners
+UnwarpDir="j-" # see fslhd info for phase encoding dir; NOTE: for EVO, both NKI and UW scanners have dir 'j-'
 BrainSize="170" # BrainSize in mm, 150-170 for humans
 FNIRTConfig="${HCPPIPEDIR_Config}/T1_2_MNI152_2mm.cnf" # FNIRT 2mm T1w Config
 GradientDistortionCoeffs="NONE" # Set to NONE to skip gradient distortion correction
 
-echo -e "\nAnatomical Preprocessing and Surface Registration Pipeline: with NKI Field Maps" 
+echo -e "\nAnatomical Preprocessing and Surface Registration Pipeline for subject $Subject...\n" 
 
 # clean slate;
  rm -rf ${StudyFolder}/${Subject}/T*w > /dev/null 2>&1 
@@ -85,7 +84,7 @@ for i in $T1ws ; do
 done
 
 # build list of full paths to T1w images;
-T2ws=`ls ${StudyFolder}/${Subject}/anat/unprocessed/T2w/T2w*.nii.gz > /dev/null 2>&1`  
+T2ws=`ls ${StudyFolder}/${Subject}/anat/unprocessed/T2w/T2w*.nii.gz`  
 T2wInputImages="" # preallocate 
 
 # find all 
@@ -94,6 +93,7 @@ for i in $T2ws ; do
 	T2wInputImages=`echo "${T2wInputImages}$i@"`
 done
 
+# NOTE: EVO data should be in "LegacyStyleData" processing mode
 # determine if T2w images exist & adjust "processing mode" accordingly
 if [ "$T2wInputImages" = "" ]; then
 	T2wInputImages="NONE" # script will proceed in "legacy" mode
@@ -105,7 +105,7 @@ fi
 # make "QA" folder
  mkdir ${StudyFolder}/${Subject}/qa/ > /dev/null 2>&1 
 
- echo -e "\nRunning PreFreeSurferPipeline" 
+ echo -e "\nRunning PreFreeSurferPipeline for subject $Subject...\n" 
 
 # run the Pre FreeSurfer pipeline
  ${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh \
@@ -154,7 +154,7 @@ else
 	T2wImage="${StudyFolder}/${Subject}/T1w/T2w_acpc_dc_restore.nii.gz" #T2w FreeSurfer Input (Full Resolution)
 fi
 
-echo -e "Running FreeSurferPipeline" 
+echo -e "\nRunning FreeSurferPipeline for subject $Subject\n" 
 
 # run the FreeSurfer pipeline
  ${HCPPIPEDIR}/FreeSurfer/FreeSurferPipeline.sh \
@@ -176,7 +176,7 @@ FreeSurferLabels="${HCPPIPEDIR_Config}/FreeSurferAllLut.txt"
 ReferenceMyelinMaps="${HCPPIPEDIR_Templates}/standard_mesh_atlases/Conte69.MyelinMap_BC.164k_fs_LR.dscalar.nii"
 RegName="MSMSulc" #MSMSulc is recommended, if binary is not available use FS (FreeSurfer)
 
-echo -e "Running PostFreeSurferPipeline" 
+echo -e "\nRunning PostFreeSurferPipeline for subject $Subject\n" 
 
 # run the Post FreeSurfer pipeline
 ${HCPPIPEDIR}/PostFreeSurfer/PostFreeSurferPipeline.sh \
@@ -197,3 +197,5 @@ ${HCPPIPEDIR}/PostFreeSurfer/PostFreeSurferPipeline.sh \
 mv ${StudyFolder}/${Subject}/T*w ${StudyFolder}/${Subject}/anat # T1w & T2w folders
 mv ${StudyFolder}/${Subject}/MNINonLinear ${StudyFolder}/${Subject}/anat # MNINonLinear folder
 mv ${StudyFolder}/${Subject}/qa ${StudyFolder}/${Subject}/anat # QA folder
+
+echo -e "\nAnatomical preprocessing done for subject $Subject.\n"
