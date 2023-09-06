@@ -1,177 +1,40 @@
-#!bin/bash
+#!/bin/bash
 # Holland Brown
-# Updated: 2023-09-05
+# Updated: 2023-09-06
 # NOTE: need jq installed (not installed on cluster)
 # NOTE: can get slice timing by running rorden_get_slice_times.m
 # Sources:
     # https://stackoverflow.com/questions/24942875/change-json-file-by-bash-script
     # https://jqlang.github.io/jq/manual/
+    # https://notearena.com/lesson/combining-multiple-json-files-using-jq-in-shell-scripting/
 
 Subject="" # subject ID
 Session="1" # session number
 #UnprocFuncDir=/athena/victorialab/scratch/hob4003/UW_MRI_data/"$Subject"/func/unprocessed/rest/session_"$Session"/run_1 # destination for new JSON files
 #jsonFn=Rest_S"$Session"_R1_E1.json
-UnprocFuncDir=/Users/holland_brown_ra/Desktop
-jsonFn=test.json
+UnprocFuncDir=/home/holland/Desktop
+json2read=test.json
+json2add=UW_scan_params.json
+jsonFinal=Rest_S"$Session"_E1.json
 
-# parameters you want to change in JSON file
-trStr="1.3999" # for UW, TR is 1.399999; for NKI, TR is 1.4
-phaseencodingdirStr="j-" # '-j' for both NKI and UW
-teStr="25" # for UW, TE is 25; for NKI, TE is 30
+# create test json file
+# testStr='{ "key1": "value1", "key2": "value2"}'
+# echo -e "$testStr" >> "$UnprocFuncDir"/"$json2read"
 
-# get UW slice timing using Rorden's Matlab script; NKI slice timing already in JSONs
-slicetimingStr="[
-0,
-0.699999,
-0.00972222,
-0.709722,
-0.0194444,
-0.719444,
-0.0291666,
-0.729166,
-0.0388889,
-0.738888,
-0.0486111,
-0.748611,
-0.0583333,
-0.758333,
-0.0680555,
-0.768055,
-0.0777777,
-0.777777,
-0.0874999,
-0.787499,
-0.0972222,
-0.797222,
-0.106944,
-0.806944,
-0.116667,
-0.816666,
-0.126389,
-0.826388,
-0.136111,
-0.836111,
-0.145833,
-0.845833,
-0.155555,
-0.855555,
-0.165278,
-0.865277,
-0.175,
-0.874999,
-0.184722,
-0.884722,
-0.194444,
-0.894444,
-0.204167,
-0.904166,
-0.213889,
-0.913888,
-0.223611,
-0.92361,
-0.233333,
-0.933333,
-0.243055,
-0.943055,
-0.252778,
-0.952777,
-0.2625,
-0.962499,
-0.272222,
-0.972222,
-0.281944,
-0.981944,
-0.291666,
-0.991666,
-0.301389,
-1.00139,
-0.311111,
-1.01111,
-0.320833,
-1.02083,
-0.330555,
-1.03055,
-0.340278,
-1.04028,
-0.35,
-1.05,
-0.359722,
-1.05972,
-0.369444,
-1.06944,
-0.379166,
-1.07917,
-0.388889,
-1.08889,
-0.398611,
-1.09861,
-0.408333,
-1.10833,
-0.418055,
-1.11805,
-0.427777,
-1.12778,
-0.4375,
-1.1375,
-0.447222,
-1.14722,
-0.456944,
-1.15694,
-0.466666,
-1.16667,
-0.476389,
-1.17639,
-0.486111,
-1.18611,
-0.495833,
-1.19583,
-0.505555,
-1.20555,
-0.515277,
-1.21528,
-0.525,
-1.225,
-0.534722,
-1.23472,
-0.544444,
-1.24444,
-0.554166,
-1.25417,
-0.563888,
-1.26389,
-0.573611,
-1.27361,
-0.583333,
-1.28333,
-0.593055,
-1.29305,
-0.602777,
-1.30278,
-0.6125,
-1.3125,
-0.622222,
-1.32222,
-0.631944,
-1.33194,
-0.641666,
-1.34167,
-0.651388,
-1.35139,
-0.661111,
-1.36111,
-0.670833,
-1.37083,
-0.680555,
-1.38055,
-0.690277,
-1.39028 ],"
+# fresh json files for testing
+rm "$UnprocFuncDir"/"$json2read"
+rm "$UnprocFuncDir"/"$json2add"
 
-# store parameters you want to change in JSON variable
-jsonStr='{ "RepetitionTime": "$trStr", "PhaseEncodingDirection": "$phaseencodingdirStr", "SliceTiming": "$slicetimingStr" }'
+# create json containing new parameters to be added
+jsonInput='{ "RepetitionTime": "$trStr", "PhaseEncodingDirection": "$phaseencodingdirStr", "EchoTime": "$teStr", "SliceTiming": "$slicetimingStr" }'
+echo -e "$jsonInput" >> "$UnprocFuncDir"/"$json2add"
 
-jq '. + { "RepetitionTime": "trStr" }' <<<"$jsonStr"
-jq '. + { "PhaseEncodingDirection": "$phaseencodingdirStr" }' <<<"$phaseencodingdirStr"
-jq '. + {"SliceTiming": slicetimingStr}'
+# read original json file into a string I can edit
+origStr=( cat "$UnprocFuncDir"/"$json2read" )
+echo -e origStr # test
 
-# create new JSON file
-echo -e "$jsonStr" >> "$UnprocFuncDir"/"$jsonFn"
+# add parameters to json string
+# jq '. + { "RepetitionTime": "$trStr" } "$jsonStr"'
+
+# combine 2 json files into final json
+jq -s '.'  "$UnprocFuncDir"/"$json2read" "$UnprocFuncDir"/"$json2add" > "$UnprocFuncDir"/"$jsonFinal"
