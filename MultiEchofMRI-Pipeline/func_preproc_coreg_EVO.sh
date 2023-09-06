@@ -287,7 +287,9 @@ flirt -interp nearestneighbour -in "$Subdir"/anat/MNINonLinear/T1w_restore_brain
 fslmaths "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func.nii.gz -bin "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func_mask.nii.gz # this is a binarized version of the T1w_nonlin_brain.nii.gz image in 2mm atlas space; used for masking functional data
 
 # remove tmp. freesurfer folder
-rm -rf "$Subdir"/anat/T1w/freesurfer 
+rm -rf "$Subdir"/anat/T1w/freesurfer
+
+mkdir "$Subdir"/func/rois/tmp/ # for coreg matlab script later
 
 # fresh workspace dir
 rm -rf "$Subdir"/workspace > /dev/null 2>&1
