@@ -2,7 +2,7 @@
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
 # Create SBrefs (if necessary) and coregister to anatomicals
-# Updated 2023-08-31
+# Updated 2023-09-06
 
 MEDIR=$1
 Subject=$2
@@ -29,8 +29,8 @@ rm -rf "$Subdir"/workspace > /dev/null 2>&1
 mkdir "$Subdir"/workspace > /dev/null 2>&1
 
 # create temporary find_epi_params.m 
-cp -rf "$MEDIR"/res0urces/find_epi_params2.m "$Subdir"/workspace
-mv "$Subdir"/workspace/find_epi_params2.m "$Subdir"/workspace/temp.m # rename in a separate line
+cp -rf "$MEDIR"/res0urces/find_epi_params_EVO.m "$Subdir"/workspace
+mv "$Subdir"/workspace/find_epi_params_EVO.m "$Subdir"/workspace/temp.m # rename in a separate line
 
 # define some Matlab variables;
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
@@ -41,69 +41,71 @@ cd "$Subdir"/workspace/ # run script via Matlab
 matlab -nodesktop -nosplash -r "temp; exit" #> /dev/null 2>&1 
 
 # delete some files
-rm -rf "$Subdir"/workspace
-cd "$Subdir" # go back to subject dir. 
+cd "$Subdir" # go back to subject dir.
+rm -rf "$Subdir"/workspace/
+mkdir "$Subdir"/workspace/
 
 # next, we loop through all scans and create SBrefs (average of first few echoes) for each scan
 # NOTE: this is used (when needed) as an intermediate target for co-registeration
 
 # define & create a temporary directory;
-mkdir -p "$Subdir"/func/rest/AverageSBref
-WDIR="$Subdir"/func/rest/AverageSBref
+mkdir -p "$Subdir"/func/rest/AverageSBref/
+WDIR="$Subdir"/func/rest/AverageSBref/
 
 # HRB -> need this code block if there is no JSON file ----------------------------------------------------------------
 # Create necessary files (if ppts don't have JSON files)
-if [ ! -d  "$Subdir"/func/rest/session_1 ]; then
-	cp -r "$Subdir"/func/unprocessed/rest/session_1 "$Subdir"/func/rest/
-	echo -e "Copying unprocessed S1 resting-state files to "$Subdir"/func/rest/ ..."
-fi
-if [ ! -d  "$Subdir"/func/rest/session_2 ] && [ -d "$Subdir"/func/unprocessed/rest/session_2 ]; then
-	cp -r "$Subdir"/func/unprocessed/rest/session_2 "$Subdir"/func/rest/
-	echo -e "Copying unprocessed S2 resting-state files to "$Subdir"/func/rest/ ..."
-fi
-if [ ! -d "$Subdir"/func/xfms ]; then
-	mkdir "$Subdir"/func/xfms
-	mkdir "$Subdir"/func/xfms/rest
-	echo -e "Creating "$Subdir"/func/xfms directory..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_1/run_1/SliceTiming.txt ]; then
-	cp $StudyFolder/SliceTiming.txt "$Subdir"/func/rest/session_1/run_1
-	echo -e "Copying SliceTiming.txt from study dir to /rest/session_1/..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_1/run_1/EffectiveEchoSpacing.txt ]; then
-	cp $StudyFolder/EffectiveEchoSpacing.txt "$Subdir"/func/rest/session_1/run_1
-	echo -e "Copying EffectiveEchoSpacing.txt from study dir to /rest/session_1/..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_1/run_1/TE.txt ]; then
-	cp $StudyFolder/TE.txt "$Subdir"/func/rest/session_1/run_1
-	echo -e "Copying TE.txt from study dir to /rest/session_1/..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_1/run_1/TR.txt ]; then
-	cp $StudyFolder/TR.txt "$Subdir"/func/rest/session_1/run_1
-	echo -e "Copying TR.txt from study dir to /rest/session_1/..."
-fi
+# if [ ! -d  "$Subdir"/func/rest/session_1 ]; then
+# 	cp -r "$Subdir"/func/unprocessed/rest/session_1 "$Subdir"/func/rest/
+# 	echo -e "Copying unprocessed S1 resting-state files to "$Subdir"/func/rest/ ..."
+# fi
+# if [ ! -d  "$Subdir"/func/rest/session_2 ] && [ -d "$Subdir"/func/unprocessed/rest/session_2 ]; then
+# 	cp -r "$Subdir"/func/unprocessed/rest/session_2 "$Subdir"/func/rest/
+# 	echo -e "Copying unprocessed S2 resting-state files to "$Subdir"/func/rest/ ..."
+# fi
+# if [ ! -d "$Subdir"/func/xfms ]; then
+# 	mkdir "$Subdir"/func/xfms
+# 	mkdir "$Subdir"/func/xfms/rest
+# 	echo -e "Creating "$Subdir"/func/xfms directory..."
+# fi
+# if [ ! -f "$Subdir"/func/rest/session_1/run_1/SliceTiming.txt ]; then
+# 	cp $StudyFolder/SliceTiming.txt "$Subdir"/func/rest/session_1/run_1
+# 	echo -e "Copying SliceTiming.txt from study dir to /rest/session_1/..."
+# fi
+# if [ ! -f "$Subdir"/func/rest/session_1/run_1/EffectiveEchoSpacing.txt ]; then
+# 	cp $StudyFolder/EffectiveEchoSpacing.txt "$Subdir"/func/rest/session_1/run_1
+# 	echo -e "Copying EffectiveEchoSpacing.txt from study dir to /rest/session_1/..."
+# fi
+# if [ ! -f "$Subdir"/func/rest/session_1/run_1/TE.txt ]; then
+# 	cp $StudyFolder/TE.txt "$Subdir"/func/rest/session_1/run_1
+# 	echo -e "Copying TE.txt from study dir to /rest/session_1/..."
+# fi
+# if [ ! -f "$Subdir"/func/rest/session_1/run_1/TR.txt ]; then
+# 	cp $StudyFolder/TR.txt "$Subdir"/func/rest/session_1/run_1
+# 	echo -e "Copying TR.txt from study dir to /rest/session_1/..."
+# fi
 
-if [ ! -f "$Subdir"/func/rest/session_2/run_1/SliceTiming.txt ]; then
-	cp $StudyFolder/SliceTiming.txt "$Subdir"/func/rest/session_2/run_1
-	echo -e "Copying SliceTiming.txt from study dir to /rest/session_2/..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_2/run_1/EffectiveEchoSpacing.txt ]; then
-	cp $StudyFolder/EffectiveEchoSpacing.txt "$Subdir"/func/rest/session_2/run_1
-	echo -e "Copying EffectiveEchoSpacing.txt from study dir to /rest/session_2/..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_2/run_1/TE.txt ]; then
-	cp $StudyFolder/TE.txt "$Subdir"/func/rest/session_2/run_1
-	echo -e "Copying TE.txt from study dir to /rest/session_2/..."
-fi
-if [ ! -f "$Subdir"/func/rest/session_2/run_1/TR.txt ]; then
-	cp $StudyFolder/TR.txt "$Subdir"/func/rest/session_2/run_1
-	echo -e "Copying TR.txt from study dir to /rest/session_2/..."
-fi
-if [ ! -f "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt ]; then
-	cp "$Subdir"/func/rest/session_1/run_1/EffectiveEchoSpacing.txt "$Subdir"/func/xfms/rest
-	echo -e "Copying EffectiveEchoSpacing.txt to /xfms/ from "$Subdir"/func/rest/ ..."
-fi
+# if [ ! -f "$Subdir"/func/rest/session_2/run_1/SliceTiming.txt ]; then
+# 	cp $StudyFolder/SliceTiming.txt "$Subdir"/func/rest/session_2/run_1
+# 	echo -e "Copying SliceTiming.txt from study dir to /rest/session_2/..."
+# fi
+# if [ ! -f "$Subdir"/func/rest/session_2/run_1/EffectiveEchoSpacing.txt ]; then
+# 	cp $StudyFolder/EffectiveEchoSpacing.txt "$Subdir"/func/rest/session_2/run_1
+# 	echo -e "Copying EffectiveEchoSpacing.txt from study dir to /rest/session_2/..."
+# fi
+# if [ ! -f "$Subdir"/func/rest/session_2/run_1/TE.txt ]; then
+# 	cp $StudyFolder/TE.txt "$Subdir"/func/rest/session_2/run_1
+# 	echo -e "Copying TE.txt from study dir to /rest/session_2/..."
+# fi
+# if [ ! -f "$Subdir"/func/rest/session_2/run_1/TR.txt ]; then
+# 	cp $StudyFolder/TR.txt "$Subdir"/func/rest/session_2/run_1
+# 	echo -e "Copying TR.txt from study dir to /rest/session_2/..."
+# fi
+# if [ ! -f "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt ]; then
+# 	cp "$Subdir"/func/rest/session_1/run_1/EffectiveEchoSpacing.txt "$Subdir"/func/xfms/rest
+# 	echo -e "Copying EffectiveEchoSpacing.txt to /xfms/ from "$Subdir"/func/rest/ ..."
+# fi
 # ----------------------------------------------------------------------------------------------------------------------
+
 
 # count the number of sessions
 sessions=("$Subdir"/func/unprocessed/rest/session_*)
@@ -292,7 +294,7 @@ rm -rf "$Subdir"/workspace > /dev/null 2>&1
 mkdir "$Subdir"/workspace > /dev/null 2>&1
 
 # create temp. make_precise_subcortical_labels.m 
-cp -rf "$MEDIR"/res0urces/make_precise_subcortical_labels.m "$Subdir"/workspace/temp.m
+cp -rf "$MEDIR"/res0urces/make_precise_subcortical_labels_EVO.m "$Subdir"/workspace/temp.m
 
 # define some Matlab variables
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
