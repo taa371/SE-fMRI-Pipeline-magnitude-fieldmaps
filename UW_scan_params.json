@@ -1,6 +1,7 @@
 {
     "EchoTime": 0.025001,
     "RepetitionTime": 1.399999,
+    "EffectiveEchoSpacing": 0.000296815,
     "PhaseEncodingDirection": "j-",
     "SliceTiming": [
         0,
@@ -146,5 +147,5 @@
         0.680555,
         1.38055,
         0.690277,
-        1.39028 ]
+        1.39028    ]
 }
