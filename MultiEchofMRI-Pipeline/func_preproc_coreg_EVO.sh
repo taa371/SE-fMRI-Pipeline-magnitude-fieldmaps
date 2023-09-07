@@ -308,7 +308,7 @@ matlab -nodesktop -nosplash -r "temp; exit"
 cd "$Subdir" # go back to subject dir
 
 # finally, evaluate whether scan-specific or average field maps 
-# produce the best co-registeration / cross-scan allignment & 
+# produce the best co-registeration/cross-scan allignment & 
 # then generate a movie summarizing the results 
 
 # fresh workspace dir.
