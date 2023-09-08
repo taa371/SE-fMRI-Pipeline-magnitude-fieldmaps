@@ -2,7 +2,7 @@
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
 # Create SBrefs (if necessary) and coregister to anatomicals
-# Updated 2023-09-06
+# Updated 2023-09-08
 
 MEDIR=$1
 Subject=$2
@@ -289,14 +289,16 @@ fslmaths "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func.nii.gz -bin "$Subdir"/fu
 # remove tmp. freesurfer folder
 rm -rf "$Subdir"/anat/T1w/freesurfer
 
-mkdir "$Subdir"/func/rois/tmp/ # for coreg matlab script later
-
 # fresh workspace dir
 rm -rf "$Subdir"/workspace > /dev/null 2>&1
 mkdir "$Subdir"/workspace > /dev/null 2>&1
 
 # create temp. make_precise_subcortical_labels.m 
 cp -rf "$MEDIR"/res0urces/make_precise_subcortical_labels_EVO.m "$Subdir"/workspace/temp.m
+
+# make tmp dir and navigate there (bug fix for make_precise_subcortical_labels_EVO.m; can't make dirs due to permissions)
+mkdir "$Subdir"/func/rois/tmp
+mkdir "$Subdir"/func/rois/tmp_nonlin
 
 # define some Matlab variables
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
@@ -306,6 +308,10 @@ echo SubcorticalLabels=["'$MEDIR/res0urces/FS/SubcorticalLabels.txt'"] | cat - "
 cd "$Subdir"/workspace/ # run script via Matlab 
 matlab -nodesktop -nosplash -r "temp; exit" 
 cd "$Subdir" # go back to subject dir
+
+# remove temp dirs (bug fix for make_precise_subcortical_labels_EVO.m; can't remove dirs due to permissions)
+rm -rf "$Subdir"/func/rois/tmp/
+rm -rf "$Subdir"/func/rois/tmp_nonlin/
 
 # finally, evaluate whether scan-specific or average field maps 
 # produce the best co-registeration/cross-scan allignment & 
