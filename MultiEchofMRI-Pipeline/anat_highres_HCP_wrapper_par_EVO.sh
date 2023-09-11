@@ -1,9 +1,21 @@
 #!/bin/bash
-# CJL; (cjl2007)
-# HRB; (hob4003)
-# Wrapper for the HCP's anatomical preprocessing pipeline (1st wrapper of 3)
-# Resources: https://github.com/Washington-University/HCPpipelines/blob/master/PreFreeSurfer/PreFreeSurferPipeline.sh
-# Updated 2023-09-05
+# Chuck Lynch, Hussain Bukhari, Holland Brown
+# Updated 2023-09-11
+
+# Anatomical Preprocessing Wrapper (1st of 3 wrappers): wrapper for the Washington University HCP Structural Pipeline scripts;
+# registration, gradient distortion correction, optional processing with spin-echo or double-echo field maps
+
+# About this fork:
+	# added more terminal outputs for QA
+	# selected params for Philips data with double-echo field maps
+	# debugged generally (syntax errors and such)
+
+# Usage note: impossible to know what params to use without reading HCP Pipelines docs for...
+	# (1) PreFreesurfer.sh: https://github.com/Washington-University/HCPpipelines/blob/master/PreFreeSurfer/PreFreeSurferPipeline.sh,
+	# (2) FreeSurfer.sh: https://github.com/Washington-University/HCPpipelines/blob/master/FreeSurfer/FreeSurferPipeline.sh, and
+	# (3) PostFreeSurfer.sh: https://github.com/Washington-University/HCPpipelines/blob/master/PostFreeSurfer/PostFreeSurferPipeline.sh
+
+#–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
