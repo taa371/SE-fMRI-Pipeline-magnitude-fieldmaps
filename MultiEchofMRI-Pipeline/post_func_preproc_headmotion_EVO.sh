@@ -34,11 +34,11 @@ module load matlab/R2021a
  cp -rf "$MEDIR"/res0urces/motion_qa.m "$Subdir"/workspace/temp.m
 
 # define some Matlab variables
-echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> tmp.m && mv tmp.m "$Subdir"/workspace/temp.m   
-echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> tmp1.m && mv tmp1.m "$Subdir"/workspace/temp.m 
-echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> tmp2.m && mv tmp2.m "$Subdir"/workspace/temp.m   		
+echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m   
+echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m 
+echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m   		
 cd "$Subdir"/workspace/ # run script via Matlab 
-matlab -nodesktop -nosplash -r "temp.m; exit" 
+matlab -nodesktop -nosplash -r "temp; exit" 
 
 # delete temp. workspace
-# rm -rf "$Subdir"/workspace
+rm -rf "$Subdir"/workspace
