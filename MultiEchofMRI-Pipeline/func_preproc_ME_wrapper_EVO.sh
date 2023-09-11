@@ -17,6 +17,7 @@ StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
 NTHREADS=$3 # set number of threads; larger values will reduce runtime (but also increase RAM usage)
 StartSession=$4 # define the starting point
+CollectionSite="UW" # EVO collection site (determines which field map script to call)
 
 # Load modules
 module load Connectome_Workbench/1.5.0/Connectome_Workbench
@@ -38,6 +39,12 @@ Subdir="$StudyFolder"/"$Subject"
 # define some directories containing custom matlab scripts and various atlas files
 MEDIR="/athena/victorialab/scratch/hob4003/ME_Pipeline/MEF-P-HB/MultiEchofMRI-Pipeline"
 
+# set run parameters to true to run each part of the pipeline
+RunPreprocFM=true
+RunSbrefCoreg=true
+RunPreprocHeadMotion=true
+RunPostHeadMotion=true
+
 # these variables should not be changed unless you have a very good reason
 DOF=6 # this is the degrees of freedom (DOF) used for SBref --> T1w and EPI --> SBref coregistrations
 AtlasTemplate="$MEDIR/res0urces/FSL/MNI152_T1_2mm.nii.gz" # define a lowres MNI template
@@ -52,20 +59,36 @@ source ${EnvironmentScript}	# Set up pipeline environment variables and software
 echo -e "\nMulti-Echo Preprocessing & Denoising Pipeline for Subject $Subject...\n"
 
 # process all field maps & create an average image for cases where scan-specific maps are unavailable
-echo -e "\nProcessing the Field Maps\n"
-#"$MEDIR"/func_preproc_fm_EVO_NKI.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" # skips BET for magnitude FMs (already done for NKI FMs)
-"$MEDIR"/func_preproc_fm_EVO_UW.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" # includes BET for magnitude FMs (not already done for UW FMs)
+if [ "$RunPreprocFM" == true ]; then
+	echo -e "\nProcessing the Field Maps for Subject $Subject...\n"
+	if [ "$CollectionSite" == "NKI" ]; then
+		echo -e "Collection site specified: $CollectionSite\nRunning double-echo field map preprocessing without brain extraction..\n"
+		"$MEDIR"/func_preproc_fm_EVO_NKI.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" # skips BET for magnitude FMs (already done for NKI FMs)
+	elif [ "$CollectionSite" == "UW" ]; then
+		echo -e "Collection site specified: $CollectionSite\nRunning double-echo field map preprocessing with brain extraction..\n"
+		"$MEDIR"/func_preproc_fm_EVO_UW.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" # includes BET for magnitude FMs (not already done for UW FMs)
+	else
+		echo -e "No collection site specified...\nRunning double-echo field map preprocessing with brain extraction by default...\n"
+		"$MEDIR"/func_preproc_fm_EVO_UW.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession"
+	fi
+fi
 
 # create an avg. sbref image and co-register that image & all individual SBrefs to the T1w image
-echo -e "\nCoregistering SBrefs to the Anatomical Image for Subject $Subject...\n\n"
-"$MEDIR"/func_preproc_coreg_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+if [ "$RunSbrefCoreg" == true ]; then
+	echo -e "\nCoregistering SBrefs to the Anatomical Image for Subject $Subject...\n"
+	"$MEDIR"/func_preproc_coreg_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+fi
 
 # correct func images for slice time differences and head motion
-echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distortion for Subject $Subject...\n\n"
-"$MEDIR"/func_preproc_headmotion_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+if [ "$RunPreprocHeadMotion" == true ]; then
+	echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distortion for Subject $Subject...\n"
+	"$MEDIR"/func_preproc_headmotion_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+fi
 
 # functional post-processing (motion QA)
-echo -e "\nFunctional Post-Processing for Subject $Subject...\n"
-"$MEDIR"/post_func_preproc_headmotion_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+if [ "$RunPostHeadMotion" == true ]; then
+	echo -e "\nFunctional Post-Processing for Subject $Subject...\n"
+	"$MEDIR"/post_func_preproc_headmotion_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+fi
 
 echo -e "\nFunctional pre-processing for subject $Subject done.\n" 

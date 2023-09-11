@@ -82,8 +82,8 @@ GradientDistortionCoeffs="NONE" # Set to NONE to skip gradient distortion correc
 echo -e "\nAnatomical Preprocessing and Surface Registration Pipeline for subject $Subject...\n" 
 
 # clean slate;
- rm -rf ${StudyFolder}/${Subject}/T*w > /dev/null 2>&1 
- rm -rf ${StudyFolder}/${Subject}/MNINonLinear > /dev/null 2>&1 
+ rm -rf ${StudyFolder}/${Subject}/T*w   
+ rm -rf ${StudyFolder}/${Subject}/MNINonLinear   
 
 # build list of full paths to T1w images; 
 T1ws=`ls ${StudyFolder}/${Subject}/anat/unprocessed/T1w/T1w*.nii.gz`
@@ -115,7 +115,7 @@ else
 fi
 
 # make "QA" folder
- mkdir ${StudyFolder}/${Subject}/qa/ > /dev/null 2>&1 
+ mkdir ${StudyFolder}/${Subject}/qa/   
 
  echo -e "\nRunning PreFreeSurferPipeline for subject $Subject...\n" 
 

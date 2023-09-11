@@ -1,8 +1,7 @@
 #!/bin/bash
-# CJL; (cjl2007@med.cornell.edu)
-# HRB; (hob4003@med.cornell.edu)
+# Charles Lynch, Holland Brown
 # Create SBrefs (if necessary) and coregister to anatomicals
-# Updated 2023-09-08
+# Updated 2023-09-11
 
 MEDIR=$1
 Subject=$2
@@ -25,8 +24,8 @@ module load matlab/R2021a
 # First, lets read in all the .json files associated with each scan & write out some .txt files that will be used during preprocessing
 
 # fresh workspace dir.
-rm -rf "$Subdir"/workspace > /dev/null 2>&1
-mkdir "$Subdir"/workspace > /dev/null 2>&1
+rm -rf "$Subdir"/workspace  
+mkdir "$Subdir"/workspace  
 
 # create temporary find_epi_params.m 
 cp -rf "$MEDIR"/res0urces/find_epi_params_EVO.m "$Subdir"/workspace
@@ -34,11 +33,11 @@ mv "$Subdir"/workspace/find_epi_params_EVO.m "$Subdir"/workspace/temp.m # rename
 
 # define some Matlab variables;
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
-echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m #> /dev/null 2>&1 		
-echo FuncName=["'rest'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m #> /dev/null 2>&1 		
-echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp3.m && mv "$Subdir"/workspace/tmp3.m "$Subdir"/workspace/temp.m #> /dev/null 2>&1  		
+echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m	
+echo FuncName=["'rest'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m  		
+echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp3.m && mv "$Subdir"/workspace/tmp3.m "$Subdir"/workspace/temp.m
 cd "$Subdir"/workspace/ # run script via Matlab 
-matlab -nodesktop -nosplash -r "temp; exit" #> /dev/null 2>&1 
+matlab -nodesktop -nosplash -r "temp; exit"
 
 # delete some files
 cd "$Subdir" # go back to subject dir.
@@ -51,61 +50,6 @@ mkdir "$Subdir"/workspace/
 # define & create a temporary directory;
 mkdir -p "$Subdir"/func/rest/AverageSBref/
 WDIR="$Subdir"/func/rest/AverageSBref/
-
-# HRB -> need this code block if there is no JSON file ----------------------------------------------------------------
-# Create necessary files (if ppts don't have JSON files)
-# if [ ! -d  "$Subdir"/func/rest/session_1 ]; then
-# 	cp -r "$Subdir"/func/unprocessed/rest/session_1 "$Subdir"/func/rest/
-# 	echo -e "Copying unprocessed S1 resting-state files to "$Subdir"/func/rest/ ..."
-# fi
-# if [ ! -d  "$Subdir"/func/rest/session_2 ] && [ -d "$Subdir"/func/unprocessed/rest/session_2 ]; then
-# 	cp -r "$Subdir"/func/unprocessed/rest/session_2 "$Subdir"/func/rest/
-# 	echo -e "Copying unprocessed S2 resting-state files to "$Subdir"/func/rest/ ..."
-# fi
-# if [ ! -d "$Subdir"/func/xfms ]; then
-# 	mkdir "$Subdir"/func/xfms
-# 	mkdir "$Subdir"/func/xfms/rest
-# 	echo -e "Creating "$Subdir"/func/xfms directory..."
-# fi
-# if [ ! -f "$Subdir"/func/rest/session_1/run_1/SliceTiming.txt ]; then
-# 	cp $StudyFolder/SliceTiming.txt "$Subdir"/func/rest/session_1/run_1
-# 	echo -e "Copying SliceTiming.txt from study dir to /rest/session_1/..."
-# fi
-# if [ ! -f "$Subdir"/func/rest/session_1/run_1/EffectiveEchoSpacing.txt ]; then
-# 	cp $StudyFolder/EffectiveEchoSpacing.txt "$Subdir"/func/rest/session_1/run_1
-# 	echo -e "Copying EffectiveEchoSpacing.txt from study dir to /rest/session_1/..."
-# fi
-# if [ ! -f "$Subdir"/func/rest/session_1/run_1/TE.txt ]; then
-# 	cp $StudyFolder/TE.txt "$Subdir"/func/rest/session_1/run_1
-# 	echo -e "Copying TE.txt from study dir to /rest/session_1/..."
-# fi
-# if [ ! -f "$Subdir"/func/rest/session_1/run_1/TR.txt ]; then
-# 	cp $StudyFolder/TR.txt "$Subdir"/func/rest/session_1/run_1
-# 	echo -e "Copying TR.txt from study dir to /rest/session_1/..."
-# fi
-
-# if [ ! -f "$Subdir"/func/rest/session_2/run_1/SliceTiming.txt ]; then
-# 	cp $StudyFolder/SliceTiming.txt "$Subdir"/func/rest/session_2/run_1
-# 	echo -e "Copying SliceTiming.txt from study dir to /rest/session_2/..."
-# fi
-# if [ ! -f "$Subdir"/func/rest/session_2/run_1/EffectiveEchoSpacing.txt ]; then
-# 	cp $StudyFolder/EffectiveEchoSpacing.txt "$Subdir"/func/rest/session_2/run_1
-# 	echo -e "Copying EffectiveEchoSpacing.txt from study dir to /rest/session_2/..."
-# fi
-# if [ ! -f "$Subdir"/func/rest/session_2/run_1/TE.txt ]; then
-# 	cp $StudyFolder/TE.txt "$Subdir"/func/rest/session_2/run_1
-# 	echo -e "Copying TE.txt from study dir to /rest/session_2/..."
-# fi
-# if [ ! -f "$Subdir"/func/rest/session_2/run_1/TR.txt ]; then
-# 	cp $StudyFolder/TR.txt "$Subdir"/func/rest/session_2/run_1
-# 	echo -e "Copying TR.txt from study dir to /rest/session_2/..."
-# fi
-# if [ ! -f "$Subdir"/func/xfms/rest/EffectiveEchoSpacing.txt ]; then
-# 	cp "$Subdir"/func/rest/session_1/run_1/EffectiveEchoSpacing.txt "$Subdir"/func/xfms/rest
-# 	echo -e "Copying EffectiveEchoSpacing.txt to /xfms/ from "$Subdir"/func/rest/ ..."
-# fi
-# ----------------------------------------------------------------------------------------------------------------------
-
 
 # count the number of sessions
 sessions=("$Subdir"/func/unprocessed/rest/session_*)
@@ -167,7 +111,7 @@ for s in $sessions ; do
 		done
 
 		# combine & average the te; 
-		fslmerge -t "$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz "$WDIR"/TMP_*.nii.gz > /dev/null 2>&1 
+		fslmerge -t "$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz "$WDIR"/TMP_*.nii.gz   
 		fslmaths "$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz -Tmean "$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz
 		cp "$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz "$WDIR"/SBref_"$s"_"$r".nii.gz
 		rm "$WDIR"/TMP* # remove intermediate files;
@@ -185,30 +129,30 @@ images=("$WDIR"/SBref_*.nii.gz)
 if [ "${#images[@]}" \> 1 ]; then
 
 	# align  and average the single-band reference (SBref) images;
-	"$MEDIR"/res0urces/FuncAverage -n -o "$Subdir"/func/xfms/rest/AvgSBref.nii.gz "$WDIR"/SBref_*.nii.gz > /dev/null 2>&1 
+	"$MEDIR"/res0urces/FuncAverage -n -o "$Subdir"/func/xfms/rest/AvgSBref.nii.gz "$WDIR"/SBref_*.nii.gz   
 
 else
 
 	# copy over the lone single-band reference (SBref) image;
-	cp "${images[0]}" "$Subdir"/func/xfms/rest/AvgSBref.nii.gz > /dev/null 2>&1
+	cp "${images[0]}" "$Subdir"/func/xfms/rest/AvgSBref.nii.gz  
 
 fi
 
 # create clean tmp. copy of freesurfer folder;
-rm -rf "$Subdir"/anat/T1w/freesurfer > /dev/null 2>&1
-cp -rf "$Subdir"/anat/T1w/"$Subject" "$Subdir"/anat/T1w/freesurfer > /dev/null 2>&1
+rm -rf "$Subdir"/anat/T1w/freesurfer  
+cp -rf "$Subdir"/anat/T1w/"$Subject" "$Subdir"/anat/T1w/freesurfer  
 
 # define the effective echo spacing;
 EchoSpacing=$(cat $Subdir/func/xfms/rest/EffectiveEchoSpacing.txt) 
 
 # register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using average field map); 
-"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y > /dev/null 2>&1 # note: need to manually set --pedir
+"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
 
 applywarp --interp=spline --in="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg.nii.gz --warp="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg_warp.nii.gz
 
 # use BBRegister (BBR) to fine-tune the existing co-registration & output FSL style transformation matrix;
-bbregister --s freesurfer --mov "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg.nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.dat --6 --o "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.nii.gz > /dev/null 2>&1 
-tkregister2 --s freesurfer --noedit --reg "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.dat --mov "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg.nii.gz --targ "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --fslregout "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.mat > /dev/null 2>&1 
+bbregister --s freesurfer --mov "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg.nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.dat --6 --o "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.nii.gz   
+tkregister2 --s freesurfer --noedit --reg "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.dat --mov "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg.nii.gz --targ "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --fslregout "$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.mat   
 
 # add BBR step as post warp linear transformation & generate inverse warp;
 convertwarp --warp1="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg_warp.nii.gz --postmat="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR.mat --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz
@@ -224,7 +168,7 @@ invwarp -w "$Subdir"/func/xfms/rest/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz -o "$
 # NOTE: we will compare which is best (avg. field map vs. scan-specific) later on
 
 # create & define the "CoregQA" folder;
-mkdir -p "$Subdir"/func/qa/CoregQA > /dev/null 2>&1
+mkdir -p "$Subdir"/func/qa/CoregQA  
 
 # count the number of sessions
 Sessions=("$Subdir"/func/rest/session_*)
@@ -249,12 +193,12 @@ for s in $Sessions ; do
 		
 			# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using scan-specific field map);
 			# NOTE: need to manually set --pedir (phase encoding direction)
-			"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y > /dev/null 2>&1
+			"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
 			applywarp --interp=spline --in="$Subdir"/func/rest/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r"_warp.nii.gz
 
 			# use BBRegister (BBR) to fine-tune the existing co-registeration; output FSL style transformation matrix
-			bbregister --s freesurfer --mov "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".dat --6 --o "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz > /dev/null 2>&1 
-			tkregister2 --s freesurfer --noedit --reg "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".dat --mov "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --targ "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --fslregout "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".mat > /dev/null 2>&1 
+			bbregister --s freesurfer --mov "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".dat --6 --o "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz   
+			tkregister2 --s freesurfer --noedit --reg "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".dat --mov "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --targ "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --fslregout "$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".mat   
 
 			# add BBR step as post warp linear transformation & generate inverse warp
 			convertwarp --warp1="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg_S"$s"_R"$r"_warp.nii.gz --postmat="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".mat --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/SBref2acpc_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
@@ -290,8 +234,8 @@ fslmaths "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func.nii.gz -bin "$Subdir"/fu
 rm -rf "$Subdir"/anat/T1w/freesurfer
 
 # fresh workspace dir
-rm -rf "$Subdir"/workspace > /dev/null 2>&1
-mkdir "$Subdir"/workspace > /dev/null 2>&1
+rm -rf "$Subdir"/workspace  
+mkdir "$Subdir"/workspace  
 
 # create temp. make_precise_subcortical_labels.m 
 cp -rf "$MEDIR"/res0urces/make_precise_subcortical_labels_EVO.m "$Subdir"/workspace/temp.m
