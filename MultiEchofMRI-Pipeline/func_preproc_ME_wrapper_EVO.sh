@@ -1,8 +1,17 @@
 #!/bin/bash
-# CJL; (cjl2007@med.cornell.edu)
-# HRB; (hob4003@med.cornell.edu)
-# 2nd of 3 wrappers (HCP structural, func preproc, func denoising)
-# Updated 2023-08-21
+# Chuck Lynch, Hussain Bukhari, Holland Brown
+# Updated 2023-09-11
+
+# Functional Preprocessing Wrapper (2nd of 3 wrappers): field map preprocessing, coregistration, slice-time and motion correction,
+# spatial distortion correction, and motion QA
+
+# About this fork:
+	# changed to handle double-echo (magnitude and phase) field maps optionally (prev version only for spin-echo FMs)
+	# debugged matlab script calls (prev version ran into permissions errors in some environments)
+	# added flexibility for different json formats in matlab scripts
+	# added scripts (rorden_get_slice_times.m, edit_jsons.sh) to calculate missing slice timing info and edit json format/parameter names for Philips datasets
+
+#–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
@@ -47,19 +56,16 @@ echo -e "\nProcessing the Field Maps\n"
 #"$MEDIR"/func_preproc_fm_EVO_NKI.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" # skips BET for magnitude FMs (already done for NKI FMs)
 "$MEDIR"/func_preproc_fm_EVO_UW.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" # includes BET for magnitude FMs (not already done for UW FMs)
 
-# ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-# leave commented out - this is redundant with last code block in func_preproc_fm.sh
-# echo -e "\n Post Processing the Field Maps"
-
-# "$MEDIR"/post_func_preproc_fm.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession"
-# ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-
 # create an avg. sbref image and co-register that image & all individual SBrefs to the T1w image
-echo -e "\nCoregistering SBrefs to the Anatomical Image\n"
+echo -e "\nCoregistering SBrefs to the Anatomical Image for Subject $Subject...\n\n"
 "$MEDIR"/func_preproc_coreg_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
 
 # correct func images for slice time differences and head motion
-echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distortion\n"
+echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distortion for Subject $Subject...\n\n"
 "$MEDIR"/func_preproc_headmotion_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+
+# functional post-processing (motion QA)
+echo -e "\nFunctional Post-Processing for Subject $Subject...\n"
+"$MEDIR"/post_func_preproc_headmotion_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
 
 echo -e "\nFunctional pre-processing for subject $Subject done.\n" 
