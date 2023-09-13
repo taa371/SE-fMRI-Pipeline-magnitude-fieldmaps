@@ -1,13 +1,17 @@
 #!/bin/bash
-# Denoise Single-Echo Functional Data (3rd of 3 wrappers in the ME pipeline)
-# Hussain Bukhari
-# Holland Brown
-# Updated 2023-08-11
+# Denoise Functional Data (3rd of 3 wrappers in the ME pipeline); Single-Echo Version
+# Hussain Bukhari, Holland Brown
+# Updated 2023-09-13
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
 NTHREADS=$3 # set number of threads; larger values will reduce runtime (but also increase RAM usage)
 StartSession=$4
+
+RunMGTR=false # NOTE: PIs decided not to run MGTR script for EVO study (see Chuck's papers on gray-ordinates for more info)
+RunICAAroma=true # Motion correction and artifact identification (run this for EVO participants)
+Vol2FirstSurf=true # project denoised volumes onto a surface
+SmoothVol2SecondSurf=false # additional 1.75 mm smoothing before projecting onto a second surface
 
 # Load modules 
 # define the 
@@ -51,34 +55,31 @@ EnvironmentScript="/athena/victorialab/scratch/hob4003/ME_Pipeline/Hb_HCP_master
 source ${EnvironmentScript}	# Set up pipeline environment variables and software
 PATH=$PATH:/usr/lib/python2.7/site-packages # added this to find python 2.7 packages
 
-# ------------------------------------------------------------------------------ Begin Denoising Pipeline ------------------------------------------------------------------------------
+# ---------------------- Begin Denoising Pipeline ----------------------
 
 echo -e "Denoising Pipeline: AROMA + MGTR + smooth + vol2surf"
 
-# OPTION 1: perform signal-decay denoising on pre-ICAAROMA files (do this to skip ICA-AROMA altogether)
-# echo -e "MGTR without ICA-AROMA for subject {$2}..."
-#"$MEDIR"/func_denoise_mgtr_SE.sh "$Subject" "$StudyFolder" \
-#"$MEDIR" "$CiftiList1" # pre-AROMA Ciftilist
+# Run ICA-AROMA for motion correction and artifact identification
+if [ $RunICAAroma == true ]; then
+	echo -e "Running ICA-AROMA for Subject {$2}..."
+	"$MEDIR"/ICAAROMA_SE_denoise_DE_FMs.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+fi
 
-# OPTION 2, step 1: ICA AROMA signal denoising for Single-Echo data
-# echo -e "ICA-AROMA for subject {$2}..."
-#"$MEDIR"/ICAAROMA_SE_denoise_DE_FMs.sh "$MEDIR" "$Subject" "$StudyFolder" \
-#"$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+# Run MGTR for further smoothing using gray-ordinates (do not run for EVO)
+if [ $RunMGTR == true ]; then
+	echo -e "Running MGTR for Subject {$2}..."
+	"$MEDIR"/func_denoise_mgtr_SE_EVO.sh "$Subject" "$StudyFolder" "$MEDIR" "$CiftiList2"
+fi
 
-# --------------------------------------- NOTE: PIs decided not to run MGTR script for EVO study ---------------------------------------
+# Project ICA-AROMA output volumes onto a surface
+if [ $Vol2FirstSurf == true ]; then
+	echo -e "Projecting ICAAROMA-corrected volumes onto surface for Subject {$2}..."
+	"$MEDIR"/func_vol2surf.sh "$Subject" "$StudyFolder" "$MEDIR" "$CiftiList3" $StartSession
+fi
 
-# OPTION 2, step 2: perform signal-decay denoising on post-ICAAROMA files
-#echo -e "Post-AROMA MGTR for subject {$2}..."
-#"$MEDIR"/func_denoise_mgtr_SE_EVO.sh "$Subject" "$StudyFolder" \
-#"$MEDIR" "$CiftiList2" # post-AROMA CiftiList
-
-# --------------------------------------------------------------------------------------------------------------------------------------
-
-# project AROMA output volumes onto a surface
-echo -e "Project volumes to surface for subject {$2}..."
-"$MEDIR"/func_vol2surf.sh "$Subject" "$StudyFolder" "$MEDIR" "$CiftiList3" $StartSession
-
-# 1.75 mm smoothing before projecting onto a surface
-#echo -e "Smooth and project to surface for subject {$2}..."
-#"$MEDIR"/func_smooth.sh "$Subject" "$StudyFolder" "1.75" "$CiftiList3"
+# 1.75 mm smoothing before projecting onto another surface (haven't decided whether to run for EVO yet)
+if [ $SmoothVol2SecondSurf == true ]; then
+	echo -e "Smoothing and projecting onto surface for subject {$2}..."
+	"$MEDIR"/func_smooth.sh "$Subject" "$StudyFolder" "1.75" "$CiftiList3"
+fi
 
