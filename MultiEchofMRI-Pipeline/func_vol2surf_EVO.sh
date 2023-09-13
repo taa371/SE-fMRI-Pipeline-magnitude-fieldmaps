@@ -1,8 +1,7 @@
 #!/bin/bash
-# Project Post-ICAAROMA Volumetric Functional Data onto a 3D Surface
-# Chuck Lynch; (cjl2007@med.cornell.edu)
-# Holland Brown; (hob4003@med.cornell.edu)
-# Updated 2023-08-24
+# Project Functional Volumes onto a Surface (part of the denoising pipeline)
+# Hussain Bukhari, Holland Brown
+# Updated 2023-09-13
 
 Subject=$1
 StudyFolder=$2
@@ -10,9 +9,9 @@ Subdir="$StudyFolder"/"$Subject"
 AtlasSpaceNativeFolder="$Subdir"/anat/T1w/Native
 MEDIR=$3
 CiftiList=$(cat $4)
-FS="$MEDIR/res0uces/FS" # dir. with FreeSurfer (FS) atlases 
-FSL="$MEDIR/res0uces/FSL" # dir. with FSL (FSL) atlases 
 StartSession=$5
+FS=$6 # dir with FreeSurfer (FS) atlases 
+FSL=$7 # dir with FSL (FSL) atlases 
 
 module load Connectome_Workbench/1.5.0/Connectome_Workbench
 module load freesurfer/6.0.0
