@@ -96,3 +96,5 @@ if [ $SmoothVol2SecondSurf == true ]; then
 	echo -e "Smoothing and projecting onto surface for subject {$Subject}..."
 	"$MEDIR"/func_smooth_EVO.sh "$Subject" "$StudyFolder" "1.75" "$CiftiListSecondSurf"
 fi
+
+echo -e "Denoising Pipeline Complete for Subject $Subject."
