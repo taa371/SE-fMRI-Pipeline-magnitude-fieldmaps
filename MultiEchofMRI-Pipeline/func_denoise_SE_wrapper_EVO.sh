@@ -62,7 +62,7 @@ AtlasTemplate="$MEDIR/res0urces/FSL/MNI152_T1_2mm_brain.nii.gz" # define a lowre
 AtlasSpace="T1w" # define either native space ("T1w") or MNI space ("MNINonlinear")
 
 EnvironmentScript="/athena/victorialab/scratch/hob4003/ME_Pipeline/Hb_HCP_master/Examples/Scripts/SetUpHCPPipeline.sh" # Pipeline environment script
-source ${EnvironmentScript}	# Set up pipeline environment variables and software
+source $EnvironmentScript	# Set up pipeline environment variables and software
 PATH=$PATH:/usr/lib/python2.7/site-packages # This may not be necessary if python2.7 pkgs are already on your env path; had to add for EVO
 
 # ---------------------- Begin Denoising Pipeline ----------------------
@@ -72,28 +72,28 @@ echo -e "Denoising Pipeline: AROMA + MGTR + smooth + vol2surf"
 # Run ICA-AROMA for motion correction and artifact identification
 # NOTE: no CiftiList needed at this first step; inputs are just the results of the functional preproc pipeline
 if [ $RunICAAROMA == true ]; then
-	echo -e "Running ICA-AROMA for Subject {$Subject}..."
+	echo -e "Running ICA-AROMA for Subject $Subject..."
 	"$MEDIR"/ICAAROMA_SE_denoise_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$AromaPyDir"
 fi
 
 # Run MGTR for further smoothing using gray-ordinates (do not run for EVO)
 # NOTE: need a CiftiList here; should be filenames on which to run MGTR
 if [ $RunMGTR == true ]; then
-	echo -e "Running MGTR for Subject {$Subject}..."
+	echo -e "Running MGTR for Subject $Subject..."
 	"$MEDIR"/func_denoise_mgtr_SE_EVO.sh "$Subject" "$StudyFolder" "$MEDIR" "$CiftiListMGTR"
 fi
 
 # Project ICA-AROMA output volumes onto a surface
 # NOTE: need a CiftiList here; should be filenames on which to run func_vol2surf.sh
 if [ $Vol2FirstSurf == true ]; then
-	echo -e "Projecting ICAAROMA-corrected volumes onto surface for Subject {$Subject}..."
+	echo -e "Projecting ICAAROMA-corrected volumes onto surface for Subject $Subject..."
 	"$MEDIR"/func_vol2surf_EVO.sh "$Subject" "$StudyFolder" "$MEDIR" "$CiftiListFirstSurf" "$StartSession" "$FSDir" "$FSLDir"
 fi
 
 # 1.75 mm smoothing before projecting onto another surface (haven't decided whether to run for EVO yet)
 # NOTE: need a CiftiList here; should be filenames on which to run func_smooth.sh
 if [ $SmoothVol2SecondSurf == true ]; then
-	echo -e "Smoothing and projecting onto surface for subject {$Subject}..."
+	echo -e "Smoothing and projecting onto surface for subject $Subject..."
 	"$MEDIR"/func_smooth_EVO.sh "$Subject" "$StudyFolder" "1.75" "$CiftiListSecondSurf"
 fi
 
