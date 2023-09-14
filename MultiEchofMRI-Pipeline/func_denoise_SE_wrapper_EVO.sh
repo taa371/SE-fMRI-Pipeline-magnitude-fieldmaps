@@ -1,7 +1,7 @@
 #!/bin/bash
 # Denoise Functional Data (3rd of 3 wrappers in the ME pipeline); Single-Echo Version
 # Charles Lynch, Hussain Bukhari, Holland Brown
-# Updated 2023-09-13
+# Updated 2023-09-14
 
 # ---------------------- Important User-Defined Parameters ----------------------
 
@@ -24,7 +24,7 @@ FSDir="$MEDIR/res0urces/FS" # dir with FreeSurfer (FS) atlases
 FSLDir="$MEDIR/res0urces/FSL" # dir with FSL (FSL) atlases
 
 # IMPORTANT: set /paths/to/CiftiLists.txt files before running
-CiftiListMGTR="$CiftiConfigDir"/EVO_CiftiList_MGTR.txt # txt file list of filenames on which to perform MGTR before ICA-AROMA (use if you intend to skip ICA-AROMA entirely)
+CiftiListMGTR="NONE" # txt file list of filenames on which to perform MGTR before ICA-AROMA (use if you intend to skip ICA-AROMA entirely)
 CiftiListFirstSurf="$CiftiConfigDir"/EVO_CiftiList_ICAAROMA.txt # tf list of files on which to perform MGTR after ICA-AROMA (adjust filenames if not running ICA-AROMA)
 CiftiListSecondSurf="$CiftiConfigDir"/EVO_CiftiList_ICAAROMA+FirstSurf.txt # tf list of files to be smoothed and mapped to second surface; can specify OCME, OCME+MEICA, OCME+MEICA+MGTR, and/or OCME+MEICA+MGTR_Betas
 
