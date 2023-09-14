@@ -1,7 +1,7 @@
 #!/bin/bash
-# Project Functional Volumes onto a Surface (part of the denoising pipeline)
+# Perform signal-decay denoising and project denoised volumes onto a surface (part of the SE denoising pipeline)
 # Charles Lynch, Hussain Bukhari, Holland Brown
-# Updated 2023-09-13
+# Updated 2023-09-14
 
 Subject=$1
 StudyFolder=$2
@@ -24,27 +24,27 @@ module load matlab/R2021a
 echo -e $Subject
 echo -e $CiftiList
 
-# count the number of sessions;
+# count the number of sessions
 sessions=("$Subdir"/func/rest/session_*)
 sessions=$(seq 1 1 "${#sessions[@]}")
 
-# sweep the sessions;
+# sweep the sessions
 for s in $sessions ; do
 
-	# count number of runs for this session;
+	# count number of runs for this session
 	runs=("$Subdir"/func/rest/session_"$s"/run_*)
 	runs=$(seq 1 1 "${#runs[@]}")
 
-	# sweep the runs;
+	# sweep the runs
 	for r in $runs ; do
 
-		# define output dir for CIFTI creation;
+		# define output dir for CIFTI creation
 		OUT_DIR="$Subdir"/func/rest/session_"$s"/run_"$r"
 
-		# sweep the Ciftis;
+		# sweep the Ciftis
 		for c in $CiftiList ; do
 
-			# sweep through hemispheres;
+			# sweep through hemispheres
 			for hemisphere in lh rh ; do
 
 				# set a bunch of different 
@@ -55,7 +55,7 @@ for s in $sessions ; do
 					Hemisphere="R"
 				fi
 
-				# define all of the the relevant surfaces & files;
+				# define all of the the relevant surfaces & files
 				PIAL="$Subdir"/anat/T1w/Native/$Subject.$Hemisphere.pial.native.surf.gii
 				WHITE="$Subdir"/anat/T1w/Native/$Subject.$Hemisphere.white.native.surf.gii
 				MIDTHICK="$Subdir"/anat/T1w/Native/$Subject.$Hemisphere.midthickness.native.surf.gii
@@ -65,31 +65,31 @@ for s in $sessions ; do
 				REG_MSMSulc="$Subdir"/anat/MNINonLinear/Native/$Subject.$Hemisphere.sphere.MSMSulc.native.surf.gii
 				REG_MSMSulc_FSLR32k="$Subdir"/anat/MNINonLinear/fsaverage_LR32k/$Subject.$Hemisphere.sphere.32k_fs_LR.surf.gii
 
-				# map functional data from volume to surface;
+				# map functional data from volume to surface
 				wb_command -volume-to-surface-mapping "$OUT_DIR"/"$c".nii.gz "$MIDTHICK" \
 				"$OUT_DIR"/"$hemisphere".native.shape.gii -ribbon-constrained "$WHITE" "$PIAL" 
 			
-				# dilate metric file 10mm in geodesic space;
+				# dilate metric file 10mm in geodesic space
 				wb_command -metric-dilate "$OUT_DIR"/"$hemisphere".native.shape.gii \
 				"$MIDTHICK" 10 "$OUT_DIR"/"$hemisphere".native.shape.gii -nearest
 
-				# remove medial wall in native mesh;  
+				# remove medial wall in native mesh
 				wb_command -metric-mask "$OUT_DIR"/"$hemisphere".native.shape.gii \
 				"$ROI" "$OUT_DIR"/"$hemisphere".native.shape.gii 
 
-				# resample metric data from native mesh to fs_LR_32k mesh;
+				# resample metric data from native mesh to fs_LR_32k mesh
 				wb_command -metric-resample "$OUT_DIR"/"$hemisphere".native.shape.gii "$REG_MSMSulc" \
 				"$REG_MSMSulc_FSLR32k" ADAP_BARY_AREA "$OUT_DIR"/"$hemisphere".32k_fs_LR.shape.gii \
 				-area-surfs "$MIDTHICK" "$MIDTHICK_FSLR32k" -current-roi "$ROI"
 
-				# remove medial wall in fs_LR_32k mesh;
+				# remove medial wall in fs_LR_32k mesh
 				wb_command -metric-mask "$OUT_DIR"/"$hemisphere".32k_fs_LR.shape.gii \
 				"$ROI_FSLR32k" "$OUT_DIR"/"$hemisphere".32k_fs_LR.shape.gii
 
 			done
 
-			# combine hemispheres and subcortical structures into a single CIFTI file;
-			tr=$(cat "$Subdir"/func/rest/session_"$s"/run_"$r"/TR.txt) # define the repitition time;
+			# combine hemispheres and subcortical structures into a single CIFTI file
+			tr=$(cat "$Subdir"/func/rest/session_"$s"/run_"$r"/TR.txt) # define the repitition time
 			wb_command -cifti-create-dense-timeseries "$OUT_DIR"/"$c".dtseries.nii -volume "$Subdir"/func/rest/session_"$s"/run_"$r"/"$c".nii.gz "$Subdir"/func/rois/Subcortical_ROIs_acpc.nii.gz \
 			-left-metric "$OUT_DIR"/lh.32k_fs_LR.shape.gii -roi-left "$Subdir"/anat/MNINonLinear/fsaverage_LR32k/"$Subject".L.atlasroi.32k_fs_LR.shape.gii \
 			-right-metric "$OUT_DIR"/rh.32k_fs_LR.shape.gii -roi-right "$Subdir"/anat/MNINonLinear/fsaverage_LR32k/"$Subject".R.atlasroi.32k_fs_LR.shape.gii -timestep "$tr"

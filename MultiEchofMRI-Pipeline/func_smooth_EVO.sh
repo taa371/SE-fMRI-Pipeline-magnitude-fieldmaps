@@ -1,5 +1,5 @@
 #!/bin/bash
-# Additional smoothing; project onto a second surface
+# Additional smoothing before projecting onto another surface (part of the SE denoising pipeline)
 # Charles Lynch, Hussain Bukhari, Holland Brown
 # Updated 2023-09-14
 

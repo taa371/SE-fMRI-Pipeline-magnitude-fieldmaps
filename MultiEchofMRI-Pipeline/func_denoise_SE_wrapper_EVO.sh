@@ -47,18 +47,18 @@ module load python-3.7.7-gcc-8.2.0-onbczx6
 module load ants-2.4.0-gcc-8.2.0-ehibrhi
 module load matlab/R2021a
 
-# reformat subject folder path;
+# reformat subject folder path
 if [ "${StudyFolder: -1}" = "/" ]; then
 	StudyFolder=${StudyFolder%?};
 fi
 
-# define subject directory;
+# define subject directory
 Subdir="$StudyFolder"/"$Subject"
 echo -e "Subdir test: $Subdir"
 
 # These variables should not be changed unless you have a very good reason
-DOF=6 # this is the degrees of freedom (DOF) used for SBref --> T1w and EPI --> SBref coregistrations;
-AtlasTemplate="$MEDIR/res0urces/FSL/MNI152_T1_2mm_brain.nii.gz" # define a lowres MNI template; 
+DOF=6 # this is the degrees of freedom (DOF) used for SBref --> T1w and EPI --> SBref coregistrations
+AtlasTemplate="$MEDIR/res0urces/FSL/MNI152_T1_2mm_brain.nii.gz" # define a lowres MNI template
 AtlasSpace="T1w" # define either native space ("T1w") or MNI space ("MNINonlinear")
 
 EnvironmentScript="/athena/victorialab/scratch/hob4003/ME_Pipeline/Hb_HCP_master/Examples/Scripts/SetUpHCPPipeline.sh" # Pipeline environment script

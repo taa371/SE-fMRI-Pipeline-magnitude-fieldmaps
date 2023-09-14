@@ -1,5 +1,5 @@
 #!/bin/bash
-# ICA-AROMA Artifact Identification and Removal (part of the denoising pipeline)
+# Identification & removal of artifacts via ICA-AROMA (part of the SE denoising pipeline)
 # Charles Lynch, Hussain Bukhari, Holland Brown
 # Updated 2023-09-14
 
