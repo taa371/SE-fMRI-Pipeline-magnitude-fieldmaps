@@ -1,7 +1,7 @@
 #!/bin/bash
 # ICA-AROMA Artifact Identification and Removal (part of the denoising pipeline)
-# Hussain Bukhari, Holland Brown
-# Updated 2023-09-13
+# Charles Lynch, Hussain Bukhari, Holland Brown
+# Updated 2023-09-14
 
 # assign initial variables 
 MEDIR=$1

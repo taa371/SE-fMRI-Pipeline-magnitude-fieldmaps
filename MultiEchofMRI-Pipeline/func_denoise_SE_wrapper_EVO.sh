@@ -1,6 +1,6 @@
 #!/bin/bash
 # Denoise Functional Data (3rd of 3 wrappers in the ME pipeline); Single-Echo Version
-# Hussain Bukhari, Holland Brown
+# Charles Lynch, Hussain Bukhari, Holland Brown
 # Updated 2023-09-13
 
 # ---------------------- Important User-Defined Parameters ----------------------

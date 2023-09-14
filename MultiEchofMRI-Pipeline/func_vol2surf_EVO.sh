@@ -1,6 +1,6 @@
 #!/bin/bash
 # Project Functional Volumes onto a Surface (part of the denoising pipeline)
-# Hussain Bukhari, Holland Brown
+# Charles Lynch, Hussain Bukhari, Holland Brown
 # Updated 2023-09-13
 
 Subject=$1
