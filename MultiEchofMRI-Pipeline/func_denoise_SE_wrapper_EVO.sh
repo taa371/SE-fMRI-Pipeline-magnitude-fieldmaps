@@ -1,7 +1,7 @@
 #!/bin/bash
 # Denoise Functional Data (3rd of 3 wrappers in the ME pipeline); Single-Echo Version
 # Charles Lynch, Hussain Bukhari, Holland Brown
-# Updated 2023-09-14
+# Updated 2023-09-15
 
 # ---------------------- Important User-Defined Parameters ----------------------
 
@@ -10,9 +10,9 @@ Subject=$2 # space delimited list of subject IDs
 NTHREADS=$3 # set number of threads; larger values will reduce runtime (but also increase RAM usage)
 StartSession=$4
 
+RunICAAROMA=true # Motion correction and artifact identification with ICA-AROMA (run this for EVO participants)
 RunMGTR=false # NOTE: PIs decided not to run MGTR script for EVO study (see Chuck's papers on gray-ordinates for more info)
-RunICAAROMA=false # Motion correction and artifact identification with ICA-AROMA (run this for EVO participants)
-Vol2FirstSurf=false # project denoised volumes onto a surface
+Vol2FirstSurf=true # project denoised volumes onto a surface
 SmoothVol2SecondSurf=true # additional 1.75 mm smoothing before projecting onto a second surface
 
 # Set directories to scripts and CiftList text files
