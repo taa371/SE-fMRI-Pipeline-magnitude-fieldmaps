@@ -1,7 +1,7 @@
 #!/bin/bash
 # Perform signal-decay denoising and project denoised volumes onto a surface (part of the SE denoising pipeline)
 # Charles Lynch, Hussain Bukhari, Holland Brown
-# Updated 2023-09-14
+# Updated 2023-09-15
 
 Subject=$1
 StudyFolder=$2

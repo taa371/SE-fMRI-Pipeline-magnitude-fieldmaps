@@ -26,8 +26,6 @@ module load ants-2.4.0-gcc-8.2.0-ehibrhi
 module load matlab/R2021a
 module unload python
 
-echo -e $PATH
-
 # count the number of sessions
 sessions=("$Subdir"/func/unprocessed/rest/session_*)
 sessions=$(seq $StartSession 1 "${#sessions[@]}")
