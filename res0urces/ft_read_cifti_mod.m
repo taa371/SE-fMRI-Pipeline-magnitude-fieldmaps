@@ -934,7 +934,7 @@ function [source] = ft_read_cifti_mod(filename, varargin)
     if isempty(Parcel)
       % copy the geometrical description of the brainordinates into the main structure
       % source = copyfields(brainordinate, source, fieldnames(brainordinate));
-      for fn = fieldnames(brainordinate)'
+      for fn = fieldnames(brainordinate)
         source.(fn{1}) = brainordinate.(fn{1}); % dynamically add fieldnames to source
       end
     else
