@@ -1,4 +1,4 @@
-function c = ft_read_cifti_EVO(filename, varargin)
+function [source] = ft_read_cifti_EVO(filename, varargin)
 
     % Holland Brown
     % Updated 2023-09-19
@@ -976,5 +976,4 @@ function c = ft_read_cifti_EVO(filename, varargin)
     %      source = rmfield(source, 'datalabel');
     %    end
     % end
-    c = source;
 end
