@@ -759,7 +759,10 @@ function [source] = ft_read_cifti_mod(filename, varargin)
     %   end
     end % if data
     
-    % source = copyfields(Cifti, source, {'time', 'freq','mapname'});
+    % source = copyfields(Cifti, source, {'time', 'freq','mapname'}); % HRB, 2023-09-19: matlab didn't recognize 'copyfields'
+
+    % HRB, 2023-09-19: my solution -> just set each of these 3 fields individually
+    % also see 'copyfields' in line 938
     if isfield(Cifti, 'time')
         source.time = Cifti.time;
     end
