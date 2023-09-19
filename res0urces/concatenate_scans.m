@@ -3,8 +3,7 @@
 % Updated 2023-09-19
 
 % Produce Nyquist frequency plot, tailored stop band filter, demean and concatenate output CIFTIs, calculate framewise displacement
-
-
+% NOTE: need fieldtrip installed (uses ft_read_cifti_mod.m)
 
 function [Output,SessionIdx,FD] = concatenate_scans(Subdir,File,Sessions)
 
