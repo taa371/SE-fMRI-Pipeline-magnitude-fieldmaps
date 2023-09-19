@@ -968,3 +968,4 @@ function [source] = ft_read_cifti_mod(filename, varargin)
     %      source = rmfield(source, 'datalabel');
     %    end
     % end
+end
