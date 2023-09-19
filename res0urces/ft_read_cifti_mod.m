@@ -4,6 +4,12 @@ function [source] = ft_read_cifti_mod(filename, varargin)
     % Updated 2023-09-18
     % still need to have Field Trip installed to run this version
 
+    % Changes:
+        % line 940, 2023-09-19: 'copyfields' not recognized -> assign fields to source dynamically
+        % line 765, 2023-09-19: 'copyfields' not recognized -> just set each of these 3 fields individually
+
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     % FT_READ_CIFTI read functional data or functional connectivity from a cifti-1 or
     % cifti-2 file. The functional data can consist of a dense or a parcellated
     % representation. The geometrical description of the brainordinates can consist of
@@ -762,7 +768,7 @@ function [source] = ft_read_cifti_mod(filename, varargin)
     % source = copyfields(Cifti, source, {'time', 'freq','mapname'}); % HRB, 2023-09-19: matlab didn't recognize 'copyfields'
 
     % HRB, 2023-09-19: my solution -> just set each of these 3 fields individually
-    % also see 'copyfields' in line 938
+    % also see 'copyfields' in line 940
     if isfield(Cifti, 'time')
         source.time = Cifti.time;
     end
@@ -936,9 +942,11 @@ function [source] = ft_read_cifti_mod(filename, varargin)
     
     if isempty(Parcel)
       % copy the geometrical description of the brainordinates into the main structure
+
+      % HRB, 2023-09-19: 'copyfields' not recognized -> assign fields to source dynamically
       % source = copyfields(brainordinate, source, fieldnames(brainordinate));
       for fn = fieldnames(brainordinate)
-        source.(fn{1}) = brainordinate.(fn{1}); % dynamically add fieldnames to source
+        source.(fn{1}) = brainordinate.(fn{1}); % HRB: dynamically add fieldnames to source
       end
     else
       % it is a parcellated source structure, i.e. represented by one channel per parcel
