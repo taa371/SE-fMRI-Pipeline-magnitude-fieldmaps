@@ -1,3 +1,11 @@
+% Concatenate CIFTIs (function): part of functional QA
+% Hussain Bukhari, Holland Brown
+% Updated 2023-09-19
+
+% Produce Nyquist frequency plot, tailored stop band filter, demean and concatenate output CIFTIs, calculate framewise displacement
+
+
+
 function [Output,SessionIdx,FD] = concatenate_scans(Subdir,File,Sessions)
 
     % preallocate 
@@ -8,46 +16,45 @@ function [Output,SessionIdx,FD] = concatenate_scans(Subdir,File,Sessions)
     % sweep the sessions
     for s = 1:length(Sessions)
     
-        % count the number of runs for this session;
+        % count the number of runs for this session
         runs = dir([Subdir '/func/rest/session_' num2str(Sessions(s)) '/run_*']);
     
-        % sweep the runs;
+        % sweep the runs
         for r = 1:length(runs)
             
-            % load head motion parameters;
+            % load head motion parameters (MCP.par)
             rp = load([Subdir '/func/rest/session_' num2str(Sessions(s)) '/run_' num2str(r) '/MCF.par']);
             
-            % define the TR
+            % define the repetition time (TR.txt)
             TR = load([Subdir '/func/rest/session_' num2str(Sessions(s)) '/run_' num2str(r) '/TR.txt']);
     
-            % calculate FD;
+            % calculate framewise displacement (FD)
             [fd] = calc_fd(rp,TR);
                  
-            % load the cifti file;
+            % load the cifti file (*.dtseries.nii)
             c = ft_read_cifti_mod([Subdir '/func/rest/session_' num2str(Sessions(s)) '/run_' num2str(r) '/' File '.dtseries.nii']);
-            c.data = c.data - mean(c.data,2); % demean;
+            c.data = c.data - mean(c.data,2); % demean
             
-            % log the data;
-            ConcatenatedData = [ConcatenatedData c.data]; % concatenate;
-            SessionIdx = [SessionIdx ; ones(size(c.data,2),1) * s ones(size(c.data,2),1) * r]; %  session index;
-            FD = [FD ; fd]; %  session index;
+            % log the data
+            ConcatenatedData = [ConcatenatedData c.data]; % concatenate the demeaned CIFTIs
+            SessionIdx = [SessionIdx ; ones(size(c.data,2),1) * s ones(size(c.data,2),1) * r]; %  session index
+            FD = [FD ; fd]; %  save framewise displacement
      
         end
             
     end
     
-    Output = c; % this is the output cifti;
+    Output = c; % this is the output cifti
     Output.data = ConcatenatedData;
     
     end
     
     function [fd]=calc_fd(rp,tr)
     
-    % nyquist freq.
+    % Nyquist creates a frequency plot of a dynamical system model
     nyq = (1/tr)/2;
     
-    % create a tailored
-    % stop band filter;
+    % create a tailored stop band filter
     stopband = [0.2 (nyq-0.019)];
     [B,A] = butter(10,stopband/nyq,'stop');
     
@@ -75,8 +82,8 @@ function [Output,SessionIdx,FD] = concatenate_scans(Subdir,File,Sessions)
     fd_ang = fd_ang / (2 * pi); % fraction of circle
     fd_ang = fd_ang * 100 * pi; % multiplied by circumference
     
-    fd(:,1:3) = []; % delete rotation columns,
+    fd(:,1:3) = []; % delete rotation columns
     fd = [fd fd_ang]; % add back in as angular displacement
-    fd = sum(fd,2); % sum
+    fd = sum(fd,2); % add 2 to every element in the framewise displacement matrix
     
 end
