@@ -5,15 +5,15 @@
 # Note: need jq installed
 # Note: can get slice timing by running rorden_get_slice_times.m
 
-inputJson=/Volumes/LACIE-SHARE/EVO_MEP_data/UW_MRI_data/UW_scan_params.json
-SubjectListTxt=/Volumes/LACIE-SHARE/EVO_MEP_data/UW_MRI_data/subjectlist.txt
-SessionsTxt=/Volumes/LACIE-SHARE/EVO_MEP_data/UW_MRI_data/Sessions.txt
+inputJson=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/NKI_task_params.json
+SubjectListTxt=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/subjectlist.txt
+SessionsTxt=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/Sessions.txt
 
 for Subject in $(cat "$SubjectListTxt"); do
 
     for Session in $(cat "$SessionsTxt"); do
 
-        UnprocFuncDir=/Volumes/LACIE-SHARE/EVO_MEP_data/UW_MRI_data/"$Subject"/func/unprocessed/rest/session_"$Session"/run_1
+        UnprocFuncDir=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/"$Subject"/func/unprocessed/rest/session_"$Session"/run_1
         origJson="$UnprocFuncDir"/Rest_S"$Session"_R1_E1.json
 
         # save params from existing files in bash variables
