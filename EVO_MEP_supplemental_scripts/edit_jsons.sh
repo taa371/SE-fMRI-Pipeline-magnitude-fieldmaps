@@ -1,6 +1,6 @@
 #!/bin/bash
 # Holland Brown
-# Updated: 2023-09-11
+# Updated: 2023-11-30
 
 # Note: need jq installed
 # Note: can get slice timing by running rorden_get_slice_times.m
@@ -8,13 +8,14 @@
 inputJson=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/NKI_task_params.json
 SubjectListTxt=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/subjectlist.txt
 SessionsTxt=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/Sessions.txt
+RunsTxt=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/Runs.txt
 
 for Subject in $(cat "$SubjectListTxt"); do
 
     for Session in $(cat "$SessionsTxt"); do
 
-        UnprocFuncDir=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/"$Subject"/func/unprocessed/rest/session_"$Session"/run_1
-        origJson="$UnprocFuncDir"/Rest_S"$Session"_R1_E1.json
+        UnprocFuncDir=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/"$Subject"/func/unprocessed/task/floop/session_"$Session"/run_"$Run"
+        origJson="$UnprocFuncDir"/"$Subject"_floop_S"$Session"_R1.json
 
         # save params from existing files in bash variables
         echoTime=$( jq -r '.EchoTime' "$inputJson" )
