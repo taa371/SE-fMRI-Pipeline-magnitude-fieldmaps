@@ -2,7 +2,7 @@
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
 # Task-Based fMRI Preprocessing Wrapper
-# Updated 2023-11-01
+# Updated 2023-11-30
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
@@ -60,6 +60,6 @@ echo -e "\nMulti-Echo Preprocessing & Denoising Pipeline for Subject $Subject...
 
 # correct func images for slice time differences and head motion
 echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distortion\n"
-"$MEDIR"/func_preproc_headmotion_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+"$MEDIR"/tb_preproc_headmotion_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
 
 echo -e "\nFunctional pre-processing for subject $Subject done.\n" 
