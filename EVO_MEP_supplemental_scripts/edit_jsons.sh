@@ -1,45 +1,49 @@
 #!/bin/bash
 # Holland Brown
-# Updated: 2023-09-07
-# NOTE: need jq installed (not installed on cluster)
-# NOTE: can get slice timing by running rorden_get_slice_times.m
-# Sources:
-    # https://stackoverflow.com/questions/24942875/change-json-file-by-bash-script
-    # https://jqlang.github.io/jq/manual/
-    # https://notearena.com/lesson/combining-multiple-json-files-using-jq-in-shell-scripting/
+# Updated: 2023-09-11
 
-Subject="97000" # subject ID
-Session="1" # session number
-#UnprocFuncDir=/athena/victorialab/scratch/hob4003/UW_MRI_data/"$Subject"/func/unprocessed/rest/session_"$Session"/run_1 # destination for new JSON files
-#jsonFn=Rest_S"$Session"_R1_E1.json
-UnprocFuncDir=/Users/holland_brown_ra/Desktop/EVO_json_test
-origJson=Rest_S"$Session"_E1.json
-inputJson=UW_scan_params.json
-finalJson=Rest_S"$Session"_E1_final.json
+# Note: need jq installed
+# Note: can get slice timing by running rorden_get_slice_times.m
 
-# create json file for testing
-if ! [ -f "$UnprocFuncDir"/"$origJson" ]; then
-    testStr='{ "key1": "value1", "key2": "value2", "EstimatedEffectiveEchoSpacing": 0.000296815 }'
-    echo -e "$testStr" >> "$UnprocFuncDir"/"$origJson"
-fi
+inputJson=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/NKI_task_params.json
+SubjectListTxt=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/subjectlist.txt
+SessionsTxt=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/Sessions.txt
 
-# read json files into bash strings
-# origStr=$(cat "$UnprocFuncDir"/"$origJson")
-# echo -e "$origStr" # test
+for Subject in $(cat "$SubjectListTxt"); do
 
-# add parameters to original string
-# jq '. + { "RepetitionTime": "$trStr" } "$origStr"'
+    for Session in $(cat "$SessionsTxt"); do
 
-# combine 2 files into final json (this works, but contents of each file are in separate curly brackets in new file)
-jq -s '.' "$UnprocFuncDir"/"$origJson" "$UnprocFuncDir"/"$inputJson" > "$UnprocFuncDir"/"$finalJson"
-echo -e "Checkpoint: created new json file"
+        UnprocFuncDir=/Volumes/LACIE-SHARE/EVO_MRI/organized/NKI/"$Subject"/func/unprocessed/rest/session_"$Session"/run_1
+        origJson="$UnprocFuncDir"/Rest_S"$Session"_R1_E1.json
 
-# edit one element of the json file
-# "$UnprocFuncDir"/"$finalJson" | jq .EffectiveEchoSpacing = "$UnprocFuncDir"/"$finalJson" | jq .EstimatedEffectiveEchoSpacing
-# jq --argfile params "$UnprocFuncDir"/"$origJson" 'select(.EstimatedEffectiveEchoSpacing?)|{(.EstimatedEffectiveEchoSpacing):$params[.EstimatedEffectiveEchoSpacing]}' "$UnprocFuncDir"/"$finalJson" | jq .EffectiveEchoSpacing '[inputs] | add'
+        # save params from existing files in bash variables
+        echoTime=$( jq -r '.EchoTime' "$inputJson" )
+        repTime=$( jq -r '.RepetitionTime' "$inputJson" )
+        phEncodeDir=$( jq -r '.PhaseEncodingDirection' "$inputJson" )
+        sliceTime=$( jq -r '.SliceTiming' "$inputJson" )
+        estimEcho=$( jq -r '.EstimatedEffectiveEchoSpacing' "$origJson" )
 
-# if estimated effective echo spacing is not equal to effective echo spacing...
-estimEchoSpacing=$( "$UnprocFuncDir"/"$finalJson" | jq .EstimatedEffectiveEchoSpacing )
-echo -e "$estimEchoSpacing"
-# "$UnprocFuncDir"/"$finalJson" | jq '.[] | select(.EffectiveEchoSpacing==.EstimatedEffectiveEchoSpacing)'
-"$UnprocFuncDir"/"$finalJson" | jq .EffectiveEchoSpacing = "'"$estimEchoSpacing"'"
+        # add new params to subject's resting-state json
+        cp "$origJson" "$UnprocFuncDir"/temp.json
+        jq --argjson jq_var $echoTime '. += {"EchoTime": $jq_var}' "$UnprocFuncDir"/temp.json >"$origJson"
+        rm "$UnprocFuncDir"/temp.json
+
+        cp "$origJson" "$UnprocFuncDir"/temp.json
+        jq --argjson jq_var $repTime '. += {"RepetitionTime": $jq_var}' "$UnprocFuncDir"/temp.json >"$origJson"
+        rm "$UnprocFuncDir"/temp.json
+
+        cp "$origJson" "$UnprocFuncDir"/temp.json
+        jq --arg jq_var "$phEncodeDir" '. += { "PhaseEncodingDirection": $jq_var }' "$UnprocFuncDir"/temp.json >"$origJson"
+        rm "$UnprocFuncDir"/temp.json
+
+        cp "$origJson" "$UnprocFuncDir"/temp.json
+        jq --argjson jq_var "$estimEcho" '. += { "EffectiveEchoSpacing": $jq_var }' "$UnprocFuncDir"/temp.json >"$origJson"
+        rm "$UnprocFuncDir"/temp.json
+
+        cp "$origJson" "$UnprocFuncDir"/temp.json
+        jq --argjson jq_var "$sliceTime" '. += { "SliceTiming": $jq_var }' "$UnprocFuncDir"/temp.json >"$origJson"
+        rm "$UnprocFuncDir"/temp.json
+    
+    done
+
+done

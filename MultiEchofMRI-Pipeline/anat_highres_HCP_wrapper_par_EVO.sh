@@ -1,9 +1,21 @@
 #!/bin/bash
-# CJL; (cjl2007)
-# HRB; (hob4003)
-# Wrapper for the HCP's anatomical preprocessing pipeline (1st wrapper of 3)
-# Resources: https://github.com/Washington-University/HCPpipelines/blob/master/PreFreeSurfer/PreFreeSurferPipeline.sh
-# Updated 2023-09-05
+# Chuck Lynch, Hussain Bukhari, Holland Brown
+# Updated 2023-09-11
+
+# Anatomical Preprocessing Wrapper (1st of 3 wrappers): wrapper for the Washington University HCP Structural Pipeline scripts;
+# registration, gradient distortion correction, optional processing with spin-echo or double-echo field maps
+
+# About this fork:
+	# added more terminal outputs for QA
+	# selected params for Philips data with double-echo field maps
+	# debugged generally (syntax errors and such)
+
+# Usage note: impossible to know what params to use without reading HCP Pipelines docs for...
+	# (1) PreFreesurfer.sh: https://github.com/Washington-University/HCPpipelines/blob/master/PreFreeSurfer/PreFreeSurferPipeline.sh,
+	# (2) FreeSurfer.sh: https://github.com/Washington-University/HCPpipelines/blob/master/FreeSurfer/FreeSurferPipeline.sh, and
+	# (3) PostFreeSurfer.sh: https://github.com/Washington-University/HCPpipelines/blob/master/PostFreeSurfer/PostFreeSurferPipeline.sh
+
+#–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
@@ -70,8 +82,8 @@ GradientDistortionCoeffs="NONE" # Set to NONE to skip gradient distortion correc
 echo -e "\nAnatomical Preprocessing and Surface Registration Pipeline for subject $Subject...\n" 
 
 # clean slate;
- rm -rf ${StudyFolder}/${Subject}/T*w > /dev/null 2>&1 
- rm -rf ${StudyFolder}/${Subject}/MNINonLinear > /dev/null 2>&1 
+ rm -rf ${StudyFolder}/${Subject}/T*w   
+ rm -rf ${StudyFolder}/${Subject}/MNINonLinear   
 
 # build list of full paths to T1w images; 
 T1ws=`ls ${StudyFolder}/${Subject}/anat/unprocessed/T1w/T1w*.nii.gz`
@@ -103,7 +115,7 @@ else
 fi
 
 # make "QA" folder
- mkdir ${StudyFolder}/${Subject}/qa/ > /dev/null 2>&1 
+ mkdir ${StudyFolder}/${Subject}/qa/   
 
  echo -e "\nRunning PreFreeSurferPipeline for subject $Subject...\n" 
 

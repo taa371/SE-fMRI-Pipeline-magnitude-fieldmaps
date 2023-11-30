@@ -1,8 +1,7 @@
 #!/bin/bash
-# CJL; (cjl2007@med.cornell.edu)
-# HRB; (hob4003@med.cornell.edu)
+# Chuck Lynch, Hussain Bukhari, Holland Brown
 # Remove signal bias, slice-time correction
-# Updated 2023-08-31
+# Updated 2023-09-11
 
 MEDIR=$1
 Subject=$2
@@ -42,7 +41,7 @@ rm "$Subdir"/AllScans.txt # remove intermediate file;
 # clean up some folders;
 for s in $AllScans ; do
 
-	rm -rf "$Subdir"/func/rest/"$s"/MCF > /dev/null 2>&1 # in case there is a previous folder left over;
+	rm -rf "$Subdir"/func/rest/"$s"/MCF   # in case there is a previous folder left over;
 	mkdir "$Subdir"/func/rest/"$s"/vols
 
 	# define some acq. parameters;
@@ -165,7 +164,7 @@ for s in $AllScans ; do
 	done
 
 	# rename mcflirt transform dir.;
-	rm -rf "$Subdir"/func/rest/"$s"/MCF > /dev/null 2>&1
+	rm -rf "$Subdir"/func/rest/"$s"/MCF  
 	mv "$Subdir"/func/rest/"$s"/*_mcf*.mat "$Subdir"/func/rest/"$s"/MCF
 
 	# use the first echo (w/ least amount of signal dropout) to estimate bias field;
@@ -189,32 +188,6 @@ done
 
 # DOESN'T WORK - so I put the contents of the function in the main body and search-and-replaced the vbls...
 # export -f func # correct for head motion and warp to atlas space in single spline warp
-# parallel --jobs $NTHREADS func ::: $MEDIR ::: $AtlasTemplate ::: $Subdir ::: $DOF ::: $AllScans > /dev/null 2>&1  
+# parallel --jobs $NTHREADS func ::: $MEDIR ::: $AtlasTemplate ::: $Subdir ::: $DOF ::: $AllScans    
 
 # END OF FUNCTION ------------------------------------------------------------------------------------------
-
-# This section was already commented out in the GitHub distro... why?
-
-# finally, calculate frame-wise displacement and generate stop-motion movies 
-# summarizing motion and respiration parameters and show minimally preprocessed images;
-
-# # fresh workspace dir.
-# rm -rf "$Subdir"/workspace/ > /dev/null 2>&1 
-# mkdir "$Subdir"/workspace/ > /dev/null 2>&1 
-
-# # create & define the "MotionQA" folder;
-# rm -rf "$Subdir"/func/qa/MotionQA > /dev/null 2>&1
-# mkdir -p "$Subdir"/func/qa/MotionQA > /dev/null 2>&1
-
-# # create a temp. "motion_qa.m"
-# cp -rf "$MEDIR"/res0urces/motion_qa.m \
-# "$Subdir"/workspace/temp.m
-
-# # define some Matlab variables
-# echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1  
-# echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1  		
-# cd "$Subdir"/workspace/ # run script via Matlab 
-# matlab -nodesktop -nosplash -r "temp; exit" #> /dev/null 2>&1  
-
-# # delete temp. workspace;
-# rm -rf "$Subdir"/workspace
