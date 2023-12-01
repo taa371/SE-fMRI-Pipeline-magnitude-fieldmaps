@@ -7,10 +7,10 @@
 # Note: need jq installed
 # Note: can get slice timing by running rorden_get_slice_times.m
 
-inputJson=/media/holland/EVO_Estia/EVO_MRI/organized/UW_task_params.json
-SubjectListTxt=/media/holland/EVO_Estia/EVO_MRI/organized/subjectlist.txt
-SessionsTxt=/media/holland/EVO_Estia/EVO_MRI/organized/Sessions.txt
-RunsTxt=/media/holland/EVO_Estia/EVO_MRI/organized/Runs.txt
+inputJson=/Volumes/EVO_Estia/EVO_MRI/organized/UW_task_params.json
+SubjectListTxt=/Volumes/EVO_Estia/EVO_MRI/organized/subjectlist_tmp.txt
+SessionsTxt=/Volumes/EVO_Estia/EVO_MRI/organized/Sessions.txt
+RunsTxt=/Volumes/EVO_Estia/EVO_MRI/organized/Runs.txt
 
 for Subject in $(cat "$SubjectListTxt"); do
 
@@ -18,8 +18,8 @@ for Subject in $(cat "$SubjectListTxt"); do
 
         for Run in $(cat "$RunsTxt"); do
 
-            UnprocFuncDir=/media/holland/EVO_Estia/EVO_MRI/organized/UW/"$Subject"/func/unprocessed/task/adjective/session_"$Session"/run_"$Run"
-            origJson="$UnprocFuncDir"/"$Subject"_S"$Session"_R"$Run"_adjective.json
+            UnprocFuncDir=/Volumes/EVO_Estia/EVO_MRI/organized/UW/"$Subject"/func/unprocessed/task/floop/session_"$Session"/run_"$Run"
+            origJson="$UnprocFuncDir"/"$Subject"_S"$Session"_R"$Run"_floop.json
 
             # save params from existing files in bash variables
             echoTime=$( jq -r '.EchoTime' "$inputJson" )
