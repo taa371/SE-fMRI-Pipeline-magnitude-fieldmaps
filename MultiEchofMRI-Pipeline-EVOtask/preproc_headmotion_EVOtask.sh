@@ -194,28 +194,26 @@ done
 
 # END OF FUNCTION ------------------------------------------------------------------------------------------
 
-# This section was already commented out in the GitHub distro... why?
-
 # finally, calculate frame-wise displacement and generate stop-motion movies 
-# summarizing motion and respiration parameters and show minimally preprocessed images;
+# summarizing motion and respiration parameters and show minimally preprocessed images
 
-# # fresh workspace dir.
-# rm -rf "$Subdir"/workspace/ > /dev/null 2>&1 
-# mkdir "$Subdir"/workspace/ > /dev/null 2>&1 
+# fresh workspace dir.
+rm -rf "$Subdir"/workspace/ > /dev/null 2>&1 
+mkdir "$Subdir"/workspace/ > /dev/null 2>&1 
 
-# # create & define the "MotionQA" folder;
-# rm -rf "$Subdir"/func/task/floop/qa/MotionQA > /dev/null 2>&1
-# mkdir -p "$Subdir"/func/task/floop/qa/MotionQA > /dev/null 2>&1
+# create & define the "MotionQA" folder;
+rm -rf "$Subdir"/func/task/floop/qa/MotionQA > /dev/null 2>&1
+mkdir -p "$Subdir"/func/task/floop/qa/MotionQA > /dev/null 2>&1
 
-# # create a temp. "motion_qa.m"
-# cp -rf "$MEDIR"/res0urces/motion_qa.m \
-# "$Subdir"/workspace/temp.m
+# create a temp. "motion_qa.m"
+cp -rf "$MEDIR"/res0urces/motion_qa.m \
+"$Subdir"/workspace/temp.m
 
-# # define some Matlab variables
-# echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m > temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1  
-# echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> temp && mv temp "$Subdir"/workspace/temp.m > /dev/null 2>&1  		
-# cd "$Subdir"/workspace/ # run script via Matlab 
-# matlab -nodesktop -nosplash -r "temp; exit" #> /dev/null 2>&1  
+# define some Matlab variables
+echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
+echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m		
+cd "$Subdir"/workspace/ # run script via Matlab 
+matlab -nodesktop -nosplash -r "temp; exit" #> /dev/null 2>&1  
 
-# # delete temp. workspace;
-# rm -rf "$Subdir"/workspace
+# delete temp. workspace;
+rm -rf "$Subdir"/workspace
