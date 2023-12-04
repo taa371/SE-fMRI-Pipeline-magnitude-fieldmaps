@@ -1,6 +1,6 @@
 #!/bin/bash
 # Holland Brown
-# Updated: 2023-12-01
+# Updated: 2023-12-04
 
 #                    >>>>    Edit parameter names in UW JSONs to match what ME Pipeline expects    <<<<
 
@@ -40,8 +40,8 @@ for Subject in $(cat "$SubjectListTxt"); do
 
         for Run in $(cat "$RunsTxt"); do
 
-            UnprocFuncDir=/Volumes/EVO_Estia/EVO_MRI/organized/UW/"$Subject"/func/unprocessed/task/floop/session_"$Session"/run_"$Run"
-            origJson="$UnprocFuncDir"/"$Subject"_S"$Session"_R"$Run"_floop.json
+            UnprocFuncDir=/Volumes/EVO_Estia/EVO_MRI/organized/UW/"$Subject"/func/unprocessed/task/adjective/session_"$Session"/run_"$Run"
+            origJson="$UnprocFuncDir"/adjective_S"$Session"_R"$Run"_E1.json
 
             # save params from existing files in bash variables
             echoTime=$( jq -r '.EchoTime' "$inputJson" )
