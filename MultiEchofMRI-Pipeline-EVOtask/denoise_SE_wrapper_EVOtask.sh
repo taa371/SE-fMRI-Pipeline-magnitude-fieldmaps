@@ -9,6 +9,7 @@ StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
 NTHREADS=$3 # set number of threads; larger values will reduce runtime (but also increase RAM usage)
 StartSession=$4
+TaskName=$5 # 'floop' or 'adjective' for EVO; should be name of task subdir and file prefix
 
 RunICAAROMA=true # Motion correction and artifact identification with ICA-AROMA (run this for EVO participants)
 RunMGTR=false # NOTE: PIs decided not to run MGTR script for EVO study (see Chuck's papers on gray-ordinates for more info)
@@ -73,28 +74,28 @@ echo -e "\nSingle-Echo Preprocessing & Denoising Pipeline\n"
 # NOTE: no CiftiList needed at this first step; inputs are just the results of the functional preproc pipeline
 if [ $RunICAAROMA == true ]; then
 	echo -e "\n$Subject: Identification & removal of artifacts via ICA-AROMA\n"
-	"$MEDIR"/ICAAROMA_SE_denoise_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$AromaPyDir"
+	"$MEDIR"/ICAAROMA_SE_denoise_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$AromaPyDir" "$TaskName"
 fi
 
 # Run MGTR to smooth spatially-diffuse noise using gray-ordinates (PI's decided not to run for EVO)
 # NOTE: need a CiftiList here; should be filenames on which to run MGTR
 if [ $RunMGTR == true ]; then
 	echo -e "\n$Subject: Removal of spatially diffuse noise via MGTR\n"
-	"$MEDIR"/func_denoise_mgtr_SE_EVO.sh "$Subject" "$StudyFolder" "$MEDIR" "$CiftiListMGTR"
+	"$MEDIR"/func_denoise_mgtr_SE_EVOtask.sh "$Subject" "$StudyFolder" "$MEDIR" "$CiftiListMGTR" "$TaskName"
 fi
 
 # Perform signal-decay denoising and project denoised volumes onto a surface
 # NOTE: need a CiftiList here; should be filenames on which to run func_vol2surf.sh
 if [ $Vol2FirstSurf == true ]; then
 	echo -e "\n$Subject: Signal-decay denoising and projection onto a surface\n"
-	"$MEDIR"/func_vol2surf_EVO.sh "$Subject" "$StudyFolder" "$MEDIR" "$CiftiListFirstSurf" "$StartSession" "$FSDir" "$FSLDir"
+	"$MEDIR"/func_vol2surf_EVOtask.sh "$Subject" "$StudyFolder" "$MEDIR" "$CiftiListFirstSurf" "$StartSession" "$FSDir" "$FSLDir" "$TaskName"
 fi
 
 # Additional smoothing before projecting onto another surface
 # NOTE: need a CiftiList here; should be filenames on which to run func_smooth.sh
 if [ $SmoothVol2SecondSurf == true ]; then
 	echo -e "\n$Subject: Additional smoothing and projection onto a surface\n"
-	"$MEDIR"/func_smooth_EVO.sh "$Subject" "$StudyFolder" "$KernelSize" "$CiftiListSecondSurf"
+	"$MEDIR"/func_smooth_EVOtask.sh "$Subject" "$StudyFolder" "$KernelSize" "$CiftiListSecondSurf" "$TaskName"
 fi
 
 echo -e "\n$Subject: Single-echo denoising pipeline complete.\n"

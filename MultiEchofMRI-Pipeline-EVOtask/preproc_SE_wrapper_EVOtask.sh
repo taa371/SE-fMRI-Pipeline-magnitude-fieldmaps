@@ -2,12 +2,13 @@
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
 # Task-Based fMRI Preprocessing Wrapper
-# Updated 2023-11-30
+# Updated 2023-12-04
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
 NTHREADS=$3 # set number of threads; larger values will reduce runtime (but also increase RAM usage)
 StartSession=$4 # define the starting point
+TaskName=$5 # name of task; should match subdir names and file prefixes
 
 # Load modules
 module load Connectome_Workbench/1.5.0/Connectome_Workbench
@@ -55,11 +56,11 @@ echo -e "\nMulti-Echo Preprocessing & Denoising Pipeline for Subject $Subject...
 # ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
 # create an avg. sbref image and co-register that image & all individual SBrefs to the T1w image
-# echo -e "\nCoregistering SBrefs to the Anatomical Image\n"
-# "$MEDIR"/func_preproc_coreg_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+echo -e "\nCoregistering SBrefs to the Anatomical Image\n"
+"$MEDIR"/func_preproc_coreg_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
 
 # correct func images for slice time differences and head motion
 echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distortion\n"
-"$MEDIR"/tb_preproc_headmotion_EVO.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
+"$MEDIR"/preproc_headmotion_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
 
-echo -e "\nFunctional pre-processing for subject $Subject done.\n" 
+echo -e "\nFunctional pre-processing for subject $Subject "$TaskName" done.\n" 
