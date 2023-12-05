@@ -63,7 +63,7 @@ echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distort
 "$MEDIR"/preproc_headmotion_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
 
 # (4) Functional post-processing (motion QA)
-echo -e "\nFunctional Post-Processing for Subject $Subject...\n"
-"$MEDIR"/post_func_preproc_headmotion_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
+echo -e "\nFunctional Post-Processing Motion QA for Subject $Subject...\n"
+"$MEDIR"/post_func_preproc_headmotion_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
 
 echo -e "\nFunctional pre-processing for subject $Subject "$TaskName" done.\n" 
