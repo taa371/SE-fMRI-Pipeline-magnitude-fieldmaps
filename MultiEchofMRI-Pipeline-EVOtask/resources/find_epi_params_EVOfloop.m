@@ -160,7 +160,7 @@ if StartSession == 1
                 
                 % log the file sizes;
                 tmp = dir([Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/' strcat([ upper(FuncName(1)) FuncName(2:end) ]) '_S' num2str(s) '_R' num2str(r) '_E' num2str(e) '.nii.gz'])
-                FileSize(count,e) = tmp.bytes / 1e+6 % convert from byte to megabyte;
+                FileSize(count,e) = tmp.bytes ./ 0.000001 % convert from byte to megabyte;
                 
                 % remove temporary file;
                 system(['rm ' Subdir '/tmp.txt']);
