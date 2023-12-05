@@ -7,13 +7,13 @@ Subject = Subject{length(Subject)};
 set(0,'DefaultFigureVisible','off');
 
 % define the number of sessions;
-sessions = dir([Subdir '/func/task/floop/session_*']);
+sessions = dir([Subdir '/func/floop/session_*']);
 
 % sweep the scans;
 for s = 1:length(sessions)
     
     % this is the number of runs for this session;
-    runs = dir([Subdir '/func/task/floop/session_' num2str(s) '/run_*']);
+    runs = dir([Subdir '/func/floop/session_' num2str(s) '/run_*']);
     
     % sweep the runs;
     for r = 1:length(runs)
@@ -22,7 +22,7 @@ for s = 1:length(sessions)
 
         % load mcflirt parameters (assumed that first three columns
         % are rotation in radians and then last three are translation)
-        rp = load([Subdir '/func/task/floop/session_' num2str(s) '/run_' num2str(r) '/MCF.par']);
+        rp = load([Subdir '/func/floop/session_' num2str(s) '/run_' num2str(r) '/MCF.par']);
         
         % calculate frame-wise displacement
         % (1-4 TRs; no band stop filter applied)
@@ -56,7 +56,7 @@ for s = 1:length(sessions)
         
         % calculate some respiration-related information
         
-        TR = load([Subdir '/func/task/floop/session_'...
+        TR = load([Subdir '/func/floop/session_'...
         num2str(s) '/run_' num2str(r) '/TR.txt']);
         
         % nyquist freq.
@@ -130,12 +130,12 @@ for s = 1:length(sessions)
         end
         
         % save "master" Motion variable
-        save([Subdir '/func/task/floop/session_' num2str(s)...
+        save([Subdir '/func/floop/session_' num2str(s)...
         '/run_' num2str(r) '/Motion'],'Motion');
         
         % read in some information about this run
-        echoes = load([Subdir '/func/task/floop/session_' num2str(s) '/run_' num2str(r) '/TE.txt']); % te
-        tr = load([Subdir '/func/task/floop/session_' num2str(s) '/run_' num2str(r) '/TR.txt']); % tr
+        echoes = load([Subdir '/func/floop/session_' num2str(s) '/run_' num2str(r) '/TE.txt']); % te
+        tr = load([Subdir '/func/floop/session_' num2str(s) '/run_' num2str(r) '/TR.txt']); % tr
         nyq = (1/tr)/2;
         
         % sweep trs
@@ -151,7 +151,7 @@ for s = 1:length(sessions)
         clear tmp
         
         % load unfiltered realignment parameters;
-        rp_no_filt = load([Subdir '/func/task/floop/session_'...
+        rp_no_filt = load([Subdir '/func/floop/session_'...
         num2str(s) '/run_' num2str(r) '/MCF.par']);
         
         % calculate frame-wise displacement;
@@ -167,7 +167,7 @@ for s = 1:length(sessions)
         
         % read in original data;
         for e = 1:length(echoes)
-            all_data{e} = single(niftiread([Subdir '/func/task/floop/session_'...
+            all_data{e} = single(niftiread([Subdir '/func/floop/session_'...
             num2str(s) '/run_' num2str(r) '/floop_E' num2str(e) '_acpc.nii.gz']));
         end
         
@@ -199,7 +199,7 @@ for s = 1:length(sessions)
             
             % check if physio data exists;
             scout = dir([Subdir '/physio/unprocessed/task/floop/session_'...
-            num2str(s) '/run_' num2str(r) '/*RESP*']);
+            num2str(s) '/run_' num2str(r) '/*RESP*/']);
             
             % if available;
             if ~isempty(scout)
