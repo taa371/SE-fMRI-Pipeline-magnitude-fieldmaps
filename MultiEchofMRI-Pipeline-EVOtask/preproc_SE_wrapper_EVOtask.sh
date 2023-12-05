@@ -2,7 +2,7 @@
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
 # Task-Based fMRI Preprocessing Wrapper
-# Updated 2023-12-04
+# Updated 2023-12-05
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
@@ -42,6 +42,11 @@ EnvironmentScript="/athena/victorialab/scratch/hob4003/ME_Pipeline/Hb_HCP_master
 source ${EnvironmentScript}	# Set up pipeline environment variables and software
 
 echo -e "\nMulti-Echo Preprocessing Pipeline for Subject $Subject...\n"
+
+# Create output directory
+if [ ! -d "$StudyFolder"/"$Subject"/func/"$TaskName" ]; then
+	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName"
+fi
 
 # (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
 echo -e "\nProcessing the Field Maps\n"
