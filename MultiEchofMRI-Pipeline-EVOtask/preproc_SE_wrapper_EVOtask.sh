@@ -8,7 +8,7 @@ StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
 NTHREADS=$3 # set number of threads; larger values will reduce runtime (but also increase RAM usage)
 StartSession=$4 # define the starting point
-TaskName=$5 # name of task; should match subdir names and file prefixes
+TaskName=$5 # name of task; should match subdir names and file prefixes (for EVO, should be 'floop' or 'adjective')
 
 # Load modules
 module load Connectome_Workbench/1.5.0/Connectome_Workbench
@@ -41,12 +41,11 @@ AtlasSpace="T1w" # define either native space ("T1w") or MNI space ("MNINonlinea
 EnvironmentScript="/athena/victorialab/scratch/hob4003/ME_Pipeline/Hb_HCP_master/Examples/Scripts/SetUpHCPPipeline.sh" # Pipeline environment script
 source ${EnvironmentScript}	# Set up pipeline environment variables and software
 
-echo -e "\nMulti-Echo Preprocessing & Denoising Pipeline for Subject $Subject...\n"
+echo -e "\nMulti-Echo Preprocessing Pipeline for Subject $Subject...\n"
 
-# process all field maps & create an average image for cases where scan-specific maps are unavailable
-# echo -e "\nProcessing the Field Maps\n"
-#"$MEDIR"/func_preproc_fm_EVO_NKI.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" # skips BET for magnitude FMs (already done for NKI FMs)
-# "$MEDIR"/func_preproc_fm_EVO_UW.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" # includes BET for magnitude FMs (not already done for UW FMs)
+# (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
+echo -e "\nProcessing the Field Maps\n"
+"$MEDIR"/func_preproc_fm_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" "$TaskName"
 
 # ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 # leave commented out - this is redundant with last code block in func_preproc_fm.sh
@@ -55,12 +54,16 @@ echo -e "\nMulti-Echo Preprocessing & Denoising Pipeline for Subject $Subject...
 # "$MEDIR"/post_func_preproc_fm.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession"
 # ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
-# create an avg. sbref image and co-register that image & all individual SBrefs to the T1w image
+# (2) Create an avg. sbref image and co-register that image & all individual SBrefs to the T1w image
 echo -e "\nCoregistering SBrefs to the Anatomical Image\n"
 "$MEDIR"/func_preproc_coreg_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
 
-# correct func images for slice time differences and head motion
+# (3) Correct func images for slice time differences and head motion
 echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distortion\n"
 "$MEDIR"/preproc_headmotion_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
+
+# (4) Functional post-processing (motion QA)
+echo -e "\nFunctional Post-Processing for Subject $Subject...\n"
+"$MEDIR"/post_func_preproc_headmotion_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
 
 echo -e "\nFunctional pre-processing for subject $Subject "$TaskName" done.\n" 
