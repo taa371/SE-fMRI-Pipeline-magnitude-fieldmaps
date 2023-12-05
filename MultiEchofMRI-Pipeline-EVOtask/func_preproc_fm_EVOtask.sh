@@ -1,7 +1,7 @@
 #!/bin/bash
 # Chuck Lynch, Hussain Bukhari, Holland Brown
 # Pre-process field maps for EVO data from NKI collection site
-# Updated 2023-09-11
+# Updated 2023-12-05
 
 MEDIR=$1
 Subject=$2
