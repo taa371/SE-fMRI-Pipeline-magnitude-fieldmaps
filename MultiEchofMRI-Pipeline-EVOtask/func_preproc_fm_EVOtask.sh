@@ -24,7 +24,7 @@ module load matlab/R2021a
 rm -rf "$Subdir"/workspace/   
 mkdir "$Subdir"/workspace/   
 
-# create a temp "find_fm_params.m"
+# if text files already exist, remove older versions
 if [ -f "$Subdir"/func/"$TaskName"/qa/AvgFieldMap.txt ]; then
     echo -e "Removing old AvgFieldMap text file..."
     rm "$Subdir"/func/"$TaskName"/qa/AvgFieldMap.txt
@@ -34,6 +34,7 @@ if [ -f /func/field_maps/acqparams.txt ]; then
     rm "$Subdir"/func/field_maps/acqparams.txt
 fi
 
+# create a temp "find_fm_params.m"
 cp -rf "$MEDIR"/res0urces/find_fm_params_EVO"$TaskName".m "$Subdir"/workspace/temp.m
 echo -e "\nRunning Matlab script find_fm_params_EVO$TaskName...\n"
 
@@ -44,7 +45,7 @@ echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir
 cd "$Subdir"/workspace/ # run script via Matlab 
 matlab -nodesktop -nosplash -r "temp; exit" 
 
-# delete some files
+# fresh workspace
 rm -r "$Subdir"/workspace/
 mkdir "$Subdir"/workspace/
 cd "$Subdir"
