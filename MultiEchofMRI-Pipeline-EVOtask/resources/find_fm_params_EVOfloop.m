@@ -35,7 +35,7 @@ if StartSession == 1
             pe_ap = j.PhaseEncodingDirection; % confirm phase encode dir.
         else
             trt_ap(i) = NaN ; % extract the total readout time
-            pe_ap = 'Unknown'; % confirm phase encode dir.
+            pe_ap = 'Unknown'; % confirm phase encode dir (NOTE: for EVO, preprocessed FMs outside of pipeline -> no FM jsons)
         end
         
         % split the text;
