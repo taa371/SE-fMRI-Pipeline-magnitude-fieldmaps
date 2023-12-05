@@ -10,7 +10,7 @@ BrainMask = niftiread([Subdir '/func/xfms/floop/T1w_acpc_brain_func_mask.nii.gz'
 TargetImage = niftiread([Subdir '/func/xfms/floop/AvgSBref2acpc_EpiReg+BBR.nii.gz']);
 
 % define the number of sessions;
-sessions = dir([Subdir '/func/task/floop/session_*']);
+sessions = dir([Subdir '/func/floop/session_*']);
 
 count = 0; % tick
 
@@ -18,7 +18,7 @@ count = 0; % tick
 for s = 1:length(sessions)
     
     % this is the number of runs for this session;
-    runs = dir([Subdir '/func/task/floop/session_' num2str(s) '/run_*']);
+    runs = dir([Subdir '/func/floop/session_' num2str(s) '/run_*']);
     
     % sweep the runs;
     for r = 1:length(runs)
@@ -27,14 +27,14 @@ for s = 1:length(sessions)
         count = count+1;
 
         % extract the SBref coregistered to target volume using average field map information;
-        Volume = niftiread([Subdir '/func/task/floop/qa/CoregQA/SBref2acpc_EpiReg+BBR_AvgFM_S' num2str(s) '_R' num2str(r) '.nii.gz']);
+        Volume = niftiread([Subdir '/func/floop/qa/CoregQA/SBref2acpc_EpiReg+BBR_AvgFM_S' num2str(s) '_R' num2str(r) '.nii.gz']);
         
         % log spatial correlation;
         Rho(count,1) = corr(Volume(BrainMask==1),TargetImage(BrainMask==1),'type','Spearman');
         
         % if scan-specific field map exists; otherwise use NaN place-holder;
-        if exist([Subdir '/func/task/floop/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S' num2str(s) '_R' num2str(r) '.nii.gz'])
-            Volume = niftiread([Subdir '/func/task/floop/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S' num2str(s) '_R' num2str(r) '.nii.gz']);
+        if exist([Subdir '/func/floop/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S' num2str(s) '_R' num2str(r) '.nii.gz'])
+            Volume = niftiread([Subdir '/func/floop/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S' num2str(s) '_R' num2str(r) '.nii.gz']);
             Rho(count,2) = corr(Volume(BrainMask==1),TargetImage(BrainMask==1),'type','Spearman');
         else
             Rho(count,2) = nan;
@@ -42,11 +42,11 @@ for s = 1:length(sessions)
         
         % check which approach works best;
         if Rho(count,1) > Rho(count,2) || isnan(Rho(count,2))
-            system(['echo ' Subdir '/func/xfms/floop/AvgSBref.nii.gz > ' Subdir '/func/task/floop/session_' num2str(s) '/run_' num2str(r) '/IntermediateCoregTarget.txt']);
-            system(['echo ' Subdir '/func/xfms/floop/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz > ' Subdir '/func/task/floop/session_' num2str(s) '/run_' num2str(r) '/Intermediate2ACPCWarp.txt']);
+            system(['echo ' Subdir '/func/xfms/floop/AvgSBref.nii.gz > ' Subdir '/func/floop/session_' num2str(s) '/run_' num2str(r) '/IntermediateCoregTarget.txt']);
+            system(['echo ' Subdir '/func/xfms/floop/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz > ' Subdir '/func/floop/session_' num2str(s) '/run_' num2str(r) '/Intermediate2ACPCWarp.txt']);
         else
-            system(['echo ' Subdir '/func/task/floop/session_' num2str(s) '/run_' num2str(r) '/SBref.nii.gz > ' Subdir '/func/task/floop/session_' num2str(s) '/run_' num2str(r) '/IntermediateCoregTarget.txt']);
-            system(['echo ' Subdir '/func/xfms/floop/SBref2acpc_EpiReg+BBR_S' num2str(s) '_R' num2str(r) '_warp.nii.gz > ' Subdir '/func/task/floop/session_' num2str(s) '/run_' num2str(r) '/Intermediate2ACPCWarp.txt']);
+            system(['echo ' Subdir '/func/floop/session_' num2str(s) '/run_' num2str(r) '/SBref.nii.gz > ' Subdir '/func/floop/session_' num2str(s) '/run_' num2str(r) '/IntermediateCoregTarget.txt']);
+            system(['echo ' Subdir '/func/xfms/floop/SBref2acpc_EpiReg+BBR_S' num2str(s) '_R' num2str(r) '_warp.nii.gz > ' Subdir '/func/floop/session_' num2str(s) '/run_' num2str(r) '/Intermediate2ACPCWarp.txt']);
         end
 
     end
@@ -68,7 +68,7 @@ set(0,'DefaultFigureVisible','off');
 for s = 1:length(sessions)
     
     % this is the number of runs for this session;
-    runs = dir([Subdir '/func/task/floop/session_' num2str(s) '/run_*']);
+    runs = dir([Subdir '/func/floop/session_' num2str(s) '/run_*']);
     
     % sweep the runs;
     for r = 1:length(runs)
@@ -88,9 +88,9 @@ for s = 1:length(sessions)
         
         % extract the mean volume;
         if Rho(count,1) > Rho (count,2) || isnan(Rho(count,2))
-        SBref = niftiread([Subdir '/func/task/floop/qa/CoregQA/SBref2acpc_EpiReg+BBR_AvgFM_S' num2str(s) '_R' num2str(r) '.nii.gz']);
+        SBref = niftiread([Subdir '/func/floop/qa/CoregQA/SBref2acpc_EpiReg+BBR_AvgFM_S' num2str(s) '_R' num2str(r) '.nii.gz']);
         else
-        SBref = niftiread([Subdir '/func/task/floop/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S' num2str(s) '_R' num2str(r) '.nii.gz']);
+        SBref = niftiread([Subdir '/func/floop/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S' num2str(s) '_R' num2str(r) '.nii.gz']);
         end
         
         % remove skull;
@@ -159,7 +159,7 @@ for s = 1:length(sessions)
 end
 
 % create movie;
-v = VideoWriter([Subdir '/func/task/floop/qa/CoregQA/CoregQA_Movie']);
+v = VideoWriter([Subdir '/func/floop/qa/CoregQA/CoregQA_Movie']);
 v.FrameRate = 10;
 v.Quality = 100; % max quality
 open(v);
@@ -168,4 +168,4 @@ close(v);
 close all
 
 % save Rho variable
-save([Subdir '/func/task/floop/qa/CoregQA/Rho'],'Rho');
+save([Subdir '/func/floop/qa/CoregQA/Rho'],'Rho');
