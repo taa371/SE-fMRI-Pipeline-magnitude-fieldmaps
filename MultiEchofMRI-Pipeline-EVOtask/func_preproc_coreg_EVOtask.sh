@@ -1,7 +1,7 @@
 #!/bin/bash
 # Charles Lynch, Holland Brown
 # Create SBrefs (if necessary) and coregister to anatomicals
-# Updated 2023-12-04
+# Updated 2023-12-05
 
 MEDIR=$1
 Subject=$2
@@ -35,7 +35,7 @@ mv "$Subdir"/workspace/find_epi_params_EVO"$TaskName".m "$Subdir"/workspace/temp
 # define some Matlab variables;
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
 echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m	
-echo FuncName=["'floop'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m  		
+echo FuncName=["'$TaskName'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m  		
 echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp3.m && mv "$Subdir"/workspace/tmp3.m "$Subdir"/workspace/temp.m
 cd "$Subdir"/workspace/ # run script via Matlab 
 matlab -nodesktop -nosplash -r "temp; exit"
@@ -49,8 +49,8 @@ mkdir "$Subdir"/workspace/
 # NOTE: this is used (when needed) as an intermediate target for co-registeration
 
 # define & create a temporary directory;
-mkdir -p "$Subdir"/func/task/"$TaskName"/AverageSBref/
-WDIR="$Subdir"/func/task/"$TaskName"/AverageSBref/
+mkdir -p "$Subdir"/func/"$TaskName"/AverageSBref/
+WDIR="$Subdir"/func/"$TaskName"/AverageSBref/
 
 # count the number of sessions
 sessions=("$Subdir"/func/unprocessed/task/"$TaskName"/session_*)
@@ -67,7 +67,7 @@ for s in $sessions ; do
 	for r in $runs ; do 
 
 		# define the echo times;
-		te=$(cat "$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/TE.txt)
+		te=$(cat "$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/TE.txt)
 		n_te=0 # set to zero;
 
 		# sweep the te;
@@ -81,7 +81,7 @@ for s in $sessions ; do
 			# are also a bunch of non-steady state images we need to dump from the start of the time-series...
 			if [[ ! -f "$Subdir"/func/unprocessed/task/"$TaskName"/session_"$s"/run_"$r"/SBref_S"$s"_R"$r"_E"$n_te".nii.gz ]]; then
 				fslroi "$Subdir"/func/unprocessed/task/"$TaskName"/session_"$s"/run_"$r"/"$TaskName"_S"$s"_R"$r"_E"$n_te".nii.gz "$Subdir"/func/unprocessed/task/"$TaskName"/session_"$s"/run_"$r"/SBref_S"$s"_R"$r"_E"$n_te".nii.gz 10 1 
-				echo 10 > "$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/rmVols.txt
+				echo 10 > "$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/rmVols.txt # prints num volumes to remove to text file, but when does it remove them?
 			fi
 
 		done
@@ -112,9 +112,9 @@ for s in $sessions ; do
 		done
 
 		# combine & average the te; 
-		fslmerge -t "$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz "$WDIR"/TMP_*.nii.gz   
-		fslmaths "$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz -Tmean "$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz
-		cp "$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz "$WDIR"/SBref_"$s"_"$r".nii.gz
+		fslmerge -t "$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz "$WDIR"/TMP_*.nii.gz   
+		fslmaths "$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz -Tmean "$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz
+		cp "$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz "$WDIR"/SBref_"$s"_"$r".nii.gz
 		rm "$WDIR"/TMP* # remove intermediate files;
 
 	done
@@ -171,10 +171,10 @@ invwarp -w "$Subdir"/func/xfms/"$TaskName"/AvgSBref2nonlin_EpiReg+BBR_warp.nii.g
 # NOTE: we will compare which is best (avg. field map vs. scan-specific) later on
 
 # create & define the "CoregQA" folder;
-mkdir -p "$Subdir"/func/task/"$TaskName"/qa/CoregQA  
+mkdir -p "$Subdir"/func/"$TaskName"/qa/CoregQA  
 
 # count the number of sessions
-Sessions=("$Subdir"/func/task/"$TaskName"/session_*)
+Sessions=("$Subdir"/func/"$TaskName"/session_*)
 Sessions=$(seq $StartSession 1 "${#sessions[@]}")
 
 # func ---------------------------------------------------------------
@@ -182,7 +182,7 @@ Sessions=$(seq $StartSession 1 "${#sessions[@]}")
 for s in $Sessions ; do
 
 	# count number of runs for this session;
-	runs=("$Subdir"/func/task/"$TaskName"/session_"$s"/run_*)
+	runs=("$Subdir"/func/"$TaskName"/session_"$s"/run_*)
 	runs=$(seq 1 1 "${#runs[@]}")
 
 	# sweep the runs
@@ -192,14 +192,14 @@ for s in $Sessions ; do
 		if [[ -f "$Subdir/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz" ]]; then # this needs to have spaces around brackets
 
 			# define the effective echo spacing
-			EchoSpacing=$(cat "$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/EffectiveEchoSpacing.txt) 
+			EchoSpacing=$(cat "$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/EffectiveEchoSpacing.txt) 
 		
 			# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using scan-specific field map);
 			# NOTE: need to manually set --pedir (phase encoding direction)
-			epi_reg --epi="$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
+			epi_reg --epi="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
 
-			# "$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
-			applywarp --interp=spline --in="$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r"_warp.nii.gz
+			# "$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
+			applywarp --interp=spline --in="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r"_warp.nii.gz
 
 			# use BBRegister (BBR) to fine-tune the existing co-registeration; output FSL style transformation matrix
 			bbregister --s freesurfer --mov "$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".dat --6 --o "$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz   
@@ -207,19 +207,19 @@ for s in $Sessions ; do
 
 			# add BBR step as post warp linear transformation & generate inverse warp
 			convertwarp --warp1="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r"_warp.nii.gz --postmat="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".mat --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
-			applywarp --interp=spline --in="$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
-			mv "$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz "$Subdir"/func/task/"$TaskName"/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S"$s"_R"$r".nii.gz
+			applywarp --interp=spline --in="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
+			mv "$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz "$Subdir"/func/"$TaskName"/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S"$s"_R"$r".nii.gz
 			
 			# warp SBref image into MNI atlas volume space in a single spline warp; can be used for CoregQA
 			convertwarp --ref="$AtlasTemplate" --warp1="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz --warp2="$Subdir"/anat/MNINonLinear/xfms/acpc_dc2standard.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2nonlin_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
-			applywarp --interp=spline --in="$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/task/"$TaskName"/qa/CoregQA/SBref2nonlin_EpiReg+BBR_ScanSpecificFM_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/SBref2nonlin_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
+			applywarp --interp=spline --in="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/"$TaskName"/qa/CoregQA/SBref2nonlin_EpiReg+BBR_ScanSpecificFM_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/SBref2nonlin_EpiReg+BBR_S"$s"_R"$r"_warp.nii.gz
 
 		fi
 
 		# repeat warps (ACPC, MNI) but this time with the native --> acpc co-registration using an average field map;
-		flirt -dof "$DOF" -in "$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz -ref "$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz -out "$Subdir"/func/task/"$TaskName"/qa/CoregQA/SBref2AvgSBref_S"$s"_R"$r".nii.gz -omat "$Subdir"/func/task/"$TaskName"/qa/CoregQA/SBref2AvgSBref_S"$s"_R"$r".mat
-		applywarp --interp=spline --in="$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --premat="$Subdir"/func/task/"$TaskName"/qa/CoregQA/SBref2AvgSBref_S"$s"_R"$r".mat --warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz --out="$Subdir"/func/task/"$TaskName"/qa/CoregQA/SBref2acpc_EpiReg+BBR_AvgFM_S"$s"_R"$r".nii.gz --ref="$AtlasTemplate"
-		applywarp --interp=spline --in="$Subdir"/func/task/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --premat="$Subdir"/func/task/"$TaskName"/qa/CoregQA/SBref2AvgSBref_S"$s"_R"$r".mat --warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz --out="$Subdir"/func/task/"$TaskName"/qa/CoregQA/SBref2nonlin_EpiReg+BBR_AvgFM_S"$s"_R"$r".nii.gz --ref="$AtlasTemplate"
+		flirt -dof "$DOF" -in "$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz -ref "$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz -out "$Subdir"/func/"$TaskName"/qa/CoregQA/SBref2AvgSBref_S"$s"_R"$r".nii.gz -omat "$Subdir"/func/"$TaskName"/qa/CoregQA/SBref2AvgSBref_S"$s"_R"$r".mat
+		applywarp --interp=spline --in="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --premat="$Subdir"/func/"$TaskName"/qa/CoregQA/SBref2AvgSBref_S"$s"_R"$r".mat --warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg+BBR_warp.nii.gz --out="$Subdir"/func/"$TaskName"/qa/CoregQA/SBref2acpc_EpiReg+BBR_AvgFM_S"$s"_R"$r".nii.gz --ref="$AtlasTemplate"
+		applywarp --interp=spline --in="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --premat="$Subdir"/func/"$TaskName"/qa/CoregQA/SBref2AvgSBref_S"$s"_R"$r".mat --warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz --out="$Subdir"/func/"$TaskName"/qa/CoregQA/SBref2nonlin_EpiReg+BBR_AvgFM_S"$s"_R"$r".nii.gz --ref="$AtlasTemplate"
 
 	done
 
@@ -246,8 +246,8 @@ mkdir "$Subdir"/workspace
 cp -rf "$MEDIR"/res0urces/make_precise_subcortical_labels_EVO"$TaskName".m "$Subdir"/workspace/temp.m
 
 # make tmp dir and navigate there (bug fix for make_precise_subcortical_labels_EVO.m; can't make dirs due to permissions)
-mkdir "$Subdir"/func/task/floop/rois/tmp
-mkdir "$Subdir"/func/task/floop/rois/tmp_nonlin
+mkdir "$Subdir"/func/"$TaskName"/rois/tmp
+mkdir "$Subdir"/func/"$TaskName"/rois/tmp_nonlin
 
 # define some Matlab variables
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
@@ -259,8 +259,8 @@ matlab -nodesktop -nosplash -r "temp; exit"
 cd "$Subdir" # go back to subject dir
 
 # remove temp dirs (bug fix for make_precise_subcortical_labels_EVO.m; can't remove dirs due to permissions)
-rm -rf "$Subdir"/func/task/floop/rois/tmp/
-rm -rf "$Subdir"/func/task/floop/rois/tmp_nonlin/
+rm -rf "$Subdir"/func/"$TaskName"/rois/tmp/
+rm -rf "$Subdir"/func/"$TaskName"/rois/tmp_nonlin/
 
 # finally, evaluate whether scan-specific or average field maps 
 # produce the best co-registeration/cross-scan allignment & 
