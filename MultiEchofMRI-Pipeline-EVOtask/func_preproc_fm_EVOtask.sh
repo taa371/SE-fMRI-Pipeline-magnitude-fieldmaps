@@ -119,7 +119,7 @@ WDIR="$Subdir"/func/"$TaskName"/AverageSBref
 #     # **ADD HERE LATER: for future use, add call to my preproc_fieldmaps script here (ran it outside of pipeline for EVO)**
 
 #     # register reference volume to the T1-weighted anatomical image; use bbr cost function 
-#     "$MEDIR"/res0urces/epi_reg_dof --epi="$WDIR"/FM_mag_"$ThisFM".nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz \
+#     epi_reg --epi="$WDIR"/FM_mag_"$ThisFM".nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz \
 #     --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$WDIR"/fm2acpc_"$ThisFM" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --dof=6   
 
 #     # use BBRegister to fine-tune the existing co-registration; output FSL style transformation matrix; (not sure why --s isnt working, renaming dir. to "freesurfer" as an ugly workaround)
