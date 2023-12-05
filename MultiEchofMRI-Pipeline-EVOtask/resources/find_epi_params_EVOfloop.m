@@ -9,7 +9,7 @@ StartSession = 1;
 if StartSession == 1
     
     % clean slate;
-    system(['rm -rf ' Subdir '/func/task/' FuncName '/']);
+    system(['rm -rf ' Subdir '/func/' FuncName '/']);
     
     count = 0; % preallocate;
     
@@ -26,7 +26,7 @@ if StartSession == 1
         for r = 1:length(runs)
             
             % make the dir;
-            system(['mkdir -p ' Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/']);
+            system(['mkdir -p ' Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/']);
             
             count = count+1;
             
@@ -87,20 +87,20 @@ if StartSession == 1
             
             % sweep the remaining TRs
             for i = 1:length(timing_file)
-                system(['echo ' num2str(timing_file(i)) ' >> ' Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/SliceTiming.txt']);
+                system(['echo ' num2str(timing_file(i)) ' >> ' Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/SliceTiming.txt']);
             end
             
             % write out some other files;
-            system(['echo ' num2str(TE) ' > ' Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TE.txt']);
-            system(['echo ' num2str(TR) ' > ' Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TR.txt']);
-            system(['echo ' num2str(EffectiveEchoSpacing(count)) ' > ' Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/EffectiveEchoSpacing.txt']);
+            system(['echo ' num2str(TE) ' > ' Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TE.txt']);
+            system(['echo ' num2str(TR) ' > ' Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TR.txt']);
+            system(['echo ' num2str(EffectiveEchoSpacing(count)) ' > ' Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/EffectiveEchoSpacing.txt']);
             
         end
         
     end
     
     % make "qa" and "xfms" folders;
-    system(['mkdir -p ' Subdir '/func/task/floop/qa/']);
+    system(['mkdir -p ' Subdir '/func/floop/qa/']);
     system(['mkdir -p ' Subdir '/func/xfms/' FuncName '/']);
     
     count = 0; % preallocate;
@@ -115,10 +115,10 @@ if StartSession == 1
         for r = 1:length(runs)
             
             count = count + 1; % tick
-            TE = load([Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TE.txt']);
-            TR = load([Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TR.txt']);
-            system(['echo Session ' num2str(s) ' Run ' num2str(r) ': ' num2str(TE) ' >> ' Subdir '/func/task/floop/qa/AllTEs.txt']);
-            system(['echo Session ' num2str(s) ' Run ' num2str(r) ': ' num2str(TR) ' >> ' Subdir '/func/task/floop/qa/AllTRs.txt']);
+            TE = load([Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TE.txt']);
+            TR = load([Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TR.txt']);
+            system(['echo Session ' num2str(s) ' Run ' num2str(r) ': ' num2str(TE) ' >> ' Subdir '/func/floop/qa/AllTEs.txt']);
+            system(['echo Session ' num2str(s) ' Run ' num2str(r) ': ' num2str(TR) ' >> ' Subdir '/func/floop/qa/AllTRs.txt']);
             
         end
         
@@ -171,8 +171,8 @@ if StartSession == 1
         
     end
     
-    save([Subdir '/func/task/floop/qa/FileSize'],'FileSize');
-    save([Subdir '/func/task/floop/qa/NumberOfVolumes'],'NumberOfVolumes');
+    save([Subdir '/func/floop/qa/FileSize'],'FileSize');
+    save([Subdir '/func/floop/qa/NumberOfVolumes'],'NumberOfVolumes');
     
 else
     
@@ -191,7 +191,7 @@ else
         for r = 1:length(runs)
             
             % make the dir;
-            system(['mkdir -p ' Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/']);
+            system(['mkdir -p ' Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/']);
             
             count = count+1;
             
@@ -248,13 +248,13 @@ else
             
             % sweep the remaining TRs;
             for i = 1:length(timing_file)
-                system(['echo ' num2str(timing_file(i)) ' >> ' Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/SliceTiming.txt']);
+                system(['echo ' num2str(timing_file(i)) ' >> ' Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/SliceTiming.txt']);
             end
             
             % write out some other files;
-            system(['echo ' num2str(TE) ' > ' Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TE.txt']);
-            system(['echo ' num2str(TR) ' > ' Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TR.txt']);
-            system(['echo ' num2str(EffectiveEchoSpacing(count)) ' > ' Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/EffectiveEchoSpacing.txt']);
+            system(['echo ' num2str(TE) ' > ' Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TE.txt']);
+            system(['echo ' num2str(TR) ' > ' Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TR.txt']);
+            system(['echo ' num2str(EffectiveEchoSpacing(count)) ' > ' Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/EffectiveEchoSpacing.txt']);
             
         end
         
@@ -272,18 +272,18 @@ else
         for r = 1:length(runs)
             
             count = count + 1; % tick;
-            TE = load([Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TE.txt']);
-            TR = load([Subdir '/func/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TR.txt']);
-            system(['echo Session ' num2str(s) ' Run ' num2str(r) ': ' num2str(TE) ' >> ' Subdir '/func/task/floop/qa/AllTEs.txt']);
-            system(['echo Session ' num2str(s) ' Run ' num2str(r) ': ' num2str(TR) ' >> ' Subdir '/func/task/floop/qa/AllTRs.txt']);
+            TE = load([Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TE.txt']);
+            TR = load([Subdir '/func/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/TR.txt']);
+            system(['echo Session ' num2str(s) ' Run ' num2str(r) ': ' num2str(TE) ' >> ' Subdir '/func/floop/qa/AllTEs.txt']);
+            system(['echo Session ' num2str(s) ' Run ' num2str(r) ': ' num2str(TR) ' >> ' Subdir '/func/floop/qa/AllTRs.txt']);
             
         end
         
     end
     
     % load the previously generated variables;
-    load([Subdir '/func/task/floop/qa/FileSize']);
-    load([Subdir '/func/task/floop/qa/NumberOfVolumes']);
+    load([Subdir '/func/floop/qa/FileSize']);
+    load([Subdir '/func/floop/qa/NumberOfVolumes']);
     
     count = StartSession-1; % preallocate;
     
@@ -332,7 +332,7 @@ else
         
     end
     
-    save([Subdir '/func/task/floop/qa/FileSize'],'FileSize');
-    save([Subdir '/func/task/floop/qa/NumberOfVolumes'],'NumberOfVolumes');
+    save([Subdir '/func/floop/qa/FileSize'],'FileSize');
+    save([Subdir '/func/floop/qa/NumberOfVolumes'],'NumberOfVolumes');
     
 end
