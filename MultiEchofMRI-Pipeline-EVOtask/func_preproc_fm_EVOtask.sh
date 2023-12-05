@@ -112,9 +112,9 @@ WDIR="$Subdir"/func/"$TaskName"/AverageSBref
 #     cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_"$ThisFM".nii.gz
 
 #     # temporary bet image (for EVO, this only needs to be run for UW participants)
-#     cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_brain_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz # added for EVO NKI data (already ran bet)
-#     # bet "$WDIR"/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz -f 0.6 -B  
-#     # cp -r "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz "$Subdir"/func/unprocessed/field_maps # save a copy in unproc dir
+#     # cp -r "$Subdir"/func/unprocessed/field_maps/FM_mag_brain_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz # added for EVO NKI data (already ran bet)
+#     bet "$WDIR"/FM_mag_"$ThisFM".nii.gz "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz -f 0.6 -B  
+#     cp -r "$WDIR"/FM_mag_brain_"$ThisFM".nii.gz "$Subdir"/func/unprocessed/field_maps # save a copy in unproc dir
 
 #     # **ADD HERE LATER: for future use, add call to my preproc_fieldmaps script here (ran it outside of pipeline for EVO)**
 

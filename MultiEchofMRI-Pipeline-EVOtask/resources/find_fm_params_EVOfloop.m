@@ -8,8 +8,8 @@ if StartSession == 1
     % clean slate;
     system(['rm -rf ' Subdir '/func/floop/qa/']);
     system(['mkdir ' Subdir '/func/floop/qa/']);
-    system(['rm -rf ' Subdir '/func/field_maps/']);
-    system(['mkdir ' Subdir '/func/field_maps/']);
+    %system(['rm -rf ' Subdir '/func/field_maps/']);
+    %system(['mkdir ' Subdir '/func/field_maps/']);
     
     % define the field maps;
     ap = dir([Subdir '/func/unprocessed/field_maps/AP*.nii.gz']);
