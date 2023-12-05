@@ -44,8 +44,11 @@ source ${EnvironmentScript}	# Set up pipeline environment variables and software
 echo -e "\nMulti-Echo Preprocessing Pipeline for Subject $Subject...\n"
 
 # Create output directory
-if [ ! -d "$StudyFolder"/"$Subject"/func/"$TaskName" ]; then
+if [ ! -d "$StudyFolder/$Subject/func/$TaskName" ]; then
 	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName"
+fi
+if [ ! -d "$StudyFolder/$Subject/func/$TaskName/rois" ]; then
+	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName"/rois
 fi
 
 # (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
@@ -71,4 +74,8 @@ echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distort
 echo -e "\nFunctional Post-Processing Motion QA for Subject $Subject...\n"
 "$MEDIR"/post_func_preproc_headmotion_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
 
-echo -e "\nFunctional pre-processing for subject $Subject "$TaskName" done.\n" 
+echo -e "\nFunctional pre-processing for subject $Subject "$TaskName" done.\n"
+
+if [ -d "$StudyFolder/$Subject/workspace" ]; then
+	rm -rf "$StudyFolder"/"$Subject"/workspace
+fi
