@@ -32,12 +32,12 @@ if StartSession == 1
             
             % define json dir;
             json_dir = ([Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/']);
-            check_json_name = strcmp(FuncName,'rest'); % compare strings; 0 if not matching, 1 if matching
-            if check_json_name == 0
+            check_json_name = strcmp(FuncName,'floop'); % compare strings; 0 if not matching, 1 if matching
+            if check_json_name == 1
             % find .json file;
                 json = dir([json_dir '/f*.json']); % NOTE: change for floop
             else
-                json = dir([json_dir '/R*.json']);
+                json = dir([json_dir '/*.json']);
 
             end
             
@@ -145,7 +145,7 @@ if StartSession == 1
             json_dir = ([Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/']);
             
             % find .json file;
-            json = dir([json_dir '/' strcat([ upper(FuncName(1)) FuncName(2:end) ]) '*.json']);
+            json = dir([json_dir '/floop' '*.json']);
             
             % tick;
             count = count + 1;
@@ -154,16 +154,13 @@ if StartSession == 1
             for e = 1:length(json)
                 
                 % log the number of volumes;
-                system(['fslnvols ' Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/' strcat([ upper(FuncName(1)) FuncName(2:end) ]) '_S' num2str(s) '_R' num2str(r) '_E' num2str(e) '.nii.gz > ' Subdir '/tmp.txt']);
+                system(['fslnvols ' Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/floop' '_S' num2str(s) '_R' num2str(r) '_E' num2str(e) '.nii.gz > ' Subdir '/tmp.txt']);
                 tmp = load([Subdir '/tmp.txt']);
                 NumberOfVolumes(count,e) = tmp;
                 
                 % log the file sizes;
-                tmp = dir([Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/' strcat([ upper(FuncName(1)) FuncName(2:end) ]) '_S' num2str(s) '_R' num2str(r) '_E' num2str(e) '.nii.gz'])
-                FileSize(count,e) = tmp.bytes ./ 0.000001 % convert from byte to megabyte;
-                
-                % remove temporary file;
-                system(['rm ' Subdir '/tmp.txt']);
+                tmp = dir([Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/floop' '_S' num2str(s) '_R' num2str(r) '_E' num2str(e) '.nii.gz'])
+                FileSize(count,e) = tmp.bytes ./ 1000000 % convert from byte to megabyte;
                 
             end
             
@@ -171,8 +168,11 @@ if StartSession == 1
         
     end
     
-    save([Subdir '/func/floop/qa/FileSize'],'FileSize');
-    save([Subdir '/func/floop/qa/NumberOfVolumes'],'NumberOfVolumes');
+    save([Subdir '/func/floop/qa/FileSize.mat'],'FileSize');
+    save([Subdir '/func/floop/qa/NumberOfVolumes.mat'],'NumberOfVolumes');
+
+    % remove temporary file;
+    system(['rm ' Subdir '/tmp.txt']);
     
 else
     
@@ -199,7 +199,7 @@ else
             json_dir = ([Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/']);
             
             % find .json file;
-            json = dir([json_dir '/R*.json']);
+            json = dir([json_dir '/*.json']);
             
             % preallocate;
             TE = zeros(1,length(json));
@@ -301,11 +301,12 @@ else
             
             % define json dir;
             json_dir = ([Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/']);
-            if FuncName == 'task'
+            check_json_name = strcmp(FuncName,'floop'); % compare strings; 0 if not matching, 1 if matching
+            if check_json_name == 1
             % find .json file;
-            json = dir([json_dir '/T*.json']);
+            json = dir([json_dir '/f*.json']);
             else
-             json = dir([json_dir '/R*.json']);
+             json = dir([json_dir '/*.json']);
 
             end
             % tick;
@@ -315,16 +316,13 @@ else
             for e = 1:length(json)
                 
                 % log the number of volumes;
-                system(['fslnvols ' Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/' strcat([ upper(FuncName(1)) FuncName(2:end) ]) '_S' num2str(s) '_R' num2str(r) '_E' num2str(e) '.nii.gz > ' Subdir '/tmp.txt']);
+                system(['fslnvols ' Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/floop' '_S' num2str(s) '_R' num2str(r) '_E' num2str(e) '.nii.gz > ' Subdir '/tmp.txt']);
                 tmp = load([Subdir '/tmp.txt']);
                 NumberOfVolumes(count,e) = tmp;
                 
                 % log the file sizes;
-                tmp = dir([Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/' strcat([ upper(FuncName(1)) FuncName(2:end) ]) '_S' num2str(s) '_R' num2str(r) '_E' num2str(e) '.nii.gz']);
-                FileSize(count,e) = tmp.bytes / 1e+6; % convert from byte to megabyte;
-                
-                % remove temporary file;
-                system(['rm ' Subdir '/tmp.txt']);
+                tmp = dir([Subdir '/func/unprocessed/task/' FuncName '/session_' num2str(s) '/run_' num2str(r) '/floop' '_S' num2str(s) '_R' num2str(r) '_E' num2str(e) '.nii.gz'])
+                FileSize(count,e) = tmp.bytes ./ 1000000 % convert from byte to megabyte;
                 
             end
             
@@ -332,7 +330,11 @@ else
         
     end
     
-    save([Subdir '/func/floop/qa/FileSize'],'FileSize');
-    save([Subdir '/func/floop/qa/NumberOfVolumes'],'NumberOfVolumes');
+    % system([num2str(FileSize) ' >> Subdir '/func/floop/qa/FileSize.txt']);
+    save([Subdir '/func/floop/qa/FileSize.mat'],'FileSize');
+    save([Subdir '/func/floop/qa/NumberOfVolumes.mat'],'NumberOfVolumes');
+
+    % remove temporary file;
+    system(['rm ' Subdir '/tmp.txt']);
     
 end
