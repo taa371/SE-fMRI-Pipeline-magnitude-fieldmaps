@@ -194,27 +194,37 @@ done
 
 # END OF FUNCTION ------------------------------------------------------------------------------------------
 
+
+
+# ----------------------------------------------------------------------------------------------------------------------------------
+# This is redundant with post_func_preproc_headmotion_EVOtask.sh; if running here, don't run post_func_preproc_headmotion_EVOtask.sh
+# ----------------------------------------------------------------------------------------------------------------------------------
+
 # finally, calculate frame-wise displacement and generate stop-motion movies 
 # summarizing motion and respiration parameters and show minimally preprocessed images
 
-# this is redundant with post_func_preproc_headmotion_EVOtask.sh... only run once
-# # fresh workspace dir.
-# rm -rf "$Subdir"/workspace/ > /dev/null 2>&1 
-# mkdir "$Subdir"/workspace/ > /dev/null 2>&1 
+# fresh workspace dir.
+rm -rf "$Subdir"/workspace/  
+mkdir "$Subdir"/workspace/  
 
-# # create & define the "MotionQA" folder;
-# rm -rf "$Subdir"/func/floop/qa/MotionQA > /dev/null 2>&1
-# mkdir -p "$Subdir"/func/floop/qa/MotionQA > /dev/null 2>&1
+# create & define the "MotionQA" folder;
+rm -rf "$Subdir"/func/"$TaskName"/qa/MotionQA 
+mkdir -p "$Subdir"/func/"$TaskName"/qa/MotionQA 
 
-# # create a temp. "motion_qa_EVOfloop.m"
-# cp -rf "$MEDIR"/res0urces/motion_qa_EVOfloop.m \
-# "$Subdir"/workspace/temp.m
+# create a temp. "motion_qa.m"
+cp -rf "$MEDIR"/res0urces/motion_qa_EVO"$TaskName".m "$Subdir"/workspace/temp.m
+echo -e "-----------------------------------------------------------------------------------"
+echo -e "\nRunning Func Preproc Head Motion Matlab script (1 of 1): motion_qa_EVO$TaskName...\n"
+echo -e "-----------------------------------------------------------------------------------"
 
-# # define some Matlab variables
-# echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
-# echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m		
-# cd "$Subdir"/workspace/ # run script via Matlab 
-# matlab -nodesktop -nosplash -r "temp; exit" #> /dev/null 2>&1  
+# define some Matlab variables
+echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m   
+echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m 
+echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m   		
+cd "$Subdir"/workspace/ # run script via Matlab 
+matlab -nodesktop -nosplash -r "temp; exit" 
 
-# # delete temp. workspace;
-# rm -rf "$Subdir"/workspace
+# delete temp. workspace
+rm -rf "$Subdir"/workspace
+cd "$Subdir"
+echo -e "\nCompleted Func Preproc Head Motion Matlab script (1 of 1): motion_qa_EVO$TaskName.\n"
