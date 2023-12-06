@@ -2,7 +2,7 @@
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
 # Task-Based fMRI Preprocessing Wrapper
-# Updated 2023-12-05
+# Updated 2023-12-06
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
@@ -47,9 +47,6 @@ echo -e "\nMulti-Echo Preprocessing Pipeline for Subject $Subject...\n"
 if [ ! -d "$StudyFolder/$Subject/func/$TaskName" ]; then
 	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName"
 fi
-if [ ! -d "$StudyFolder/$Subject/func/$TaskName/rois" ]; then
-	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName"/rois
-fi
 
 # (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
 echo -e "\nProcessing the Field Maps\n"
@@ -74,7 +71,7 @@ echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distort
 echo -e "\nFunctional Post-Processing Motion QA for Subject $Subject...\n"
 "$MEDIR"/post_func_preproc_headmotion_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
 
-echo -e "\nFunctional pre-processing for subject $Subject "$TaskName" done.\n"
+echo -e "\nFunctional Pre-Processing for Subject $Subject "$TaskName" Done.\n"
 
 if [ -d "$StudyFolder/$Subject/workspace" ]; then
 	rm -rf "$StudyFolder"/"$Subject"/workspace
