@@ -1,7 +1,11 @@
 
 Labels = [8 47 26 58 18 54 11 50 17 53 13 52 12 51 10 49 16 28 60]; % these are the default subcortical labels
 tmp_dir = [Subdir '/func/floop/rois/tmp']; % define the roi directory
-%system(['mkdir ' tmp_dir]); % make the temporary dir. 
+
+% make the temporary dir
+% if ~exist(tmp_dir, 'dir')
+%     system(['mkdir ' tmp_dir]);
+% end
 cd(tmp_dir); % change dir. 
 
 % sweep through the labels

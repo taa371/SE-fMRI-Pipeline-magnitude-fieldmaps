@@ -1,7 +1,7 @@
 #!/bin/bash
 # Charles Lynch, Holland Brown
 # Create SBrefs (if necessary) and coregister to anatomicals
-# Updated 2023-12-05
+# Updated 2023-12-06
 
 MEDIR=$1
 Subject=$2
@@ -24,7 +24,7 @@ module load matlab/R2021a
 
 # First, lets read in all the .json files associated with each scan & write out some .txt files that will be used during preprocessing
 
-DwellTime=0.000090456 # set manually for EVO task (same as echo spacing, but not in scientific notation)
+# DwellTime=0.000090456 # TEST: "expecting unary operator" error in epi_reg_dof; try EchoSpacing/DwellTime not in scientific notation
 
 # fresh workspace dir.
 rm -rf "$Subdir"/workspace  
@@ -33,6 +33,7 @@ mkdir "$Subdir"/workspace
 # create temporary find_epi_params.m 
 cp -rf "$MEDIR"/res0urces/find_epi_params_EVO"$TaskName".m "$Subdir"/workspace
 mv "$Subdir"/workspace/find_epi_params_EVO"$TaskName".m "$Subdir"/workspace/temp.m # rename in a separate line
+echo -e "\nRunning Func Preproc Coreg Matlab script (1 of 3): find_epi_params_EVO$TaskName...\n"
 
 # define some Matlab variables;
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
@@ -41,6 +42,7 @@ echo FuncName=["'$TaskName'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/wo
 echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp3.m && mv "$Subdir"/workspace/tmp3.m "$Subdir"/workspace/temp.m
 cd "$Subdir"/workspace/ # run script via Matlab 
 matlab -nodesktop -nosplash -r "temp; exit"
+echo -e "\nCompleted Func Preproc Coreg Matlab script (1 of 3): find_epi_params_EVO$TaskName.\n"
 
 # delete some files
 cd "$Subdir" # go back to subject dir.
@@ -149,9 +151,9 @@ cp -rf "$Subdir"/anat/T1w/"$Subject" "$Subdir"/anat/T1w/freesurfer
 EchoSpacing=$(cat $Subdir/func/xfms/"$TaskName"/EffectiveEchoSpacing.txt) 
 
 # register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using average field map);
-epi_reg --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$DwellTime" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
+epi_reg --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
 
-# "$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$DwellTime" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
+# "$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
 
 applywarp --interp=spline --in="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg.nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg_warp.nii.gz
 
@@ -198,9 +200,9 @@ for s in $Sessions ; do
 		
 			# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using scan-specific field map);
 			# NOTE: need to manually set --pedir (phase encoding direction)
-			epi_reg --epi="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$DwellTime" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
+			epi_reg --epi="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
 
-			# "$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$DwellTime" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
+			# "$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
 			applywarp --interp=spline --in="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r"_warp.nii.gz
 
 			# use BBRegister (BBR) to fine-tune the existing co-registeration; output FSL style transformation matrix
@@ -245,9 +247,14 @@ rm -rf "$Subdir"/workspace
 mkdir "$Subdir"/workspace  
 
 # create temp. make_precise_subcortical_labels.m 
-cp -rf "$MEDIR"/res0urces/make_precise_subcortical_labels_EVO"$TaskName".m "$Subdir"/workspace/temp.m
+cp -rf "$MEDIR"/res0urces/make_precise_subcortical_labels_EVO"$TaskName".m "$Subdir"/workspace
+mv "$Subdir"/workspace/make_precise_subcortical_labels_EVO"$TaskName".m "$Subdir"/workspace/temp.m
+echo -e "\nRunning Func Preproc Coreg Matlab script (2 of 3): make_precise_subcortical_labels_EVO$TaskName...\n"
 
 # make tmp dir and navigate there (bug fix for make_precise_subcortical_labels_EVO.m; can't make dirs due to permissions)
+if [ ! -d "$Subdir"/func/"$TaskName"/rois ]; then
+	mkdir "$Subdir"/func/"$TaskName"/rois
+fi
 mkdir "$Subdir"/func/"$TaskName"/rois/tmp
 mkdir "$Subdir"/func/"$TaskName"/rois/tmp_nonlin
 
@@ -259,8 +266,9 @@ echo SubcorticalLabels=["'$MEDIR/res0urces/FS/SubcorticalLabels.txt'"] | cat - "
 cd "$Subdir"/workspace/ # run script via Matlab 
 matlab -nodesktop -nosplash -r "temp; exit" 
 cd "$Subdir" # go back to subject dir
+echo -e "\nCompleted Func Preproc Coreg Matlab script (2 of 3): make_precise_subcortical_labels_EVO$TaskName.\n"
 
-# remove temp dirs (bug fix for make_precise_subcortical_labels_EVO.m; can't remove dirs due to permissions)
+# remove temp dirs (solution to error: can't remove dirs in Matlab due to permissions)
 rm -rf "$Subdir"/func/"$TaskName"/rois/tmp/
 rm -rf "$Subdir"/func/"$TaskName"/rois/tmp_nonlin/
 
@@ -273,7 +281,9 @@ rm -rf "$Subdir"/workspace/
 mkdir "$Subdir"/workspace/
 
 # create temporary CoregQA.m 
-cp -rf "$MEDIR"/res0urces/coreg_qa_EVO"$TaskName".m "$Subdir"/workspace/temp.m
+cp -rf "$MEDIR"/res0urces/coreg_qa_EVO"$TaskName".m "$Subdir"/workspace
+mv "$Subdir"/workspace/coreg_qa_EVO"$TaskName".m "$Subdir"/workspace/temp.m
+echo -e "\nRunning Func Preproc Coreg Matlab script (3 of 3): coreg_qa_EVO"$TaskName"...\n"
 
 # define some Matlab variables
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
@@ -282,3 +292,4 @@ cd "$Subdir"/workspace/ # run script via Matlab
 matlab -nodesktop -nosplash -r "temp; exit"
 rm -rf "$Subdir"/workspace
 cd "$Subdir" # go back to subject dir
+echo -e "\nCompleted Func Preproc Coreg Matlab script (3 of 3): coreg_qa_EVO"$TaskName".\n"
