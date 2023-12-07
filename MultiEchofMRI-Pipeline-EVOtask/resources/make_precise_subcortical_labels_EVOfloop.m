@@ -26,7 +26,7 @@ system(['wb_command -volume-label-import ' tmp_dir '/FinalLabels.nii.gz ' Subcor
 %system(['rm -rf ' tmp_dir]);
 
 % MNInonlinear
-tmp_dir = [Subdir 'func/floop/rois/tmp_nonlin']; % define the roi directory
+tmp_dir = [Subdir '/func/floop/rois/tmp_nonlin']; % define the roi directory
 %system(['mkdir ' tmp_dir]); % make the temporary dir. 
 cd(tmp_dir); % change dir. 
 
@@ -44,5 +44,5 @@ end
 % merge the files
 system(['fslmerge -t ' tmp_dir '/FinalLabels.nii.gz ' tmp_dir '/Label*_Final.nii.gz']);
 system(['fslmaths ' tmp_dir '/FinalLabels.nii.gz -Tmax ' tmp_dir '/FinalLabels.nii.gz']);
-system(['wb_command -volume-label-import ' tmp_dir '/FinalLabels.nii.gz ' SubcorticalLabels ' ' Subdir 'func/floop/rois/Subcortical_ROIs_nonlin.nii.gz -discard-others']);
+system(['wb_command -volume-label-import ' tmp_dir '/FinalLabels.nii.gz ' SubcorticalLabels ' ' Subdir '/func/floop/rois/Subcortical_ROIs_nonlin.nii.gz -discard-others']);
 % system(['rm -rf ' tmp_dir]);
