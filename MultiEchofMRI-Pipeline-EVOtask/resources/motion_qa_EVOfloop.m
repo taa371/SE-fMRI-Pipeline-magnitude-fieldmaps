@@ -1,4 +1,7 @@
 
+
+% Note: This script mainly deals with respiration data, which I don't have for EVO.
+
 % infer subject name;
 Subject = strsplit(Subdir,'/');
 Subject = Subject{length(Subject)};
@@ -45,7 +48,7 @@ for s = 1:length(sessions)
             fd_ang = fd_temp(:,1:3); % convert rotation columns into angular displacement...
             fd_ang = fd_ang / (2 * pi); % fraction of circle
             fd_ang = fd_ang * 100 * pi; % multiplied by circumference
-            fd_temp(:,1:3) = []; % delete rotation columns,
+            fd_temp(:,1:3) = []; % delete rotation columns
             fd_temp = [fd_temp fd_ang]; % add back in as angular displacement
             fd_temp = sum(fd_temp,2); % sum
             
@@ -54,43 +57,43 @@ for s = 1:length(sessions)
             
         end
         
-        % calculate some respiration-related information
+        % calculate some respiration-related information (don't have for EVO)
         
         TR = load([Subdir '/func/floop/session_'...
         num2str(s) '/run_' num2str(r) '/TR.txt']);
         
         % nyquist freq.
-        nyq = (1/TR)/2;
+        nyq = (1/TR)/2; % Nyquist rate: half the sample rate or pi rad/sample
         
-        % if;
-        if nyq > 0.4
-            % create a tailored
-            % stop band filter;
-            stopband = [0.2 0.4];
-            [B,A] = butter(10,stopband/nyq,'stop');
-        else
-            % create a tailored
-            % stop band filter;
-            stopband = [0.2 (nyq-0.019)];
-            [B,A] = butter(10,stopband/nyq,'stop');
-        end
+        % % if;
+        % if nyq > 0.4
+        %     % create a tailored
+        %     % stop band filter;
+        %     stopband = [0.2 0.4]; % Note: radian values [w1 w2] where w1 < w2
+        %     [B,A] = butter(10,stopband/nyq,'stop');
+        % else
+        %     % create a tailored
+        %     % stop band filter;
+        %     stopband = [0.2 (nyq-0.019)];
+        %     [B,A] = butter(10,stopband/nyq,'stop');
+        % end
         
-        % save stop band information;
-        Motion.power.stopband = stopband;
+        % % save stop band information;
+        % Motion.power.stopband = stopband;
         
-        % sweep through rps;
-        for i = 1:size(rp,2)
-            [pw,pf] = pwelch(rp(:,i),[],[],[],1/TR,'power');
-            idx = find(pf<nyq & pf>0.05);
-            Motion.power.no_filt.pf(:,i) = pf(idx); % note: should be six identical columns
-            Motion.power.no_filt.pw(:,i) = pw(idx);
-        end
+        % % sweep through rps;
+        % for i = 1:size(rp,2)
+        %     [pw,pf] = pwelch(rp(:,i),[],[],[],1/TR,'power');
+        %     idx = find(pf<nyq & pf>0.05);
+        %     Motion.power.no_filt.pf(:,i) = pf(idx); % note: should be six identical columns
+        %     Motion.power.no_filt.pw(:,i) = pw(idx);
+        % end
         
-        % apply stop-
-        % band filter;
-        for i = 1:size(rp,2)
-            rp(:,i) = filtfilt(B,A,rp(:,i));
-        end
+        % % apply stop-
+        % % band filter;
+        % for i = 1:size(rp,2)
+        %     rp(:,i) = filtfilt(B,A,rp(:,i));
+        % end
         
         % sweep through rps;
         for i = 1:size(rp,2)
@@ -100,7 +103,7 @@ for s = 1:length(sessions)
             Motion.power.filt.pw(:,i) = pw(idx);
         end
         
-        % frame-wise displacement (1 TR; band stop filter applied)
+        % frame-wise displacement (1 TR; band stop filter not applied for EVO bc missing RESP data)
         
         % sweep trs;
         for f = 1:4
@@ -108,9 +111,7 @@ for s = 1:length(sessions)
             fd_temp = rp; % preallocate
             fd_temp(1:f,:) = 0; % by convention
             
-            % calculate
-            % backward
-            % difference;
+            % calculate backward difference;
             for i = 1:size(rp,2)
                 for ii = (f+1):size(fd_temp,1)
                     fd_temp(ii,i) = abs(rp(ii,i)-rp(ii-f,i));
@@ -174,10 +175,11 @@ for s = 1:length(sessions)
         % set dims;
         dims = size(all_data{1});
         
-        % now, the main loop
+        % ------------------
+        % Now, the main loop
+        % ------------------
         
-        % define
-        % some bins
+        % define some bins
         count = 0;
         for i = 1:ceil(dims(4)/(300/tr))
             for ii = 1:ceil((300/tr))
@@ -202,7 +204,7 @@ for s = 1:length(sessions)
             num2str(s) '/run_' num2str(r) '/*RESP*/']);
             
             % if available;
-            if ~isempty(scout)
+            if ~isdir(scout)
                 
                 % parse physio data;
                 resp = extract_resp([Subdir '/physio/unprocessed/task/floop/session_'...
