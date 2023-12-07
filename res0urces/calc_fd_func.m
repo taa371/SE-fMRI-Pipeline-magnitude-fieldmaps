@@ -1,7 +1,7 @@
 function calc_fd_func(Subdir,sessions)
 
 % add resources;
-addpath(genpath('/home/charleslynch/res0urces'));
+addpath(genpath('/athena/victorialab/scratch/hob4003/ME_Pipeline/MultiEchofMRI-Pipeline/res0urces'));
 
 % define
 % the number
