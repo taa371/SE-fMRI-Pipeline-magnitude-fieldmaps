@@ -48,31 +48,27 @@ if [ ! -d "$StudyFolder/$Subject/func/$TaskName" ]; then
 	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName"
 fi
 
-# (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
-echo -e "\nProcessing the Field Maps\n"
-"$MEDIR"/func_preproc_fm_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" "$TaskName"
+# # (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
+# echo -e "\nProcessing the Field Maps\n"
+# "$MEDIR"/func_preproc_fm_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" "$TaskName"
 
-# ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-# leave commented out - this is redundant with last code block in func_preproc_fm.sh
-# echo -e "\n Post Processing the Field Maps"
+# # ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+# # leave commented out - this is redundant with last code block in func_preproc_fm.sh
+# # echo -e "\n Post Processing the Field Maps"
 
-# "$MEDIR"/post_func_preproc_fm.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession"
-# ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+# # "$MEDIR"/post_func_preproc_fm.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession"
+# # ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
-# (2) Create an avg. sbref image and co-register that image & all individual SBrefs to the T1w image
-echo -e "\nCoregistering SBrefs to the Anatomical Image\n"
-"$MEDIR"/func_preproc_coreg_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
+# # (2) Create an avg. sbref image and co-register that image & all individual SBrefs to the T1w image
+# echo -e "\nCoregistering SBrefs to the Anatomical Image\n"
+# "$MEDIR"/func_preproc_coreg_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
 
 # (3) Correct func images for slice time differences and head motion
 echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distortion\n"
 "$MEDIR"/preproc_headmotion_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
 
-# (4) Functional post-processing (motion QA)
-echo -e "\nFunctional Post-Processing Motion QA for Subject $Subject...\n"
-"$MEDIR"/post_func_preproc_headmotion_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession"
-
-echo -e "\nFunctional Pre-Processing for Subject $Subject "$TaskName" Done.\n"
-
 if [ -d "$StudyFolder/$Subject/workspace" ]; then
 	rm -rf "$StudyFolder"/"$Subject"/workspace
 fi
+
+echo -e "\nFunctional Pre-Processing for Subject $Subject "$TaskName" Done.\n"
