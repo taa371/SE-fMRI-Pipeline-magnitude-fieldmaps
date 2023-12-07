@@ -1,7 +1,7 @@
 #!/bin/bash
 # Charles Lynch, Holland Brown
 # Create SBrefs (if necessary) and coregister to anatomicals
-# Updated 2023-12-06
+# Updated 2023-12-07
 
 MEDIR=$1
 Subject=$2
@@ -24,8 +24,6 @@ module load matlab/R2021a
 
 # First, lets read in all the .json files associated with each scan & write out some .txt files that will be used during preprocessing
 
-# DwellTime=0.000090456 # TEST: "expecting unary operator" error in epi_reg_dof; try EchoSpacing/DwellTime not in scientific notation
-
 # fresh workspace dir.
 rm -rf "$Subdir"/workspace  
 mkdir "$Subdir"/workspace  
@@ -34,6 +32,11 @@ mkdir "$Subdir"/workspace
 cp -rf "$MEDIR"/res0urces/find_epi_params_EVO"$TaskName".m "$Subdir"/workspace
 mv "$Subdir"/workspace/find_epi_params_EVO"$TaskName".m "$Subdir"/workspace/temp.m # rename in a separate line
 echo -e "\nRunning Func Preproc Coreg Matlab script (1 of 3): find_epi_params_EVO$TaskName...\n"
+
+# remove old xfms parameter file
+if [ -f "$Subdir/func/xfms/$TaskName/EffectiveEchoSpacing.txt" ]; then
+	rm "$Subdir/func/xfms/$TaskName/EffectiveEchoSpacing.txt"
+fi
 
 # define some Matlab variables;
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
@@ -148,12 +151,20 @@ rm -rf "$Subdir"/anat/T1w/freesurfer
 cp -rf "$Subdir"/anat/T1w/"$Subject" "$Subdir"/anat/T1w/freesurfer  
 
 # define the effective echo spacing;
-EchoSpacing=$(cat $Subdir/func/xfms/"$TaskName"/EffectiveEchoSpacing.txt) 
+EchoSpacing=$(cat $Subdir/func/xfms/"$TaskName"/EffectiveEchoSpacing.txt)
+
+# if needed, reformat to non-scientific notation (or it will throw an error in epi_reg_dof)
+EchoSpacing_f=$(awk -v decimal="$EchoSpacing" 'BEGIN { printf("%f\n", decimal) }' </dev/null) # Note: this does round to 6 decimal places
+if [ "$EchoSpacing" != "$EchoSpacing_f" ]; then
+	EchoSpacing="$EchoSpacing_f"
+fi
+echo -e "Avg/xfms EchoSpacing = $EchoSpacing" 
 
 # register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using average field map);
-epi_reg --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
+"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
 
-# "$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
+# TEST: debug "Error in epi_reg_dof: expected unary operator" -> doesn't happen when I just use FSL built-in 'epi_reg' instead of dof version
+# epi_reg --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
 
 applywarp --interp=spline --in="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg.nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg_warp.nii.gz
 
@@ -193,17 +204,26 @@ for s in $Sessions ; do
 	for r in $runs ; do
 
 		# check to see if this scan has a field map or not
-		if [[ -f "$Subdir/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz" ]]; then # this needs to have spaces around brackets
+		if [[ -f "$Subdir/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz" ]]; then # this needs to have spaces inside brackets
 
 			# define the effective echo spacing
-			EchoSpacing=$(cat "$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/EffectiveEchoSpacing.txt) 
+			EchoSpacing=$(cat "$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/EffectiveEchoSpacing.txt)
+
+			# if needed, reformat to non-scientific notation (or it will throw an error in epi_reg_dof)
+			EchoSpacing_f=$(awk -v decimal="$EchoSpacing" 'BEGIN { printf("%f\n", decimal) }' </dev/null)
+			if [ "$EchoSpacing" != "$EchoSpacing_f" ]; then
+				EchoSpacing="$EchoSpacing_f"
+			fi
+			echo -e "Session $s, Run $r EchoSpacing = $EchoSpacing" 
 		
 			# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using scan-specific field map);
 			# NOTE: need to manually set --pedir (phase encoding direction)
-			epi_reg --epi="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
 
-			# "$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
+			"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
 			applywarp --interp=spline --in="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r"_warp.nii.gz
+
+			# TEST: try epi_reg instead of epi_reg_dof
+			# epi_reg --epi="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
 
 			# use BBRegister (BBR) to fine-tune the existing co-registeration; output FSL style transformation matrix
 			bbregister --s freesurfer --mov "$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".dat --6 --o "$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg+BBR_S"$s"_R"$r".nii.gz   
