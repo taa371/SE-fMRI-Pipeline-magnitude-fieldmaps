@@ -2,7 +2,7 @@
 # CJL; (cjl2007@med.cornell.edu)
 # HRB; (hob4003@med.cornell.edu)
 # Task-Based fMRI Preprocessing Wrapper
-# Updated 2023-12-06
+# Updated 2023-12-07
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
@@ -48,20 +48,20 @@ if [ ! -d "$StudyFolder/$Subject/func/$TaskName" ]; then
 	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName"
 fi
 
-# # (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
-# echo -e "\nProcessing the Field Maps\n"
-# "$MEDIR"/func_preproc_fm_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" "$TaskName"
+# (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
+echo -e "\nProcessing the Field Maps\n"
+"$MEDIR"/func_preproc_fm_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" "$TaskName"
 
-# # ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-# # leave commented out - this is redundant with last code block in func_preproc_fm.sh
-# # echo -e "\n Post Processing the Field Maps"
+# ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+# leave commented out - this is redundant with last code block in func_preproc_fm.sh
+# echo -e "\n Post Processing the Field Maps"
 
-# # "$MEDIR"/post_func_preproc_fm.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession"
-# # ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+# "$MEDIR"/post_func_preproc_fm.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession"
+# ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
-# # (2) Create an avg. sbref image and co-register that image & all individual SBrefs to the T1w image
-# echo -e "\nCoregistering SBrefs to the Anatomical Image\n"
-# "$MEDIR"/func_preproc_coreg_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
+# (2) Create an avg. sbref image and co-register that image & all individual SBrefs to the T1w image
+echo -e "\nCoregistering SBrefs to the Anatomical Image\n"
+"$MEDIR"/func_preproc_coreg_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
 
 # (3) Correct func images for slice time differences and head motion
 echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distortion\n"
