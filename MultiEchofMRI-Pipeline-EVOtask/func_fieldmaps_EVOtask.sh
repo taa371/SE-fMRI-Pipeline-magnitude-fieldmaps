@@ -1,7 +1,7 @@
 #!/bin/bash
 # Chuck Lynch, Hussain Bukhari, Holland Brown
 # Pre-process field maps for EVO data from NKI collection site
-# Updated 2023-12-05
+# Updated 2023-12-08
 
 MEDIR=$1
 Subject=$2
@@ -43,16 +43,25 @@ echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subd
 echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m
 echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m 		
 cd "$Subdir"/workspace/ # run script via Matlab 
-matlab -nodesktop -nosplash -r "temp; exit" 
+
+echo -e "\n\t------------------------------------------------------------------------"
+echo -e "\t$Subject Func Fieldmaps Matlab script (1 of 1): find_fm_params_EVO$TaskName"
+echo -e "\t------------------------------------------------------------------------\n"
+matlab -nodesktop -nosplash -r "temp; exit"
+echo -e "\n\t----------------------------------------------"
+echo -e "\t$Subject find_fm_params_EVO$TaskName Complete"
+echo -e "\t----------------------------------------------\n" 
 
 # fresh workspace
+cd "$Subdir"
 rm -r "$Subdir"/workspace/
 mkdir "$Subdir"/workspace/
-cd "$Subdir"
 
 # define & create a temporary directory
 mkdir -p "$Subdir"/func/"$TaskName"/AverageSBref
 WDIR="$Subdir"/func/"$TaskName"/AverageSBref
+
+# DON'T RUN THIS PART FOR TASK (ALREADY PREPROCESSED FIELDMAPS DURING REST PREPROC) --------------------------------
 
 # # count the number of sessions
 # sessions=("$Subdir"/func/unprocessed/task/"$TaskName"/session_*)

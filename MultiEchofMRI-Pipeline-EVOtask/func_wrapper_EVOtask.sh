@@ -1,8 +1,7 @@
 #!/bin/bash
-# CJL; (cjl2007@med.cornell.edu)
-# HRB; (hob4003@med.cornell.edu)
+# Charles Lynch, Holland Brown
 # Task-Based fMRI Preprocessing Wrapper
-# Updated 2023-12-07
+# Updated 2023-12-08
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
@@ -32,16 +31,16 @@ MEDIR="/athena/victorialab/scratch/hob4003/ME_Pipeline/MEF-P-HB/MultiEchofMRI-Pi
 
 # these variables should not be changed unless you have a very good reason
 DOF=6 # this is the degrees of freedom (DOF) used for SBref --> T1w and EPI --> SBref coregistrations
-AtlasTemplate="$MEDIR/res0urces/FSL/MNI152_T1_2mm.nii.gz" # define a lowres MNI template
+AtlasTemplate="$MEDIR/res0urces/FSL/MNI152_T1_2mm.nii.gz" # define a low-res MNI template
 AtlasSpace="T1w" # define either native space ("T1w") or MNI space ("MNINonlinear")
 
-# set variable value that sets up environment
-# source /software/spack/share/spack/setup-env.sh # TEST - did not change parallel error in func_preproc_coreg.sh
+# Set up pipeline environment variables and software
+EnvironmentScript="/athena/victorialab/scratch/hob4003/ME_Pipeline/Hb_HCP_master/Examples/Scripts/SetUpHCPPipeline.sh"
+source ${EnvironmentScript}
 
-EnvironmentScript="/athena/victorialab/scratch/hob4003/ME_Pipeline/Hb_HCP_master/Examples/Scripts/SetUpHCPPipeline.sh" # Pipeline environment script
-source ${EnvironmentScript}	# Set up pipeline environment variables and software
-
-echo -e "\nMulti-Echo Preprocessing Pipeline for Subject $Subject...\n"
+echo -e "\n----------------------------------------------------"
+echo -e "$Subject $TaskName Multi-Echo Preprocessing Pipeline"
+echo -e "----------------------------------------------------\n"
 
 # Create output directory
 if [ ! -d "$StudyFolder/$Subject/func/$TaskName" ]; then
@@ -49,26 +48,27 @@ if [ ! -d "$StudyFolder/$Subject/func/$TaskName" ]; then
 fi
 
 # (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
-echo -e "\nProcessing the Field Maps\n"
+echo -e "\n--------------------------------------------"
+echo -e "$Subject $TaskName Processing the Field Maps"
+echo -e "--------------------------------------------\n"
 "$MEDIR"/func_preproc_fm_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" "$TaskName"
 
-# ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-# leave commented out - this is redundant with last code block in func_preproc_fm.sh
-# echo -e "\n Post Processing the Field Maps"
-
-# "$MEDIR"/post_func_preproc_fm.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession"
-# ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-
-# (2) Create an avg. sbref image and co-register that image & all individual SBrefs to the T1w image
-echo -e "\nCoregistering SBrefs to the Anatomical Image\n"
+# (2) Create an avg SBref image; co-register that image & all individual SBrefs to the T1w image
+echo -e "\n---------------------------------------------------------------"
+echo -e "$Subject $TaskName Coregistering SBrefs to the Anatomical Image"
+echo -e "---------------------------------------------------------------\n"
 "$MEDIR"/func_preproc_coreg_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
 
-# (3) Correct func images for slice time differences and head motion
-echo -e "\nCorrecting for Slice Time Differences, Head Motion, & Spatial Distortion\n"
+# (3) Correct func images for slice-time differences & head motion; motion QA
+echo -e "\n-------------------------------------------------------------------------------------------"
+echo -e "$Subject $TaskName Correcting for Slice Time Differences, Head Motion, & Spatial Distortion"
+echo -e "-------------------------------------------------------------------------------------------\n"
 "$MEDIR"/preproc_headmotion_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
 
 if [ -d "$StudyFolder/$Subject/workspace" ]; then
 	rm -rf "$StudyFolder"/"$Subject"/workspace
 fi
 
-echo -e "\nFunctional Pre-Processing for Subject $Subject "$TaskName" Done.\n"
+echo -e "\n-----------------------------------------------------"
+echo -e "$Subject $TaskName Functional Pre-Processing COMPLETE"
+echo -e "-----------------------------------------------------\n"

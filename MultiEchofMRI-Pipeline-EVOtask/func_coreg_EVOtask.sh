@@ -1,7 +1,7 @@
 #!/bin/bash
 # Charles Lynch, Holland Brown
 # Create SBrefs (if necessary) and coregister to anatomicals
-# Updated 2023-12-07
+# Updated 2023-12-08
 
 MEDIR=$1
 Subject=$2
@@ -31,7 +31,6 @@ mkdir "$Subdir"/workspace
 # create temporary find_epi_params.m 
 cp -rf "$MEDIR"/res0urces/find_epi_params_EVO"$TaskName".m "$Subdir"/workspace
 mv "$Subdir"/workspace/find_epi_params_EVO"$TaskName".m "$Subdir"/workspace/temp.m # rename in a separate line
-echo -e "\nRunning Func Preproc Coreg Matlab script (1 of 3): find_epi_params_EVO$TaskName...\n"
 
 # remove old xfms parameter file
 if [ -f "$Subdir/func/xfms/$TaskName/EffectiveEchoSpacing.txt" ]; then
@@ -43,9 +42,15 @@ echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subd
 echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m	
 echo FuncName=["'$TaskName'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m  		
 echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp3.m && mv "$Subdir"/workspace/tmp3.m "$Subdir"/workspace/temp.m
-cd "$Subdir"/workspace/ # run script via Matlab 
+cd "$Subdir"/workspace/ # run script via Matlab
+
+echo -e "\n\t------------------------------------------------------------------------"
+echo -e "\t$Subject Func Coreg Matlab script (1 of 3): find_epi_params_EVO$TaskName"
+echo -e "\t------------------------------------------------------------------------\n"
 matlab -nodesktop -nosplash -r "temp; exit"
-echo -e "\nCompleted Func Preproc Coreg Matlab script (1 of 3): find_epi_params_EVO$TaskName.\n"
+echo -e "\n\t----------------------------------------------"
+echo -e "\t$Subject find_epi_params_EVO$TaskName Complete"
+echo -e "\t----------------------------------------------\n"
 
 # delete some files
 cd "$Subdir" # go back to subject dir.
@@ -269,7 +274,6 @@ mkdir "$Subdir"/workspace
 # create temp. make_precise_subcortical_labels.m 
 cp -rf "$MEDIR"/res0urces/make_precise_subcortical_labels_EVO"$TaskName".m "$Subdir"/workspace
 mv "$Subdir"/workspace/make_precise_subcortical_labels_EVO"$TaskName".m "$Subdir"/workspace/temp.m
-echo -e "\nRunning Func Preproc Coreg Matlab script (2 of 3): make_precise_subcortical_labels_EVO$TaskName...\n"
 
 # make tmp dir and navigate there (bug fix for make_precise_subcortical_labels_EVO.m; can't make dirs due to permissions)
 if [ ! -d "$Subdir"/func/"$TaskName"/rois ]; then
@@ -284,11 +288,17 @@ echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/worksp
 echo AtlasTemplate=["'$AtlasTemplate'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m	
 echo SubcorticalLabels=["'$MEDIR/res0urces/FS/SubcorticalLabels.txt'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp3.m && mv "$Subdir"/workspace/tmp3.m "$Subdir"/workspace/temp.m		
 cd "$Subdir"/workspace/ # run script via Matlab 
-matlab -nodesktop -nosplash -r "temp; exit" 
-cd "$Subdir" # go back to subject dir
-echo -e "\nCompleted Func Preproc Coreg Matlab script (2 of 3): make_precise_subcortical_labels_EVO$TaskName.\n"
+
+echo -e "\n\t-----------------------------------------------------------------------------------------"
+echo -e "\t$Subject Func Coreg Matlab script (2 of 3): make_precise_subcortical_labels_EVO$TaskName"
+echo -e "\t-----------------------------------------------------------------------------------------\n"
+matlab -nodesktop -nosplash -r "temp; exit"
+echo -e "\n\t------------------------------------------------------------------"
+echo -e "\t$Subject make_precise_subcortical_labels_EVO$TaskName Complete"
+echo -e "\t------------------------------------------------------------------\n"
 
 # remove temp dirs (solution to error: can't remove dirs in Matlab due to permissions)
+cd "$Subdir" # go back to subject dir
 rm -rf "$Subdir"/func/"$TaskName"/rois/tmp/
 rm -rf "$Subdir"/func/"$TaskName"/rois/tmp_nonlin/
 
@@ -303,13 +313,20 @@ mkdir "$Subdir"/workspace/
 # create temporary CoregQA.m 
 cp -rf "$MEDIR"/res0urces/coreg_qa_EVO"$TaskName".m "$Subdir"/workspace
 mv "$Subdir"/workspace/coreg_qa_EVO"$TaskName".m "$Subdir"/workspace/temp.m
-echo -e "\nRunning Func Preproc Coreg Matlab script (3 of 3): coreg_qa_EVO"$TaskName"...\n"
 
 # define some Matlab variables
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
 echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m		
 cd "$Subdir"/workspace/ # run script via Matlab 
+
+echo -e "\n\t-----------------------------------------------------------------"
+echo -e "\t$Subject Func Coreg Matlab script (3 of 3): coreg_qa_EVO$TaskName"
+echo -e "\t-----------------------------------------------------------------\n"
 matlab -nodesktop -nosplash -r "temp; exit"
-rm -rf "$Subdir"/workspace
+echo -e "\n\t---------------------------------------"
+echo -e "\t$Subject coreg_qa_EVO$TaskName Complete"
+echo -e "\t---------------------------------------\n"
+
+# remove tmp matlab workspace
 cd "$Subdir" # go back to subject dir
-echo -e "\nCompleted Func Preproc Coreg Matlab script (3 of 3): coreg_qa_EVO"$TaskName".\n"
+rm -rf "$Subdir"/workspace

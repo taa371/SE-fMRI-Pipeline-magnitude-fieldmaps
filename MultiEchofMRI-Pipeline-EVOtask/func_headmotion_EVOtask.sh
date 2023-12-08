@@ -1,8 +1,7 @@
 #!/bin/bash
-# CJL; (cjl2007@med.cornell.edu)
-# HRB; (hob4003@med.cornell.edu)
+# Charles Lynch, Holland Brown
 # Remove signal bias, slice-time correction
-# Updated 2023-12-07
+# Updated 2023-12-08
 
 MEDIR=$1
 Subject=$2
@@ -47,7 +46,7 @@ for s in $AllScans ; do
 	rm -rf "$Subdir"/func/"$TaskName"/"$s"/MCF > /dev/null 2>&1 # in case there is a previous folder left over
 	mkdir "$Subdir"/func/"$TaskName"/"$s"/vols
 
-	# define some acq. parameters;
+	# define some acquisition parameters;
 	te=$(cat "$Subdir"/func/"$TaskName"/"$s"/TE.txt)
 	tr=$(cat "$Subdir"/func/"$TaskName"/"$s"/TR.txt)
 	n_te=0 # set to zero;
@@ -87,14 +86,17 @@ for s in $AllScans ; do
 	rm -rf "$Subdir"/func/"$TaskName"/"$s"/vols/ # remove temporary dir.
 
 	# use the first echo (w/ least amount of signal dropout) to estimate bias field;
+	echo -e "\n\t$Subject, $s: Estimating bias field using first echo...\n\t\t"$TaskName"_E1.nii.gz -> Mean.nii.gz\n\n"
 	fslmaths "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_E1.nii.gz -Tmean "$Subdir"/func/"$TaskName"/"$s"/Mean.nii.gz
 	N4BiasFieldCorrection -d 3 -i "$Subdir"/func/"$TaskName"/"$s"/Mean.nii.gz -o ["$Subdir"/func/"$TaskName"/"$s"/Mean_restored.nii.gz,"$Subdir"/func/"$TaskName"/"$s"/Bias_field.nii.gz] # estimate field inhomog.; 
 	rm "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_E1.nii.gz # remove intermediate file;
 
 	# resample bias field image (ANTs --> FSL orientation);
+	echo -e "\n\t$Subject, $s: Resampling ANTs bias field to FSL space...\n\t\tReference img, Mean.nii.gz -> Bias_field.nii.gz\n"
 	flirt -in "$Subdir"/func/"$TaskName"/"$s"/Bias_field.nii.gz -ref "$Subdir"/func/"$TaskName"/"$s"/Mean.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat -out "$Subdir"/func/"$TaskName"/"$s"/Bias_field.nii.gz -interp spline
 
-	# remove signal bias; 
+	# remove signal bias;
+	echo -e "\n\t$Subject: Correct for signal inhomegeneity for echo-averaged image...\n\t\tDivide "$TaskName"_AVG.nii.gz by Bias_field.nii.gz\n"
 	fslmaths "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG.nii.gz -div "$Subdir"/func/"$TaskName"/"$s"/Bias_field.nii.gz "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG.nii.gz
 
 	# remove some intermediate files;
@@ -103,23 +105,27 @@ for s in $AllScans ; do
 
 	# remove the first few volumes if needed;
 	if [[ -f "$Subdir"/func/"$TaskName"/"$s"/rmVols.txt ]]; then
+		echo -e "\n\t$Subject, $s: Removing first 10 volumes...\n\t\tOutput: "$TaskName"_AVG.nii.gz\n"
 		nVols=`fslnvols "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG.nii.gz`
 		rmVols=$(cat "$Subdir"/func/"$TaskName"/"$s"/rmVols.txt)
 		fslroi "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG.nii.gz "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG.nii.gz "$rmVols" `expr $nVols - $rmVols`
 	fi
 
 	# run an initial MCFLIRT to get rp. estimates prior to any slice time correction;
+	echo -e "\n\t$Subject, $s: Initial MCFLIRT to estimate realignment params before slice-time correction...\n"
 	mcflirt -dof "$DOF" -stages 3 -plots -in "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG.nii.gz -r "$Subdir"/func/"$TaskName"/"$s"/SBref.nii.gz -out "$Subdir"/func/"$TaskName"/"$s"/MCF
 	rm "$Subdir"/func/"$TaskName"/"$s"/MCF.nii.gz # remove .nii output; not used moving forward 
 
-	# perform slice time correction; using custom timing file;
+	# perform slice time correction using custom timing file;
 	if [[ -f "$Subdir"/func/"$TaskName"/"$s"/SliceTiming.txt ]]; then
+		echo -e "\n\t$Subject: Slice-timing correction...\n\t\tOutput: "$TaskName"_AVG.nii.gz\n"
 		slicetimer -i "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG.nii.gz -o "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG.nii.gz -r $tr --tcustom="$Subdir"/func/"$TaskName"/"$s"/SliceTiming.txt
 	else
-		echo -e "$Subdir/func/"$TaskName"/$s/SliceTiming.txt does not exist. Skipping slice-timing correction."
+		echo -e "ERROR: $Subdir/func/"$TaskName"/$s/SliceTiming.txt does not exist. Skipping slice-timing correction."
 	fi
 
 	# now run another MCFLIRT; specify average sbref as ref. vol & output transformation matrices;
+	echo -e "\n\t$Subject, $s: Second MCFLIRT for motion correction using average SBref as reference volume...\n"
 	mcflirt -dof "$DOF" -mats -stages 4 -in "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG.nii.gz -r "$IntermediateCoregTarget" -out "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG_mcf 
 	rm "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG_*.nii.gz > /dev/null 2>&1 # delete intermediate images; not needed moving forward;
 
@@ -131,14 +137,16 @@ for s in $AllScans ; do
 
 		# remove the first few volumes if needed;
 		if [[ -f "$Subdir"/func/"$TaskName"/"$s"/rmVols.txt ]]; then
+			echo -e "\n\t$Subject, $s: Removing first 10 volumes...\n\t\tOutput: "$TaskName"_E"$e".nii.gz\n"
 			fslroi "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_E"$e".nii.gz "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_E"$e".nii.gz "$rmVols" `expr $nVols - $rmVols`
 		fi
 
 		# perform slice time correction using custom timing file;
 		if [[ -f "$Subdir"/func/"$TaskName"/"$s"/SliceTiming.txt ]]; then
+			echo -e "\n\t$Subject: Slice-timing correction...\n\t\tOutput: "$TaskName"_E"$e".nii.gz\n"
 			slicetimer -i "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_E"$e".nii.gz --tcustom="$Subdir"/func/"$TaskName"/"$s"/SliceTiming.txt -r $tr -o "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_E"$e".nii.gz
 		else
-			echo -e "$Subdir/func/"$TaskName"/$s/SliceTiming.txt does not exist. Skipping slice-timing correction."
+			echo -e "ERROR: $Subdir/func/"$TaskName"/$s/SliceTiming.txt does not exist. Skipping slice-timing correction."
 		fi
 		
 		# split original data into individual volumes;
@@ -171,12 +179,17 @@ for s in $AllScans ; do
 	mv "$Subdir"/func/"$TaskName"/"$s"/*_mcf*.mat "$Subdir"/func/"$TaskName"/"$s"/MCF
 
 	# use the first echo (w/ least amount of signal dropout) to estimate bias field;
+	echo -e "\n\t$Subject, $s: Estimating bias field using first echo...\n\t\t"$TaskName"_E1_acpc.nii.gz -> Mean.nii.gz\n"
 	fslmaths "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_E1_acpc.nii.gz -Tmean "$Subdir"/func/"$TaskName"/"$s"/Mean.nii.gz
 	fslmaths "$Subdir"/func/"$TaskName"/"$s"/Mean.nii.gz -thr 0 "$Subdir"/func/"$TaskName"/"$s"/Mean.nii.gz # remove any negative values introduced by spline interpolation;
-	N4BiasFieldCorrection -d 3 -i "$Subdir"/func/"$TaskName"/"$s"/Mean.nii.gz -o ["$Subdir"/func/"$TaskName"/"$s"/Mean_restored.nii.gz,"$Subdir"/func/"$TaskName"/"$s"/Bias_field.nii.gz] # estimate field inhomog.; 
-	flirt -in "$Subdir"/func/"$TaskName"/"$s"/Bias_field.nii.gz -ref "$Subdir"/func/"$TaskName"/"$s"/Mean.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat -out "$Subdir"/func/"$TaskName"/"$s"/Bias_field.nii.gz -interp spline # resample bias field image (ANTs --> FSL orientation);
+	N4BiasFieldCorrection -d 3 -i "$Subdir"/func/"$TaskName"/"$s"/Mean.nii.gz -o ["$Subdir"/func/"$TaskName"/"$s"/Mean_restored.nii.gz,"$Subdir"/func/"$TaskName"/"$s"/Bias_field.nii.gz] # estimate field inhomog.;
 
-	# sweep all of the echoes; 
+	# resample bias field image (ANTs --> FSL orientation);
+	echo -e "\n\t$Subject, $s: Resampling ANTs bias field to FSL space...\n\t\tNew reference img, acpc-aligned Mean.nii.gz -> Bias_field.nii.gz\n"
+	flirt -in "$Subdir"/func/"$TaskName"/"$s"/Bias_field.nii.gz -ref "$Subdir"/func/"$TaskName"/"$s"/Mean.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat -out "$Subdir"/func/"$TaskName"/"$s"/Bias_field.nii.gz -interp spline
+
+	# sweep all of the echoes;
+	echo -e "\n\t$Subject: Correct for signal inhomegeneity for all echoes...\n\t\tDivide "$TaskName"_E"$e"_acpc.nii.gz by Bias_field.nii.gz\n"
 	for e in $(seq 1 1 "$n_te") ; do
 
 		# correct for signal inhomog.;
@@ -212,9 +225,9 @@ mkdir -p "$Subdir"/func/"$TaskName"/qa/MotionQA > /dev/null 2>&1
 
 # create a temp. "motion_qa.m"
 cp -rf "$MEDIR"/res0urces/motion_qa_EVO"$TaskName".m "$Subdir"/workspace/temp.m
-echo -e "--------------------------------------------------------------------------------"
-echo -e "\nRunning Func Preproc Head Motion Matlab script (1 of 1): motion_qa_EVO$TaskName...\n"
-echo -e "--------------------------------------------------------------------------------"
+echo -e "\n\t------------------------------------------------------------------------"
+echo -e "\t$Subject Func Head Motion Matlab script (1 of 1): motion_qa_EVO$TaskName"
+echo -e "\t------------------------------------------------------------------------\n"
 
 # define some Matlab variables
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m   
@@ -223,7 +236,10 @@ echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir
 cd "$Subdir"/workspace/ # run script via Matlab 
 matlab -nodesktop -nosplash -r "temp; exit" 
 
+echo -e "\n\t----------------------------------------"
+echo -e "\t$Subject motion_qa_EVO$TaskName Complete"
+echo -e "\t----------------------------------------\n"
+
 # delete temp. workspace
 rm -rf "$Subdir"/workspace
 cd "$Subdir"
-echo -e "\nCompleted Func Preproc Head Motion Matlab script (1 of 1): motion_qa_EVO$TaskName.\n"
