@@ -1,4 +1,6 @@
-function calc_fd_func(Subdir,sessions)
+function calc_fd_func_EVOfloop(Subdir,sessions)
+
+    % 2023-12-08 NOTE: commented out 'butter' (matlab function for Butterworth stopband filter) for EVO; throws an error if you don't have PHYSIO data
 
     % add resources;
     addpath(genpath('/athena/victorialab/scratch/hob4003/ME_Pipeline/MultiEchofMRI-Pipeline/res0urces'));
@@ -61,18 +63,18 @@ function calc_fd_func(Subdir,sessions)
             % nyquist freq.
             nyq = (1/TR)/2;
             
-            % if;
-            if nyq > 0.4
-                % create a tailored
-                % stop band filter;
-                stopband = [0.2 0.4];
-                [B,A] = butter(10,stopband/nyq,'stop');
-            else
-                % create a tailored
-                % stop band filter;
-                stopband = [0.2 (nyq-0.019)];
-                [B,A] = butter(10,stopband/nyq,'stop');
-            end
+            % % if;
+            % if nyq > 0.4
+            %     % create a tailored
+            %     % stop band filter;
+            %     stopband = [0.2 0.4];
+            %     [B,A] = butter(10,stopband/nyq,'stop');
+            % else
+            %     % create a tailored
+            %     % stop band filter;
+            %     stopband = [0.2 (nyq-0.019)];
+            %     [B,A] = butter(10,stopband/nyq,'stop');
+            % end
             
             % save stop band information;
             Motion.power.stopband = stopband;
@@ -139,4 +141,4 @@ function calc_fd_func(Subdir,sessions)
         
     end
     
-    end
+end
