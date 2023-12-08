@@ -47,17 +47,17 @@ if [ ! -d "$StudyFolder/$Subject/func/$TaskName" ]; then
 	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName"
 fi
 
-# # (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
-# echo -e "\n--------------------------------------------"
-# echo -e "$Subject $TaskName Processing the Field Maps"
-# echo -e "--------------------------------------------\n"
-# "$MEDIR"/func_fieldmaps_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" "$TaskName"
+# (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
+echo -e "\n--------------------------------------------"
+echo -e "$Subject $TaskName Processing the Field Maps"
+echo -e "--------------------------------------------\n"
+"$MEDIR"/func_fieldmaps_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$NTHREADS" "$StartSession" "$TaskName"
 
-# # (2) Create an avg SBref image; co-register that image & all individual SBrefs to the T1w image
-# echo -e "\n---------------------------------------------------------------"
-# echo -e "$Subject $TaskName Coregistering SBrefs to the Anatomical Image"
-# echo -e "---------------------------------------------------------------\n"
-# "$MEDIR"/func_coreg_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
+# (2) Create an avg SBref image; co-register that image & all individual SBrefs to the T1w image
+echo -e "\n---------------------------------------------------------------"
+echo -e "$Subject $TaskName Coregistering SBrefs to the Anatomical Image"
+echo -e "---------------------------------------------------------------\n"
+"$MEDIR"/func_coreg_EVOtask.sh "$MEDIR" "$Subject" "$StudyFolder" "$AtlasTemplate" "$DOF" "$NTHREADS" "$StartSession" "$TaskName"
 
 # (3) Correct func images for slice-time differences & head motion; motion QA
 echo -e "\n-------------------------------------------------------------------------------------------"

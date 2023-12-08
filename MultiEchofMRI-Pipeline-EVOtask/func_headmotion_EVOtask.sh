@@ -86,7 +86,7 @@ for s in $AllScans ; do
 	rm -rf "$Subdir"/func/"$TaskName"/"$s"/vols/ # remove temporary dir.
 
 	# use the first echo (w/ least amount of signal dropout) to estimate bias field;
-	echo -e "\n\t$Subject, $s: Estimating bias field using first echo...\n\t\t"$TaskName"_E1.nii.gz -> Mean.nii.gz\n\n"
+	echo -e "\n\t$Subject, $s: Estimating bias field using first echo...\n\t\t"$TaskName"_E1.nii.gz -> Mean.nii.gz\n"
 	fslmaths "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_E1.nii.gz -Tmean "$Subdir"/func/"$TaskName"/"$s"/Mean.nii.gz
 	N4BiasFieldCorrection -d 3 -i "$Subdir"/func/"$TaskName"/"$s"/Mean.nii.gz -o ["$Subdir"/func/"$TaskName"/"$s"/Mean_restored.nii.gz,"$Subdir"/func/"$TaskName"/"$s"/Bias_field.nii.gz] # estimate field inhomog.; 
 	rm "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_E1.nii.gz # remove intermediate file;
