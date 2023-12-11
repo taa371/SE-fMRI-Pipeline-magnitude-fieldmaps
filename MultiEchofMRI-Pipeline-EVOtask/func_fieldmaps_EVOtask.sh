@@ -1,7 +1,7 @@
 #!/bin/bash
 # Chuck Lynch, Hussain Bukhari, Holland Brown
 # Pre-process field maps for EVO data from NKI collection site
-# Updated 2023-12-08
+# Updated 2023-12-11
 
 MEDIR=$1
 Subject=$2
@@ -18,13 +18,9 @@ module load python-3.7.7-gcc-8.2.0-onbczx6
 module load fsl/6.0.4
 module load afni/afni
 module load ants-2.4.0-gcc-8.2.0-ehibrhi
-module load matlab/R2021a
+module load matlab/R2021a 
 
-# fresh workspace dir.
-rm -rf "$Subdir"/workspace/   
-mkdir "$Subdir"/workspace/   
-
-# if text files already exist, remove older versions
+# If text files already exist, remove older versions
 if [ -f "$Subdir"/func/"$TaskName"/qa/AvgFieldMap.txt ]; then
     echo -e "Removing old AvgFieldMap text file..."
     rm "$Subdir"/func/"$TaskName"/qa/AvgFieldMap.txt
@@ -33,6 +29,24 @@ if [ -f /func/field_maps/acqparams.txt ]; then
     echo -e "Removing old acqparams text file..."
     rm "$Subdir"/func/field_maps/acqparams.txt
 fi
+
+# Create fresh xfms & qa dirs
+if [ ! -d "$StudyFolder/$Subject/func/xfms/$TaskName" ]; then
+	mkdir "$StudyFolder"/"$Subject"/func/xfms/"$TaskName"
+else
+	rmdir "$StudyFolder/$Subject/func/xfms/$TaskName" # fresh xfms task dir
+	mkdir "$StudyFolder"/"$Subject"/func/xfms/"$TaskName"
+fi
+if [ ! -d "$StudyFolder/$Subject/func/$TaskName/qa" ]; then
+	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName/qa"
+else
+	rmdir "$StudyFolder"/"$Subject"/func/"$TaskName/qa" # fresh qa task dir
+	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName/qa"
+fi
+
+# Fresh workspace dir
+rm -rf "$Subdir"/workspace/   
+mkdir "$Subdir"/workspace/
 
 # create a temp "find_fm_params.m"
 cp -rf "$MEDIR"/res0urces/find_fm_params_EVO"$TaskName".m "$Subdir"/workspace/temp.m
