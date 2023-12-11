@@ -46,9 +46,6 @@ echo -e "----------------------------------------------------\n"
 if [ ! -d "$StudyFolder/$Subject/func/$TaskName" ]; then
 	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName"
 fi
-if [ ! -d "$StudyFolder/$Subject/func/xfms/$TaskName" ]; then
-	mkdir "$StudyFolder"/"$Subject"/func/xfms/"$TaskName"
-fi
 
 # (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
 echo -e "\n--------------------------------------------"
