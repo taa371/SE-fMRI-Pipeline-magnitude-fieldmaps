@@ -34,13 +34,13 @@ fi
 if [ ! -d "$StudyFolder/$Subject/func/xfms/$TaskName" ]; then
 	mkdir "$StudyFolder"/"$Subject"/func/xfms/"$TaskName"
 else
-	rmdir "$StudyFolder/$Subject/func/xfms/$TaskName" # fresh xfms task dir
+	rm -rf "$StudyFolder/$Subject/func/xfms/$TaskName" # fresh xfms task dir
 	mkdir "$StudyFolder"/"$Subject"/func/xfms/"$TaskName"
 fi
 if [ ! -d "$StudyFolder/$Subject/func/$TaskName/qa" ]; then
 	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName/qa"
 else
-	rmdir "$StudyFolder"/"$Subject"/func/"$TaskName/qa" # fresh qa task dir
+	rm -rf "$StudyFolder"/"$Subject"/func/"$TaskName/qa" # fresh qa task dir
 	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName/qa"
 fi
 
