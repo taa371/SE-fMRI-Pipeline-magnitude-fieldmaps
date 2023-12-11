@@ -1,7 +1,7 @@
 #!/bin/bash
 # Charles Lynch, Holland Brown
 # Create SBrefs (if necessary) and coregister to anatomicals
-# Updated 2023-12-08
+# Updated 2023-12-11
 
 MEDIR=$1
 Subject=$2
