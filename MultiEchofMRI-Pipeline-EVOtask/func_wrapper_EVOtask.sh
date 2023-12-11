@@ -1,7 +1,7 @@
 #!/bin/bash
 # Charles Lynch, Holland Brown
 # Task-Based fMRI Preprocessing Wrapper
-# Updated 2023-12-08
+# Updated 2023-12-11
 
 StudyFolder=$1 # location of Subject folder
 Subject=$2 # space delimited list of subject IDs
@@ -42,9 +42,12 @@ echo -e "\n----------------------------------------------------"
 echo -e "$Subject $TaskName Multi-Echo Preprocessing Pipeline"
 echo -e "----------------------------------------------------\n"
 
-# Create output directory
+# Create output directories
 if [ ! -d "$StudyFolder/$Subject/func/$TaskName" ]; then
 	mkdir "$StudyFolder"/"$Subject"/func/"$TaskName"
+fi
+if [ ! -d "$StudyFolder/$Subject/func/xfms/$TaskName" ]; then
+	mkdir "$StudyFolder"/"$Subject"/xfms/func/"$TaskName"
 fi
 
 # (1) Process all field maps & create an average image for cases where scan-specific maps are unavailable
