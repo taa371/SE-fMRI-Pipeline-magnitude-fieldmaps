@@ -227,7 +227,7 @@ done
 # generate a set of functional brain mask (acpc + nonlin) in the atlas space; 
 flirt -interp nearestneighbour -in "$Subdir"/anat/T1w/T1w_acpc_dc_brain.nii.gz -ref "$AtlasTemplate" -out "$Subdir"/func/xfms/rest/T1w_acpc_brain_func.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat
 flirt -interp nearestneighbour -in "$Subdir"/anat/T1w/T1w_acpc_brain_mask.nii.gz -ref "$AtlasTemplate" -out "$Subdir"/func/xfms/rest/T1w_acpc_brain_func_mask.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat
-flirt -interp nearestneighbour -in "$Subdir"/anat/MNINonLinear/T1w_restore_brain.nii.gz -ref "$AtlasTemplate" -out "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat # this is the T1w_restore_brain.nii.gz image in functional atlas space;
+flirt -interp nearestneighbour -in "$Subdir"/anat/MNINonLinear/T1w_restore_brain.nii.gz -ref "$AtlasTemplate" -out "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat # anat in std space transformed to functional atlas space;
 fslmaths "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func.nii.gz -bin "$Subdir"/func/xfms/rest/T1w_nonlin_brain_func_mask.nii.gz # this is a binarized version of the T1w_nonlin_brain.nii.gz image in 2mm atlas space; used for masking functional data
 
 # remove tmp. freesurfer folder
