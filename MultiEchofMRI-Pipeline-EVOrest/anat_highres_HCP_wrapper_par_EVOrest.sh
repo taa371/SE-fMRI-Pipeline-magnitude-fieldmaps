@@ -75,15 +75,15 @@ Template2mmMask="${HCPPIPEDIR_Templates}/MNI152_T1_2mm_brain_mask_dil.nii.gz" # 
 T1wSampleSpacing="NONE" # DICOM field (0019,1018) in s or "NONE" if not used
 T2wSampleSpacing="NONE" # DICOM field (0019,1018) in s or "NONE" if not used
 UnwarpDir="j" # {x,y,z,x-,y-,z-} OR {i,j,k,i-,j-,k-}' "Readout direction of the T1w and T2w images (according to the *voxel axes); NOTE: for EVO, both NKI and UW scanners have dir 'j'
-BrainSize="170" # BrainSize in mm, 150-170 for humans
+BrainSize="170" # BrainSize in mm, 150-170 for humans (kind of arbitrary) -> used by FreeSurfer pipeline scripts for reg (keep same unless results look weird, then try smaller brain size and re-run)
 FNIRTConfig="${HCPPIPEDIR_Config}/T1_2_MNI152_2mm.cnf" # FNIRT 2mm T1w Config
-GradientDistortionCoeffs="NONE" # Set to NONE to skip gradient distortion correction
+GradientDistortionCoeffs="NONE" # Set to NONE to skip gradient distortion correction (skipped for EVO because didn't have spin-echo fieldmaps)
 
 echo -e "\nAnatomical Preprocessing and Surface Registration Pipeline for subject $Subject...\n" 
 
-# clean slate;
- rm -rf ${StudyFolder}/${Subject}/T*w   
- rm -rf ${StudyFolder}/${Subject}/MNINonLinear   
+# clean slate; remove outputs if they exist
+rm -rf ${StudyFolder}/${Subject}/T*w   
+rm -rf ${StudyFolder}/${Subject}/MNINonLinear   
 
 # build list of full paths to T1w images; 
 T1ws=`ls ${StudyFolder}/${Subject}/anat/unprocessed/T1w/T1w*.nii.gz`
@@ -119,7 +119,7 @@ fi
 
  echo -e "\nRunning PreFreeSurferPipeline for subject $Subject...\n" 
 
-# run the Pre FreeSurfer pipeline
+# run the Pre FreeSurfer pipeline (1st FS pipeline script)
  ${HCPPIPEDIR}/PreFreeSurfer/PreFreeSurferPipeline.sh \
  --path="$StudyFolder" \
  --subject="$Subject" \
@@ -152,7 +152,7 @@ fi
  --processing-mode="$ProcessingMode" \
  --printcom=$PRINTCOM > ${StudyFolder}/${Subject}/qa/PreFreeSurfer.txt
 
-# define some input variables for FreeSurfer
+# define some input variables for FreeSurfer (2nd anatomical FS pipeline script)
 SubjectID="$Subject" #FreeSurfer Subject ID Name
 SubjectDIR="${StudyFolder}/${Subject}/T1w" #Location to Put FreeSurfer Subject's Folder
 T1wImage="${StudyFolder}/${Subject}/T1w/T1w_acpc_dc_restore.nii.gz" #T1w FreeSurfer Input (Full Resolution)
@@ -160,6 +160,7 @@ T1wImageBrain="${StudyFolder}/${Subject}/T1w/T1w_acpc_dc_restore_brain.nii.gz" #
 
 # determine if T2w images exist & 
 # adjust "T2wImage" input accordingly
+# NOTE: may keep running if this doesn't exist and fail at the end, so search QA text files/logs for errors
 if [ "$T2wInputImages" = "NONE" ]; then
 	T2wImage="NONE" # no T2w image
 else
@@ -177,18 +178,18 @@ echo -e "\nRunning FreeSurferPipeline for subject $Subject\n"
  --t2="$T2wImage" \
  --processing-mode="$ProcessingMode" > ${StudyFolder}/${Subject}/qa/FreeSurfer.txt
 
-# define some input variables for "Post" FreeSurfer
+# define some input variables for "Post" FreeSurfer (3rd FS script)
 SurfaceAtlasDIR="${HCPPIPEDIR_Templates}/standard_mesh_atlases"
 GrayordinatesSpaceDIR="${HCPPIPEDIR_Templates}/91282_Greyordinates"
 GrayordinatesResolutions="2" #Usually 2mm, if multiple delimit with @, must already exist in templates dir
-HighResMesh="164" #Usually 164k vertices
-LowResMeshes="32" #Usually 32k vertices, if multiple delimit with @, must already exist in templates dir
+HighResMesh="164" #Usually 164k vertices (Chuck said to keep this the same)
+LowResMeshes="32" #Usually 32k vertices, if multiple delimit with @, must already exist in templates dir (Chuck said to keep this the same)
 SubcorticalGrayLabels="${HCPPIPEDIR_Config}/FreeSurferSubcorticalLabelTableLut.txt"
 FreeSurferLabels="${HCPPIPEDIR_Config}/FreeSurferAllLut.txt"
 ReferenceMyelinMaps="${HCPPIPEDIR_Templates}/standard_mesh_atlases/Conte69.MyelinMap_BC.164k_fs_LR.dscalar.nii"
 RegName="MSMSulc" #MSMSulc is recommended, if binary is not available use FS (FreeSurfer)
 
-echo -e "\nRunning PostFreeSurferPipeline for subject $Subject\n" 
+echo -e "\nRunning PostFreeSurferPipeline for subject $Subject\n"
 
 # run the Post FreeSurfer pipeline
 ${HCPPIPEDIR}/PostFreeSurfer/PostFreeSurferPipeline.sh \

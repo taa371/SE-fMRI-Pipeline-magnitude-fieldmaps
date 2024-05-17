@@ -16,3 +16,8 @@ Required Software
 - Tedana
 - GNU
 
+## Step 1: Change all relevant paths in the FreeSurfer environment set up script /SetupHCPPipelinesScript.sh
+    - see FreeSurfer pipelines documentation for more information
+
+## Step 2: Anatomical Pipeline
+    - 

@@ -3,7 +3,6 @@
 % turn off
 % warnings
 warning off;
-
 if StartSession == 1
     
     % clean slate;
