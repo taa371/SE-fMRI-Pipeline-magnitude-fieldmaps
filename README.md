@@ -21,8 +21,28 @@ Required Software
     - NOTE: this script is sourced in the anatomical, functional and denoising wrappers
 
 ## Step 2: Anatomical Pipeline
-    #### 
+    - set up general variables
+        - in script to submit cluster jobs, define study folder, subject ID, TE, magnitude fieldmap name, phase fieldmap name, number of cluster cores, and readout distortion correction
+        - set path to /SetupHCPPipelinesScript.sh (variable: "EnvironmentScript")
+
+####    (A) Pre-FreeSurfer Pipeline
+        - paths to templates (likely don't need to change; paths are set during /SetupHCPPipelinesScript.sh script)
+        - structural scan settings
+            - check JSON files or scan protocol docs to make sure DICOM field and unwarping direction are correct
+            - brain size should typically be between 150 and 170 mm; choose 170 and decrease size + re-run if brain appears warped at end
+            - set path to FNIRT config file (something like /T1_2_MNI152_2mm.cnf)
+        - set gradient distortion coefficients if using spin echo fieldmaps (set to "NONE" for EVO study because fieldmaps were not spin-echo)
+
+####    (B) FreeSurfer Pipeline
+        - 
+
+####    (C) Post-FreeSurfer Pipeline
+
+
 
 ## Step 3: Functional Pipeline
+
+####    (A) Pre-FreeSurfer Pipeline
+
 
 ## Step 4: Denoising Pipeline
