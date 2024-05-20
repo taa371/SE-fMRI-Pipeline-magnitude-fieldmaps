@@ -17,7 +17,12 @@ Required Software
 - GNU
 
 ## Step 1: Change all relevant paths in the FreeSurfer environment set up script /SetupHCPPipelinesScript.sh
-    - see FreeSurfer pipelines documentation for more information
+    - see FreeSurfer pipelines documentation for more information (https://github.com/Washington-University/HCPpipelines)
+    - NOTE: this script is sourced in the anatomical, functional and denoising wrappers
 
 ## Step 2: Anatomical Pipeline
-    - 
+    #### 
+
+## Step 3: Functional Pipeline
+
+## Step 4: Denoising Pipeline
