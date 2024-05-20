@@ -25,7 +25,7 @@ Required Software
         - in script to submit cluster jobs, define study folder, subject ID, TE, magnitude fieldmap name, phase fieldmap name, number of cluster cores, and readout distortion correction
         - set path to /SetupHCPPipelinesScript.sh (variable: "EnvironmentScript")
 
-####    (A) Pre-FreeSurfer Pipeline
+#### (A) Pre-FreeSurfer Pipeline
         - paths to templates (likely don't need to change; paths are set during /SetupHCPPipelinesScript.sh script)
         - structural scan settings
             - check JSON files or scan protocol docs to make sure DICOM field and unwarping direction are correct
@@ -33,7 +33,7 @@ Required Software
             - set path to FNIRT config file (something like /T1_2_MNI152_2mm.cnf)
         - set gradient distortion coefficients if using spin echo fieldmaps (set to "NONE" for EVO study because fieldmaps were not spin-echo)
 
-####    (B) FreeSurfer Pipeline >> func_wrapper.sh
+#### (B) FreeSurfer Pipeline >> func_wrapper.sh
         - in script to submit cluster jobs, define study folder, subject ID, number of cluster cores, starting session (option to start with first session, or only run second session, for example)
         - set $MEDIR variable: path to the bash pipeline scripts and /res0urces folder where Matlab scripts are located
         - set degrees of freedom used for SBref coregistration step
@@ -41,13 +41,13 @@ Required Software
         - set $AtlasSpace: can be either native space ("T1w") or MNI space ("MNINonlinear")
         - sources /SetUpHCPPipeline.sh you set up earlier for the anatomical pipeline
 
-####    (C) Post-FreeSurfer Pipeline
+#### (C) Post-FreeSurfer Pipeline
 
-####        (1) /func_fieldmaps.sh : Process all field maps & create an average image for cases where scan-specific maps are unavailable
+##### (1) /func_fieldmaps.sh : Process all field maps & create an average image for cases where scan-specific maps are unavailable
 
-####        (2) /func_coreg.sh : Create an avg SBref image; co-register that image & all individual SBrefs to the T1w image
+##### (2) /func_coreg.sh : Create an avg SBref image; co-register that image & all individual SBrefs to the T1w image
 
-####        (3) /func_headmotion.sh : Correct func images for slice-time differences & head motion; motion QA
+##### (3) /func_headmotion.sh : Correct func images for slice-time differences & head motion; motion QA
 
 
 
@@ -55,7 +55,7 @@ Required Software
 
 ## Step 3: Functional Pipeline
 
-####    (A) Pre-FreeSurfer Pipeline
+#### (A) Pre-FreeSurfer Pipeline
 
 
 ## Step 4: Denoising Pipeline
