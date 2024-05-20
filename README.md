@@ -44,6 +44,8 @@ Required Software
 #### (C) Post-FreeSurfer Pipeline
 
 ##### (1) /func_fieldmaps.sh : Process all field maps & create an average image for cases where scan-specific maps are unavailable
+    - NOTE: two important text documents are created in this script, AvgFieldMap.txt and acqparams.txt; I added code at the beginning to remove these if they are already there, or else script will continue to write into pre-existing ones
+    >> /res0urces/find_fm_params.m
 
 ##### (2) /func_coreg.sh : Create an avg SBref image; co-register that image & all individual SBrefs to the T1w image
 
