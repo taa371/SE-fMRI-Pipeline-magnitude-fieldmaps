@@ -20,7 +20,7 @@ Required Software
     - see FreeSurfer pipelines documentation for more information (https://github.com/Washington-University/HCPpipelines)
     - NOTE: this script is sourced in the anatomical, functional and denoising wrappers
 
-## Step 2: Anatomical Pipeline
+## Step 2: Anatomical Pipeline >> /anat_highres_HCP_wrapper_par.sh
     - set up general variables
         - in script to submit cluster jobs, define study folder, subject ID, TE, magnitude fieldmap name, phase fieldmap name, number of cluster cores, and readout distortion correction
         - set path to /SetupHCPPipelinesScript.sh (variable: "EnvironmentScript")
@@ -33,10 +33,23 @@ Required Software
             - set path to FNIRT config file (something like /T1_2_MNI152_2mm.cnf)
         - set gradient distortion coefficients if using spin echo fieldmaps (set to "NONE" for EVO study because fieldmaps were not spin-echo)
 
-####    (B) FreeSurfer Pipeline
-        - 
+####    (B) FreeSurfer Pipeline >> func_wrapper.sh
+        - in script to submit cluster jobs, define study folder, subject ID, number of cluster cores, starting session (option to start with first session, or only run second session, for example)
+        - set $MEDIR variable: path to the bash pipeline scripts and /res0urces folder where Matlab scripts are located
+        - set degrees of freedom used for SBref coregistration step
+        - path to atlas template
+        - set $AtlasSpace: can be either native space ("T1w") or MNI space ("MNINonlinear")
+        - sources /SetUpHCPPipeline.sh you set up earlier for the anatomical pipeline
 
 ####    (C) Post-FreeSurfer Pipeline
+
+####        (1) /func_fieldmaps.sh : Process all field maps & create an average image for cases where scan-specific maps are unavailable
+
+####        (2) /func_coreg.sh : Create an avg SBref image; co-register that image & all individual SBrefs to the T1w image
+
+####        (3) /func_headmotion.sh : Correct func images for slice-time differences & head motion; motion QA
+
+
 
 
 
