@@ -37,7 +37,7 @@ if [ -f "$Subdir/func/xfms/$TaskName/EffectiveEchoSpacing.txt" ]; then
 	rm "$Subdir/func/xfms/$TaskName/EffectiveEchoSpacing.txt"
 fi
 
-# define some Matlab variables;
+# define some Matlab variables (write them at the top of the matlab script)
 echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m
 echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m	
 echo FuncName=["'$TaskName'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m  		
@@ -47,7 +47,7 @@ cd "$Subdir"/workspace/ # run script via Matlab
 echo -e "\n\t------------------------------------------------------------------------"
 echo -e "\t$Subject Func Coreg Matlab script (1 of 3): find_epi_params_EVO$TaskName"
 echo -e "\t------------------------------------------------------------------------\n"
-matlab -nodesktop -nosplash -r "temp; exit"
+matlab -nodesktop -nosplash -r "temp; exit" # calls matlab script without opening matlab desktop
 echo -e "\n\t----------------------------------------------"
 echo -e "\t$Subject find_epi_params_EVO$TaskName Complete"
 echo -e "\t----------------------------------------------\n"
@@ -57,7 +57,7 @@ cd "$Subdir" # go back to subject dir.
 rm -rf "$Subdir"/workspace/
 mkdir "$Subdir"/workspace/
 
-# next, we loop through all scans and create SBrefs (average of first few echoes) for each scan
+# next, we loop through all scans and create SBrefs (average of first few volumes) for each scan
 # NOTE: this is used (when needed) as an intermediate target for co-registeration
 
 # define & create a temporary directory;
@@ -171,6 +171,8 @@ echo -e "Avg/xfms EchoSpacing = $EchoSpacing"
 # TEST: debug "Error in epi_reg_dof: expected unary operator" -> doesn't happen when I just use FSL built-in 'epi_reg' instead of dof version
 # epi_reg --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
 
+# registering AvgSBref to atlas template (this re-writes AvgSBref2acpc_EpiReg.nii.gz from the previous space. We're not sure why the step before is run (with Holland, Tomas, Oded, 05/21/24).
+# the step before migth be needed for creating other .mat files etc that are not being re-written, or it's some left over from Chuck's old code. 
 applywarp --interp=spline --in="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg.nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg_warp.nii.gz
 
 # use BBRegister (BBR) to fine-tune the existing co-registration & output FSL style transformation matrix;
