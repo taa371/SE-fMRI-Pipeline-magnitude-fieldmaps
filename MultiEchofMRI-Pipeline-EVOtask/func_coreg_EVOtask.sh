@@ -299,7 +299,7 @@ echo -e "\n\t------------------------------------------------------------------"
 echo -e "\t$Subject make_precise_subcortical_labels_EVO$TaskName Complete"
 echo -e "\t------------------------------------------------------------------\n"
 
-# remove temp dirs (solution to error: can't remove dirs in Matlab due to permissions)
+# remove temp dirs (solution to error: was doing this in Matlab scripts, but can't remove dirs in Matlab due to permissions; worked fine on Chuck's and Hussain's computers, though)
 cd "$Subdir" # go back to subject dir
 rm -rf "$Subdir"/func/"$TaskName"/rois/tmp/
 rm -rf "$Subdir"/func/"$TaskName"/rois/tmp_nonlin/
