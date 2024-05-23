@@ -55,6 +55,18 @@ Required Software
     - performs a final brain extraction on the averaged fieldmap image
 
 ##### (2) /func_coreg.sh : Create an avg SBref image; co-register that image & all individual SBrefs to the T1w image
+    >>> /res0urces/find_epi_params.m : runs matlab script that extracts EPI (fMRI) scan parameters from json files
+
+    - if there are no single-band reference (SBref) images, creates them from an average of the first few volumes (which have less signal dropout/drift)
+    - estimates bias field (i.e. field inhomogeneities) from SBrefs to be used later
+
+    - NOTE: uses epi_reg_dof (a customized version of FSL's epi_reg) to get echo spacing information in a specific format
+
+    - registers all SBrefs to outputs of anatomical pipeline in /anat/T1w/freesurfer
+    - averages all SBrefs together and registers the average SBref to outputs of anatomical pipeline in /anat/T1w/freesurfer
+    - registers the SBrefs for each session to outputs of anatomical pipeline in /anat/T1w/freesurfer
+    - evaluates whether scan-specific or averaged fieldmaps give best co-registeration/cross-scan allignment
+    - generates a movie to help with QA
 
 ##### (3) /func_headmotion.sh : Correct func images for slice-time differences & head motion; motion QA
 
