@@ -217,31 +217,31 @@ done
 
 # 2023-12-08: Commented out motion_qa Matlab script call to figure out next week (error in rp_filt, line 167)
 
-# # fresh workspace dir.
-# rm -rf "$Subdir"/workspace/
-# mkdir "$Subdir"/workspace/
+# fresh workspace dir.
+rm -rf "$Subdir"/workspace/
+mkdir "$Subdir"/workspace/
 
-# # create & define the "MotionQA" folder;
-# rm -rf "$Subdir"/func/"$TaskName"/qa/MotionQA > /dev/null 2>&1
-# mkdir -p "$Subdir"/func/"$TaskName"/qa/MotionQA > /dev/null 2>&1
+# create & define the "MotionQA" folder;
+rm -rf "$Subdir"/func/"$TaskName"/qa/MotionQA > /dev/null 2>&1
+mkdir -p "$Subdir"/func/"$TaskName"/qa/MotionQA > /dev/null 2>&1
 
-# # create a temp. "motion_qa.m"
-# cp -rf "$MEDIR"/res0urces/motion_qa_EVO"$TaskName".m "$Subdir"/workspace/temp.m
-# echo -e "\n\t------------------------------------------------------------------------"
-# echo -e "\t$Subject Func Head Motion Matlab script (1 of 1): motion_qa_EVO$TaskName"
-# echo -e "\t------------------------------------------------------------------------\n"
+# create a temp. "motion_qa.m"
+cp -rf "$MEDIR"/res0urces/motion_qa_EVO"$TaskName".m "$Subdir"/workspace/temp.m
+echo -e "\n\t------------------------------------------------------------------------"
+echo -e "\t$Subject Func Head Motion Matlab script (1 of 1): motion_qa_EVO$TaskName"
+echo -e "\t------------------------------------------------------------------------\n"
 
-# # define some Matlab variables
-# echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m   
-# echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m
-# echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m   		
-# cd "$Subdir"/workspace/ # run script via Matlab 
-# matlab -nodesktop -nosplash -r "temp; exit" 
+# define some Matlab variables
+echo "addpath(genpath('${MEDIR}'))" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp.m && mv "$Subdir"/workspace/tmp.m "$Subdir"/workspace/temp.m   
+echo Subdir=["'$Subdir'"] | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp1.m && mv "$Subdir"/workspace/tmp1.m "$Subdir"/workspace/temp.m
+echo StartSession="$StartSession" | cat - "$Subdir"/workspace/temp.m >> "$Subdir"/workspace/tmp2.m && mv "$Subdir"/workspace/tmp2.m "$Subdir"/workspace/temp.m   		
+cd "$Subdir"/workspace/ # run script via Matlab 
+matlab -nodesktop -nosplash -r "temp; exit" 
 
-# echo -e "\n\t----------------------------------------"
-# echo -e "\t$Subject motion_qa_EVO$TaskName Complete"
-# echo -e "\t----------------------------------------\n"
+echo -e "\n\t----------------------------------------"
+echo -e "\t$Subject motion_qa_EVO$TaskName Complete"
+echo -e "\t----------------------------------------\n"
 
-# # delete temp. workspace
-# rm -rf "$Subdir"/workspace
-# cd "$Subdir"
+# delete temp. workspace
+rm -rf "$Subdir"/workspace
+cd "$Subdir"

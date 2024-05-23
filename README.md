@@ -68,8 +68,23 @@ Required Software
     - evaluates whether scan-specific or averaged fieldmaps give best co-registeration/cross-scan allignment
     - generates a movie to help with QA
 
-##### (3) /func_headmotion.sh : Correct func images for slice-time differences & head motion; motion QA
+    >>> make_precise_subcortical_labels.m : runs matlab script to create subcortical segmentation files
 
+    >>> coreg_qa.m : runs matlab script to create coreg QA movie
+
+##### (3) /func_headmotion.sh : Correct func images for slice-time differences & head motion; motion QA
+    - splits 4D fMRI file into single 3D volumes (for EVO, should be 404 volumes)
+    - then, loops through all individual volumes and combines the echoes (NOTE: for EVO, only has one echo, but can't skip this part because output files from this step, E*_"$i".nii.gz and AVG_"$i".nii.gz, are used going forward)
+    - merge these into two 4D images: AVG_*.nii.gz (used to estimate head motion), and E1_*.nii.gz (used to roughly estimate bias field)
+    - estimates bias field --> Bias_field.nii.gz, then resamples from ANTs to FSL orientation
+    - removes signal bias (i.e. de-drifts signal)
+    - removes first 3 volumes from Rest_AVG.nii.gz (NOTE: this step did not run when I preprocessed EVO, so I removed first 10 volumes during within-subjects level 1 Feat analyses)
+    - runs an initial MCFLIRT on Rest_AVG.nii.gz to get realignment parameter estimates before doing slice time correction (tbh, not sure why this is necessary)
+    - runs slice timing correction on Rest_AVG.nii.gz, then runs MCFLIRT again
+    - repeats initial MCFLIRT, slice time correction, and final MCFLIRT for all echoes (NOTE: EVO has only one echo)
+    - repeats field bias estimation and correction for individual echoes
+    
+    >>> motion_qa.m : 
 
 
 

@@ -79,10 +79,10 @@ fi
 
 # Run MGTR to smooth spatially-diffuse noise using gray-ordinates (PI's decided not to run for EVO)
 # NOTE: need a CiftiList here; should be filenames on which to run MGTR
-if [ $RunMGTR == true ]; then
-	echo -e "\n$Subject: Removal of spatially diffuse noise via MGTR\n"
-	"$MEDIR"/func_denoise_mgtr_SE_EVOtask.sh "$Subject" "$StudyFolder" "$MEDIR" "$CiftiListMGTR" "$TaskName"
-fi
+# if [ $RunMGTR == true ]; then
+# 	echo -e "\n$Subject: Removal of spatially diffuse noise via MGTR\n"
+# 	"$MEDIR"/func_denoise_mgtr_SE_EVOtask.sh "$Subject" "$StudyFolder" "$MEDIR" "$CiftiListMGTR" "$TaskName"
+# fi
 
 # Perform signal-decay denoising and project denoised volumes onto a surface
 # NOTE: need a CiftiList here; should be filenames on which to run func_vol2surf.sh
