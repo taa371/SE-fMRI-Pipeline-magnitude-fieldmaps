@@ -37,7 +37,7 @@ for s = 1:length(sessions)
             Volume = niftiread([Subdir '/func/floop/qa/CoregQA/SBref2acpc_EpiReg+BBR_ScanSpecificFM_S' num2str(s) '_R' num2str(r) '.nii.gz']);
             Rho(count,2) = corr(Volume(BrainMask==1),TargetImage(BrainMask==1),'type','Spearman');
         else
-            Rho(count,2) = nan;
+            Rho(count,2) = NaN;
         end
         
         % check which approach works best;
