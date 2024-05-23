@@ -111,7 +111,7 @@ for s in $AllScans ; do
 		fslroi "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG.nii.gz "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG.nii.gz "$rmVols" `expr $nVols - $rmVols`
 	fi
 
-	# run an initial MCFLIRT to get rp. estimates prior to any slice time correction;
+	# run an initial MCFLIRT to get realignment params estimates prior to any slice time correction;
 	echo -e "\n\t$Subject, $s: Initial MCFLIRT to estimate realignment params before slice-time correction...\n"
 	mcflirt -dof "$DOF" -stages 3 -plots -in "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_AVG.nii.gz -r "$Subdir"/func/"$TaskName"/"$s"/SBref.nii.gz -out "$Subdir"/func/"$TaskName"/"$s"/MCF
 	rm "$Subdir"/func/"$TaskName"/"$s"/MCF.nii.gz # remove .nii output; not used moving forward 
