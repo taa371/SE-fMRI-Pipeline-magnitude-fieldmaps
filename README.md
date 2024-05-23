@@ -43,9 +43,16 @@ Required Software
 
 #### (C) Post-FreeSurfer Pipeline
 
+## Step 3: Functional Pipeline
+
 ##### (1) /func_fieldmaps.sh : Process all field maps & create an average image for cases where scan-specific maps are unavailable
     - NOTE: two important text documents are created in this script, AvgFieldMap.txt and acqparams.txt; I added code at the beginning to remove these if they are already there, or else script will continue to write into pre-existing ones
-    >> /res0urces/find_fm_params.m
+
+    >>> /res0urces/find_fm_params.m : runs matlab script that extracts scan parameter information from fieldmap json files
+
+    - creates /AllFMs.txt file, which should contain a list of the sessions and runs for which there are fieldmaps in the format 'S1_R1'
+    - brain extracts, registers, and averages fieldmaps across sessions
+    - performs a final brain extraction on the averaged fieldmap image
 
 ##### (2) /func_coreg.sh : Create an avg SBref image; co-register that image & all individual SBrefs to the T1w image
 
@@ -55,9 +62,8 @@ Required Software
 
 
 
-## Step 3: Functional Pipeline
 
-#### (A) Pre-FreeSurfer Pipeline
+
 
 
 ## Step 4: Denoising Pipeline

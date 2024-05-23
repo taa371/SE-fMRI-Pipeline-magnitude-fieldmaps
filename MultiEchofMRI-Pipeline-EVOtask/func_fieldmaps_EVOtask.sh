@@ -75,38 +75,38 @@ mkdir "$Subdir"/workspace/
 mkdir -p "$Subdir"/func/"$TaskName"/AverageSBref
 WDIR="$Subdir"/func/"$TaskName"/AverageSBref
 
+# count the number of sessions
+sessions=("$Subdir"/func/unprocessed/task/"$TaskName"/session_*)
+sessions=$(seq 1 1 "${#sessions[@]}")
+
+# sweep the sessions
+for s in $sessions ; do
+
+	# count number of runs for this session
+	runs=("$Subdir"/func/unprocessed/task/"$TaskName"/session_"$s"/run_*)
+	runs=$(seq 1 1 "${#runs[@]}")
+
+	# sweep the runs
+	for r in $runs ; do
+
+		# check to see if this file exists or not
+		if [ -f "$Subdir"/func/unprocessed/field_maps/FM_rads_S"$s"_R"$r".nii.gz ]; then
+
+			# the "AllFMs.txt" file contains 
+			# dir. paths to every pair of field maps
+            if [ -f "$Subdir"/AllFMs.txt ]; then
+                rm "$Subdir"/AllFMs.txt
+            fi
+			touch "$Subdir"/AllFMs.txt
+			echo S"$s"_R"$r" >> "$Subdir"/AllFMs.txt  
+
+		fi
+
+	done
+
+done
+
 # DON'T RUN THIS PART FOR TASK (ALREADY PREPROCESSED FIELDMAPS DURING REST PREPROC) --------------------------------
-
-# # count the number of sessions
-# sessions=("$Subdir"/func/unprocessed/task/"$TaskName"/session_*)
-# sessions=$(seq 1 1 "${#sessions[@]}")
-
-# # sweep the sessions
-# for s in $sessions ; do
-
-# 	# count number of runs for this session
-# 	runs=("$Subdir"/func/unprocessed/task/"$TaskName"/session_"$s"/run_*)
-# 	runs=$(seq 1 1 "${#runs[@]}")
-
-# 	# sweep the runs
-# 	for r in $runs ; do
-
-# 		# check to see if this file exists or not
-# 		if [ -f "$Subdir"/func/unprocessed/field_maps/FM_rads_S"$s"_R"$r".nii.gz ]; then
-
-# 			# the "AllFMs.txt" file contains 
-# 			# dir. paths to every pair of field maps
-#             if [ -f "$Subdir"/AllFMs.txt ]; then
-#                 rm "$Subdir"/AllFMs.txt
-#             fi
-# 			touch "$Subdir"/AllFMs.txt
-# 			echo S"$s"_R"$r" >> "$Subdir"/AllFMs.txt  
-
-# 		fi
-
-# 	done
-
-# done
 
 # # define a list of directories
 # AllFMs=$(cat "$Subdir"/AllFMs.txt)
