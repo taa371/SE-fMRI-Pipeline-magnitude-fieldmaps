@@ -63,6 +63,7 @@ function calc_fd_func_EVOfloop(Subdir,sessions)
             % nyquist freq.
             nyq = (1/TR)/2;
             
+            % NOTE: commented this out for EVO Floop because don't want to use band filtering on task data
             % % if;
             % if nyq > 0.4
             %     % create a tailored
