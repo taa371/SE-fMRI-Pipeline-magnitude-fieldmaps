@@ -156,7 +156,7 @@ for s = 1:length(sessions)
         num2str(s) '/run_' num2str(r) '/MCF.par']);
         
         % calculate frame-wise displacement;
-        % [fd,rp_filt] = calc_fd(rp_no_filt,tr);
+        [fd,rp_filt] = calc_fd(rp_no_filt,tr);
         
         % convert rotation columns
         % into angular displacement;
