@@ -84,8 +84,10 @@ Required Software
     - repeats initial MCFLIRT, slice time correction, and final MCFLIRT for all echoes (NOTE: EVO has only one echo)
     - repeats field bias estimation and correction for individual echoes
     
-    >>> motion_qa.m : call function /calc_fd.m to filter Physio data; make motion QA movie
-        - NOTE: if you don't have Physio data, calc_fd will throw an error; use calc_fd_holland instead (not a separate script; is included at bottom of /motion_qa.m)
+    >>> motion_qa.m : [COMMENT OUT IF NO PHYSIO] calls function /calc_fd.m to filter Physio data; make motion QA movie
+        - NOTE: if you don't have physio data, calc_fd will throw an error; haven't figured out how to run /motion_qa.m without physio data yet
+
+    - NOTE: if not running denoising steps, use file '$TaskName'_acpc_E1.nii.gz as final output file
 
 
 

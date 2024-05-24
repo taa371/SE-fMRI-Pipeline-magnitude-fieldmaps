@@ -1,7 +1,7 @@
 #!/bin/bash
 # Charles Lynch, Holland Brown
 # Remove signal bias, slice-time correction
-# Updated 2023-12-08
+# Updated 2024-05-23
 
 MEDIR=$1
 Subject=$2
