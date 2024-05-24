@@ -1,7 +1,7 @@
 #!/bin/bash
 # Identification & removal of artifacts via ICA-AROMA (part of the SE denoising pipeline)
 # Charles Lynch, Hussain Bukhari, Holland Brown
-# Updated 2023-09-14
+# Updated 2024-05-24
 
 # assign initial variables 
 MEDIR=$1
@@ -51,7 +51,7 @@ for s in $AllScans ; do
 
 	echo -e "$s"
 
-	python2.7 /athena/victorialab/scratch/hob4003/ME_Pipeline/ICA-AROMA-master/ICA_AROMA.py -in "$Subdir"/func/task/"$TaskName"/"$s"/"$TaskName"_E1_acpc.nii.gz -out "$Subdir"/func/task/"$TaskName"/"$s"/"$TaskName"_ICAAROMA.nii.gz -m "$Subdir"/func/xfms/"$TaskName"/T1w_nonlin_brain_func_mask.nii.gz -mc "$Subdir"/func/task/"$TaskName"/"$s"/MCF.par -dim 30 -den 'aggr'
+	python2.7 /athena/victorialab/scratch/hob4003/ME_Pipeline/ICA-AROMA-master/ICA_AROMA.py -in "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_E1_acpc.nii.gz -out "$Subdir"/func/"$TaskName"/"$s"/"$TaskName"_ICAAROMA.nii.gz -m "$Subdir"/func/xfms/"$TaskName"/T1w_nonlin_brain_func_mask.nii.gz -mc "$Subdir"/func/"$TaskName"/"$s"/MCF.par -dim 30 -den 'aggr'
 
 done 
 # end function ------------
