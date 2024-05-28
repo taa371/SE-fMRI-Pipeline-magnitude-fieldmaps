@@ -91,10 +91,8 @@ Required Software
     - NOTE: if not running denoising steps, use file '$TaskName'_acpc_E1.nii.gz as final output file
 
 
-
-
-
-
-
-
 ## Step 4: Denoising Pipeline
+
+#### (1) /denoise_ICAAROMA_SE_EVOtask.sh : Run ICA-AROMA and automatically accept noise components it identifies
+    - for each session and run, execute ICA-AROMA using python2.7 command
+    - outputs "$TaskName"_ICAAROMA.nii.gz (I used this file for EVO resting-state analysis)
