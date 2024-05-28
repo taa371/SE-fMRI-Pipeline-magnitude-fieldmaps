@@ -38,13 +38,13 @@ for s in $sessions ; do
 	runs=$(seq 1 1 "${#runs[@]}")
 	for r in $runs ; do
 		echo "session_$s/run_$r" >> "$Subdir"/AllScans.txt  
-        echo 4 >> "$Subdir"/func/unprocessed/task/"$TaskName"/session_"$s"/run_"$r"/rmVols.txt
+        # echo 4 >> "$Subdir"/func/unprocessed/task/"$TaskName"/session_"$s"/run_"$r"/rmVols.txt # NOTE: this didn't work (never removed any volumes), so don't create the file
 	done
 done
 
 # define a list of directories
 AllScans=$(cat "$Subdir"/AllScans.txt) # NOTE: this is used for parallel processing purposes
-# rm "$Subdir"/AllScans.txt # remove intermediate file
+rm "$Subdir"/AllScans.txt # remove intermediate file
 
 # func --------------------
 for s in $AllScans ; do
