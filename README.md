@@ -96,3 +96,4 @@ Required Software
 #### (1) /denoise_ICAAROMA_SE_EVOtask.sh : Run ICA-AROMA and automatically accept noise components it identifies
     - for each session and run, execute ICA-AROMA using python2.7 command
     - outputs "$TaskName"_ICAAROMA.nii.gz (I used this file for EVO resting-state analysis)
+    - NOTE: usually, ICA-AROMA outputs a report that you can review to decide which components to accept or reject as noise, but for EVO, I automatically accepted them and they were removed
