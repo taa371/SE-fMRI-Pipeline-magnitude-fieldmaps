@@ -226,7 +226,10 @@ for s in $Sessions ; do
 			# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using scan-specific field map);
 			# NOTE: need to manually set --pedir (phase encoding direction)
 
+			# linear reg to T1w space
 			"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r" --fmap="$Subdir"/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz --fmapmag="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_S"$s"_R"$r".nii.gz --fmapmagbrain="$Subdir"/func/field_maps/AllFMs/FM_mag_acpc_brain_S"$s"_R"$r".nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y  
+			
+			# nonlinear reg to MNI space
 			applywarp --interp=spline --in="$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/SBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r".nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/SBref2acpc_EpiReg_S"$s"_R"$r"_warp.nii.gz
 
 			# TEST: try epi_reg instead of epi_reg_dof
