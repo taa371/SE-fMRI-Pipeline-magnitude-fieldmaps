@@ -22,15 +22,18 @@ module load afni/afni
 module load ants-2.4.0-gcc-8.2.0-ehibrhi
 module load matlab/R2021a
 
-# First, lets read in all the .json files associated with each scan & write out some .txt files that will be used during preprocessing
+# First, lets read in all the .json files associated with each
+# scan & write out some .txt files that will be used during preprocessing
 
-# fresh workspace dir.
+# fresh workspace dir
 rm -rf "$Subdir"/workspace  
 mkdir "$Subdir"/workspace  
 
 # create temporary find_epi_params.m 
 cp -rf "$MEDIR"/res0urces/find_epi_params_EVO"$TaskName".m "$Subdir"/workspace
-mv "$Subdir"/workspace/find_epi_params_EVO"$TaskName".m "$Subdir"/workspace/temp.m # rename in a separate line
+
+# rename in a separate line
+mv "$Subdir"/workspace/find_epi_params_EVO"$TaskName".m "$Subdir"/workspace/temp.m
 
 # remove old xfms parameter file
 if [ -f "$Subdir/func/xfms/$TaskName/EffectiveEchoSpacing.txt" ]; then
@@ -57,12 +60,14 @@ cd "$Subdir" # go back to subject dir.
 rm -rf "$Subdir"/workspace/
 mkdir "$Subdir"/workspace/
 
-# next, we loop through all scans and create SBrefs (average of first few volumes) for each scan
-# NOTE: this is used (when needed) as an intermediate target for co-registeration
+# Next, we loop through all scans and create SBrefs 
+# (average of first few volumes) for each scan
+# NOTE: this is used (when needed) as an intermediate 
+# target for co-registeration
 
 # define & create a temporary directory;
-mkdir -p "$Subdir"/func/"$TaskName"/AverageSBref/
-WDIR="$Subdir"/func/"$TaskName"/AverageSBref/
+mkdir -p "$Subdir"/func/"$TaskName"/AverageSBref
+WDIR="$Subdir"/func/"$TaskName"/AverageSBref
 
 # count the number of sessions
 sessions=("$Subdir"/func/unprocessed/task/"$TaskName"/session_*)
@@ -75,18 +80,17 @@ for s in $sessions ; do
 	runs=("$Subdir"/func/unprocessed/task/"$TaskName"/session_"$s"/run_*)
 	runs=$(seq 1 1 "${#runs[@]}")
 
-	# sweep the runs;
+	# sweep the runs
 	for r in $runs ; do 
 
-		# define the echo times;
+		# define the echo times
 		te=$(cat "$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/TE.txt)
-		n_te=0 # set to zero;
+		n_te=0 # set to zero
 
-		# sweep the te;
+		# sweep the te
 		for i in $te ; do
 
-			# keep track of 
-			# which te we are on;
+			# keep track of which te we are on
 			n_te=`expr $n_te + 1` 
 
 			# if there is no single-band reference image, we can assume that there 
@@ -102,7 +106,8 @@ for s in $sessions ; do
 		cp "$Subdir"/func/unprocessed/task/"$TaskName"/session_"$s"/run_"$r"/SBref*_E1.nii.gz "$WDIR"/TMP_1.nii.gz
 		
 		# estimate field inhomog. & resample bias field image (ANTs --> FSL orientation);
-		N4BiasFieldCorrection -d 3 -i "$WDIR"/TMP_1.nii.gz -o ["$WDIR"/TMP_restored.nii.gz,"$WDIR"/Bias_field_"$s"_"$r".nii.gz] # CHANGED: spaces in brackets were causing a parsing error
+		# (holland) CHANGED: spaces in brackets were causing a bracket mismatch (parsing error)
+		N4BiasFieldCorrection -d 3 -i "$WDIR"/TMP_1.nii.gz -o ["$WDIR"/TMP_restored.nii.gz,"$WDIR"/Bias_field_"$s"_"$r".nii.gz]
 		flirt -in "$WDIR"/Bias_field_"$s"_"$r".nii.gz -ref "$WDIR"/TMP_1.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat -out "$WDIR"/Bias_field_"$s"_"$r".nii.gz -interp spline
 
 		# set back 
@@ -117,7 +122,7 @@ for s in $sessions ; do
 
 				n_te=`expr $n_te + 1` # keep track which te we are on;
 				cp "$Subdir"/func/unprocessed/task/"$TaskName"/session_"$s"/run_"$r"/SBref*_E"$n_te.nii".gz "$WDIR"/TMP_"$n_te".nii.gz
-				fslmaths "$WDIR"/TMP_"$n_te".nii.gz -div "$WDIR"/Bias_field_"$s"_"$r".nii.gz "$WDIR"/TMP_"$n_te".nii.gz # apply correction;
+				fslmaths "$WDIR"/TMP_"$n_te".nii.gz -div "$WDIR"/Bias_field_"$s"_"$r".nii.gz "$WDIR"/TMP_"$n_te".nii.gz # apply correction
 
 			fi
 
@@ -133,7 +138,8 @@ for s in $sessions ; do
 
 done
 
-# Co-register all SBrefs and create an average SBref for cross-scan allignment 
+# Co-register all SBrefs and create an average SBref
+# for cross-scan allignment 
 
 # build a list of all SBrefs;
 images=("$WDIR"/SBref_*.nii.gz)
@@ -151,29 +157,28 @@ else
 
 fi
 
-# create clean tmp. copy of freesurfer folder;
+# create clean tmp. copy of freesurfer folder
 rm -rf "$Subdir"/anat/T1w/freesurfer  
 cp -rf "$Subdir"/anat/T1w/"$Subject" "$Subdir"/anat/T1w/freesurfer  
 
 # define the effective echo spacing;
 EchoSpacing=$(cat $Subdir/func/xfms/"$TaskName"/EffectiveEchoSpacing.txt)
 
-# if needed, reformat to non-scientific notation (or it will throw an error in epi_reg_dof)
+# (holland) [ADDED] if needed, reformat to non-scientific notation (or it will throw an error in epi_reg_dof)
 EchoSpacing_f=$(awk -v decimal="$EchoSpacing" 'BEGIN { printf("%f\n", decimal) }' </dev/null) # Note: this does round to 6 decimal places
 if [ "$EchoSpacing" != "$EchoSpacing_f" ]; then
 	EchoSpacing="$EchoSpacing_f"
 fi
 echo -e "Avg/xfms EchoSpacing = $EchoSpacing" 
 
-# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using average field map);
+# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using average field map)
+# NOTE: register AvgSBref to atlas template (this re-writes AvgSBref2acpc_EpiReg.nii.gz from the previous space. We're not sure why the step before is run (with Holland, Tomas, Oded, 05/21/24)
+# NOTE: the step before might be needed for creating other .mat files etc that are not being re-written, or it's some left over from Chuck's old code?
 "$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
+applywarp --interp=spline --in="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg.nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg_warp.nii.gz
 
 # TEST: debug "Error in epi_reg_dof: expected unary operator" -> doesn't happen when I just use FSL built-in 'epi_reg' instead of dof version
 # epi_reg --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
-
-# registering AvgSBref to atlas template (this re-writes AvgSBref2acpc_EpiReg.nii.gz from the previous space. We're not sure why the step before is run (with Holland, Tomas, Oded, 05/21/24).
-# the step before migth be needed for creating other .mat files etc that are not being re-written, or it's some left over from Chuck's old code. 
-applywarp --interp=spline --in="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg.nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg_warp.nii.gz
 
 # use BBRegister (BBR) to fine-tune the existing co-registration & output FSL style transformation matrix;
 bbregister --s freesurfer --mov "$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg.nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg+BBR.dat --6 --o "$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg+BBR.nii.gz   
@@ -189,10 +194,12 @@ convertwarp --ref="$AtlasTemplate" --warp1="$Subdir"/func/xfms/"$TaskName"/AvgSB
 applywarp --interp=spline --in="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2nonlin_EpiReg+BBR.nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz
 invwarp -w "$Subdir"/func/xfms/"$TaskName"/AvgSBref2nonlin_EpiReg+BBR_warp.nii.gz -o "$Subdir"/func/xfms/"$TaskName"/AvgSBref2nonlin_EpiReg+BBR_inv_warp.nii.gz --ref="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz # generate an inverse warp; atlas --> distorted SBref image 
 
-# now, lets also co-register individual SBrefs to the target anatomical image;
-# NOTE: we will compare which is best (avg. field map vs. scan-specific) later on
+# Now, lets also co-register individual SBrefs to the target
+# anatomical image
+# NOTE: we will compare which is best (avg. field map vs.
+# scan-specific) later on
 
-# create & define the "CoregQA" folder;
+# create & define the "CoregQA" folder
 mkdir -p "$Subdir"/func/"$TaskName"/qa/CoregQA  
 
 # count the number of sessions
@@ -211,12 +218,13 @@ for s in $Sessions ; do
 	for r in $runs ; do
 
 		# check to see if this scan has a field map or not
+		# (holland) [CHANGED] fixed bash syntax error in selection statements (every 'if' stmt needs double brackets and spaces in newest versions of bash)
 		if [[ -f "$Subdir/func/field_maps/AllFMs/FM_rads_acpc_S"$s"_R"$r".nii.gz" ]]; then # this needs to have spaces inside brackets
 
 			# define the effective echo spacing
 			EchoSpacing=$(cat "$Subdir"/func/"$TaskName"/session_"$s"/run_"$r"/EffectiveEchoSpacing.txt)
 
-			# if needed, reformat to non-scientific notation (or it will throw an error in epi_reg_dof)
+			# (holland) if needed, reformat to non-scientific notation (or it will throw an error in epi_reg_dof)
 			EchoSpacing_f=$(awk -v decimal="$EchoSpacing" 'BEGIN { printf("%f\n", decimal) }' </dev/null)
 			if [ "$EchoSpacing" != "$EchoSpacing_f" ]; then
 				EchoSpacing="$EchoSpacing_f"
@@ -261,7 +269,8 @@ done
 
 # END FUNCTION ----------------------------------------------------------
 
-# finally, lets create files that will be needed later on (brain mask and subcortical mask in functional space)
+# finally, lets create files that will be needed later on
+# (brain mask and subcortical mask in functional space)
 
 # generate a set of functional brain mask (acpc + nonlin) in the atlas space; 
 flirt -interp nearestneighbour -in "$Subdir"/anat/T1w/T1w_acpc_dc_brain.nii.gz -ref "$AtlasTemplate" -out "$Subdir"/func/xfms/"$TaskName"/T1w_acpc_brain_func.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat
