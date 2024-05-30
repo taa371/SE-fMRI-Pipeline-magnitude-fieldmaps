@@ -171,16 +171,43 @@ if [ "$EchoSpacing" != "$EchoSpacing_f" ]; then
 fi
 echo -e "Avg/xfms EchoSpacing = $EchoSpacing" 
 
-# register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using average field map)
-# NOTE: register AvgSBref to atlas template (this re-writes AvgSBref2acpc_EpiReg.nii.gz from the previous space. We're not sure why the step before is run (with Holland, Tomas, Oded, 05/21/24)
-# NOTE: the step before might be needed for creating other .mat files etc that are not being re-written, or it's some left over from Chuck's old code?
-"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
-applywarp --interp=spline --in="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg.nii.gz --warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg_warp.nii.gz
+# Register average SBref image to T1-weighted anatomical image using FSL's EpiReg
+# (correct for spatial distortions using average field map).
+
+# NOTE: register AvgSBref to atlas template (this re-writes AvgSBref2acpc_EpiReg.nii.gz 
+# from the previous space.
+
+# We're not sure why the epi_reg_dof step is run; its main output file seems to be
+# overwritten by the following applywarp command (Holland, Tomas, Oded, 05/21/24)
+
+# NOTE: the step before might be needed for creating other .mat
+# files etc that are not being over-written?
+"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" \ 
+--epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz \
+--t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz \
+--t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz \
+--out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg \
+--fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz \
+--fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz \
+--fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz \
+--echospacing="$EchoSpacing" \
+--wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz \
+--nofmapreg --pedir=-y   # note: need to manually set --pedir
+
+# NOTE: change output file name here
+applywarp --interp=spline \
+--in="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz \
+--ref="$AtlasTemplate" \
+--out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg_afterapplywarp2MNI.nii.gz \
+--warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg_warp.nii.gz
 
 # TEST: debug "Error in epi_reg_dof: expected unary operator" -> doesn't happen when I just use FSL built-in 'epi_reg' instead of dof version
 # epi_reg --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
 
-# use BBRegister (BBR) to fine-tune the existing co-registration & output FSL style transformation matrix;
+# use BBRegister (BBR) to fine-tune the existing co-registration & output FSL style transformation matrix
+# CHECK: is this registering to T1w or MNI?
+# CHECK: inputs/outputs and purpose of tkregister2
+# Outputs: AvgSBref2acpc_EpiReg+BBR.nii.gz (functional NIFTI registered to prev reg?), --dat AvgSBref2acpc_EpiReg+BBR.dat; Input: --mov AvgSBref2acpc_EpiReg.nii.gz (?)
 bbregister --s freesurfer --mov "$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg.nii.gz --init-reg "$MEDIR"/res0urces/eye.dat --surf white.deformed --bold --reg "$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg+BBR.dat --6 --o "$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg+BBR.nii.gz   
 tkregister2 --s freesurfer --noedit --reg "$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg+BBR.dat --mov "$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg.nii.gz --targ "$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --fslregout "$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg+BBR.mat   
 

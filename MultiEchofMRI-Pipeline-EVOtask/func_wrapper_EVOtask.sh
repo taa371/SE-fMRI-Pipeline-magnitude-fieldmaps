@@ -32,7 +32,7 @@ MEDIR="/athena/victorialab/scratch/hob4003/ME_Pipeline/MEF-P-HB/MultiEchofMRI-Pi
 # these variables should not be changed unless you have a very good reason
 DOF=6 # this is the degrees of freedom (DOF) used for SBref --> T1w and EPI --> SBref coregistrations
 AtlasTemplate="$MEDIR/res0urces/FSL/MNI152_T1_2mm.nii.gz" # define a low-res MNI template
-AtlasSpace="T1w" # define either native space ("T1w") or MNI space ("MNINonlinear")
+AtlasSpace="T1w" # define either native space ("T1w") or MNI space ("MNINonlinear") -> this variable isn't used (?)
 
 # Set up pipeline environment variables and software
 EnvironmentScript="/athena/victorialab/scratch/hob4003/ME_Pipeline/Hb_HCP_master/Examples/Scripts/SetUpHCPPipeline.sh"
