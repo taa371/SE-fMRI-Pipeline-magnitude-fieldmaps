@@ -182,6 +182,10 @@ echo -e "Avg/xfms EchoSpacing = $EchoSpacing"
 
 # NOTE: the step before might be needed for creating other .mat
 # files etc that are not being over-written?
+
+# find a way to run this (bc it does fieldmap correction) without reg to T1w
+# want to get field map-corrected AvgSBref that is not registered (but needs to be acpc-alligned)
+# allignment is fine; don't want to resample to T1 coordinate space -> want to give Feat native space data
 "$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" \ 
 --epi="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz \
 --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz \
