@@ -202,7 +202,7 @@ echo -e "Avg/xfms EchoSpacing = $EchoSpacing"
 applywarp --interp=spline \
 --in="$Subdir"/func/xfms/"$TaskName"/AvgSBref.nii.gz \
 --ref="$AtlasTemplate" \
---out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg_afterapplywarp2MNI.nii.gz \
+--out="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg.nii.gz \
 --warp="$Subdir"/func/xfms/"$TaskName"/AvgSBref2acpc_EpiReg_warp.nii.gz
 
 # TEST: debug "Error in epi_reg_dof: expected unary operator" -> doesn't happen when I just use FSL built-in 'epi_reg' instead of dof version
