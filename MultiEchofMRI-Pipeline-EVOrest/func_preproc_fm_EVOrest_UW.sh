@@ -124,7 +124,6 @@ do
 
 done
 
-# This section is repeated in post_func_preproc_fm.sh (only run once)
 # merge & average the co-registered field map images accross sessions 
 fslmerge -t "$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz "$WDIR"/FM_rads_acpc_S*.nii.gz    
 fslmaths "$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz -Tmean "$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz    
