@@ -92,8 +92,7 @@ for s in $sessions ; do
 		N4BiasFieldCorrection -d 3 -i "$WDIR"/TMP_1.nii.gz -o ["$WDIR"/TMP_restored.nii.gz,"$WDIR"/Bias_field_"$s"_"$r".nii.gz] # CHANGED: spaces in brackets were causing a parsing error
 		flirt -in "$WDIR"/Bias_field_"$s"_"$r".nii.gz -ref "$WDIR"/TMP_1.nii.gz -applyxfm -init "$MEDIR"/res0urces/ident.mat -out "$WDIR"/Bias_field_"$s"_"$r".nii.gz -interp spline
 
-		# set back 
-		# to zero;
+		# set back to zero;
 		n_te=0 
 
 		# sweep the te;
