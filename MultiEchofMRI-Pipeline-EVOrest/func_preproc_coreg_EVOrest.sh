@@ -145,7 +145,19 @@ cp -rf "$Subdir"/anat/T1w/"$Subject" "$Subdir"/anat/T1w/freesurfer
 EchoSpacing=$(cat $Subdir/func/xfms/rest/EffectiveEchoSpacing.txt) 
 
 # register average SBref image to T1-weighted anatomical image using FSL's EpiReg (correct for spatial distortions using average field map); 
-"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" --epi="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz --t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg --fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz --fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz --fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz --echospacing="$EchoSpacing" --wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz --nofmapreg --pedir=-y   # note: need to manually set --pedir
+# fmap correction done here, using fugue -look into this more
+# check output, producing name for warp that is applied in next line
+"$MEDIR"/res0urces/epi_reg_dof --dof="$DOF" \
+--epi="$Subdir"/func/xfms/rest/AvgSBref.nii.gz \
+--t1="$Subdir"/anat/T1w/T1w_acpc_dc_restore.nii.gz \
+--t1brain="$Subdir"/anat/T1w/T1w_acpc_dc_restore_brain.nii.gz \
+--out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg \
+--fmap="$Subdir"/func/field_maps/Avg_FM_rads_acpc.nii.gz \
+--fmapmag="$Subdir"/func/field_maps/Avg_FM_mag_acpc.nii.gz \
+--fmapmagbrain="$Subdir"/func/field_maps/Avg_FM_mag_acpc_brain.nii.gz \
+--echospacing="$EchoSpacing" \
+--wmseg="$Subdir"/anat/T1w/"$Subject"/mri/white.nii.gz \
+--nofmapreg --pedir=-y   # note: need to manually set --pedir
 
 applywarp --interp=spline --in="$Subdir"/func/xfms/rest/AvgSBref.nii.gz --ref="$AtlasTemplate" --out="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg.nii.gz --warp="$Subdir"/func/xfms/rest/AvgSBref2acpc_EpiReg_warp.nii.gz
 
